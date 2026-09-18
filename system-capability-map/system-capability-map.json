@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "microservice-kit 系统能力地图",
+    "locale": "zh-CN",
+    "output": "system-capability-map.html",
+    "quality_profile": "standard",
+    "repository": {
+      "url": "https://github.com/gcc798/microservice-kit",
+      "provider": "github",
+      "link_mode": "web",
+      "revision": "938e8b55087de45a7a9814f4cfb06c8c1ae39d72"
+    },
+    "views": [
+      { "id": "request-path", "label": "请求路径", "focus": ["frontend", "gateway", "iam", "sys", "resource", "postgres"], "note": "从管理端进入 Gateway，再到拥有数据的领域服务。" },
+      { "id": "domain-ownership", "label": "领域边界", "focus": ["iam", "sys", "resource", "postgres"], "note": "查看 IAM、SYS、Resource 的数据与职责边界。" },
+      { "id": "platform", "label": "平台运行能力", "focus": ["gateway", "registry", "scheduler", "redis", "rustfs", "observability"], "note": "查看 Consul / etcd / Nacos、API 级注册、Gateway 内的 API 流量治理潜力、异步任务和可观测性。" }
+    ]
+  },
+  "components": [
+    { "id": "frontend", "type": "frontend", "label": "web-react", "sublabel": "React 管理端", "tag": "统一 HTTP 契约", "pos": [40, 310], "size": [150, 70], "sources": [{ "path": "web-react/src/main.tsx", "label": "前端入口" }] },
+    { "id": "gateway", "type": "backend", "label": "Gateway", "sublabel": "统一入口与动态路由", "tag": "API 路由表 · 流量治理", "pos": [270, 320], "size": [170, 70], "sources": [{ "path": "native/application/gateway/proxy.go", "line": 89, "label": "动态路由" }] },
+    { "id": "iam", "type": "security", "label": "IAM 认证中心", "sublabel": "身份、认证、授权", "tag": "用户 · 角色 · Token", "pos": [520, 200], "size": [180, 78], "sources": [{ "path": "native/application/iam/internal/domain/token_manager.go", "line": 30, "label": "Token 生命周期" }] },
+    { "id": "sys", "type": "backend", "label": "SYS 服务", "sublabel": "组织与系统管理", "tag": "菜单 · 字典 · 配置 · 日志", "pos": [760, 200], "size": [180, 78], "sources": [{ "path": "native/application/sys/internal/migrations/migrations.go", "label": "SYS 领域" }] },
+    { "id": "resource", "type": "backend", "label": "Resource 服务", "sublabel": "资源与文件能力", "tag": "附件 · 对象存储", "pos": [520, 440], "size": [180, 78], "sources": [{ "path": "native/application/resource/internal/migrations/migrations.go", "label": "Resource 领域" }] },
+    { "id": "scheduler", "type": "backend", "label": "Scheduler", "sublabel": "DB 配置 · gRPC Job", "tag": "注册发现 · 不提供 HTTP", "pos": [760, 440], "size": [180, 78], "sources": [{ "path": "native/application/scheduler/main.go", "line": 62, "label": "注册与 Client Pool" }, { "path": "native/internal/modules/scheduler.go", "line": 39, "label": "读取 Job 配置" }] },
+    { "id": "postgres", "type": "database", "label": "PostgreSQL", "sublabel": "领域数据存储", "tag": "IAM / SYS / Resource 独立迁移", "pos": [1030, 250], "size": [180, 78], "sources": [{ "path": "native/application/iam/internal/migrations/migrations.go", "label": "IAM 迁移" }, { "path": "native/application/sys/internal/migrations/sql/00001_schema.sql", "label": "SYS 迁移" }, { "path": "native/application/resource/internal/migrations/sql/00001_schema.sql", "label": "Resource 迁移" }] },
+    { "id": "redis", "type": "database", "label": "Redis", "sublabel": "Token · Session · 运行配置", "pos": [1030, 100], "size": [180, 70], "sources": [{ "path": "native/application/iam/internal/domain/token_manager.go", "line": 85, "label": "Token 存储" }, { "path": "native/internal/runtimeconfig/store.go", "line": 45, "label": "运行配置缓存" }] },
+    { "id": "rustfs", "type": "cloud", "label": "RustFS / S3", "sublabel": "对象存储", "pos": [520, 560], "size": [180, 70] },
+    { "id": "registry", "type": "cloud", "label": "Consul / etcd / Nacos", "sublabel": "API 颗粒度服务实例注册", "tag": "实例 · HTTP Routes · Metadata", "pos": [640, 60], "size": [200, 70], "sources": [{ "path": "native/internal/registry/registry.go", "line": 18, "label": "API 路由模型" }, { "path": "native/internal/registry/nacos.go", "line": 54, "label": "Nacos Metadata" }, { "path": "native/internal/httpserver/http.go", "line": 83, "label": "路由采集" }] },
+    { "id": "observability", "type": "cloud", "label": "可观测性", "sublabel": "日志 · Metrics · OTel", "pos": [40, 120], "size": [170, 70] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "native：真实微服务部署边界", "wraps": ["gateway", "iam", "sys", "resource", "scheduler"] },
+    { "kind": "security-group", "label": "服务层：领域服务 + 异步任务服务", "wraps": ["iam", "sys", "resource", "scheduler"] }
+  ],
+  "connections": [
+    { "id": "frontend-gateway", "from": "frontend", "to": "gateway", "label": "HTTP / WS", "variant": "emphasis" },
+    { "id": "gateway-iam", "from": "gateway", "to": "iam", "variant": "security", "fromSide": "right", "toSide": "left" },
+    { "id": "gateway-sys", "from": "gateway", "to": "sys", "fromSide": "right", "toSide": "left" },
+    { "id": "gateway-resource", "from": "gateway", "to": "resource", "fromSide": "right", "toSide": "left" },
+    { "id": "gateway-registry", "from": "registry", "to": "gateway", "variant": "emphasis" },
+    { "id": "iam-registry", "from": "iam", "to": "registry", "label": "注册实例 / API", "variant": "dashed", "fromSide": "top", "toSide": "bottom", "via": [[610, 160], [740, 160]] },
+    { "id": "sys-registry", "from": "sys", "to": "registry", "variant": "dashed", "fromSide": "top", "toSide": "bottom", "via": [[850, 150], [740, 150]] },
+    { "id": "resource-registry", "from": "resource", "to": "registry", "variant": "dashed", "fromSide": "left", "toSide": "left", "via": [[480, 479], [480, 95], [620, 95]] },
+    { "id": "scheduler-registry", "from": "scheduler", "to": "registry", "variant": "dashed", "fromSide": "bottom", "toSide": "right", "via": [[850, 550], [990, 550], [990, 95], [840, 95]] },
+    { "id": "iam-postgres", "from": "iam", "to": "postgres", "fromSide": "top", "toSide": "top", "via": [[610, 180], [1120, 180], [1120, 230]] },
+    { "id": "iam-redis", "from": "iam", "to": "redis", "label": "Token / Session", "variant": "security", "fromSide": "top", "toSide": "left", "via": [[610, 180], [1000, 180], [1000, 135]] },
+    { "id": "sys-postgres", "from": "sys", "to": "postgres" },
+    { "id": "sys-redis", "from": "sys", "to": "redis", "label": "运行配置 / 缓存", "labelAt": [975, 292] },
+    { "id": "resource-postgres", "from": "resource", "to": "postgres", "fromSide": "top", "toSide": "bottom", "via": [[610, 400], [1120, 400], [1120, 328]] },
+    { "id": "resource-rustfs", "from": "resource", "to": "rustfs", "fromSide": "bottom", "toSide": "top" },
+    { "id": "scheduler-postgres", "from": "scheduler", "to": "postgres", "label": "读取 Job 配置", "fromSide": "right", "toSide": "left", "via": [[990, 479], [990, 289]] },
+    { "id": "scheduler-sys", "from": "scheduler", "to": "sys", "label": "gRPC 清理日志", "variant": "dashed" },
+    { "id": "scheduler-resource", "from": "scheduler", "to": "resource", "label": "gRPC 清理附件", "variant": "dashed", "fromSide": "left", "toSide": "right", "labelAt": [730, 532] }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "业务能力", "items": ["IAM：认证中心，Token 与 Session 存储在 Redis", "SYS：组织、菜单、字典、配置与操作日志", "Resource：附件、对象存储与资源元数据"] },
+    { "dot": "emerald", "title": "注册与路由", "items": ["注册中心支持 Consul / etcd / Nacos（三选一）", "领域服务注册实例与 HTTP API 路由，Gateway 动态构建路由表", "实例 Label 支持金丝雀、灰度与定向路由"] },
+    { "dot": "rose", "title": "运行边界", "items": ["Gateway 是唯一对外入口，不拥有业务数据", "每个领域服务独立拥有模型与 Goose 迁移", "Scheduler 读取数据库配置，经注册发现调用 SYS / Resource 的 gRPC Job"] }
+  ]
+}
