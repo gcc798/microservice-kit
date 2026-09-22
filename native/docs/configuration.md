@@ -41,7 +41,7 @@ Gateway 只负责 HTTP/WS 接入、鉴权代理和服务发现，不连接数据
 | `server.port` | `MS_K_SERVER_PORT` | Gateway HTTP 监听端口，范围 1-65535。 |
 | `server.tlsCertFile` | `MS_K_SERVER_TLS_CERT_FILE` | TLS 证书路径；不启用 TLS 时显式设为空字符串。 |
 | `server.tlsKeyFile` | `MS_K_SERVER_TLS_KEY_FILE` | TLS 私钥路径；必须和证书同时为空或同时非空。 |
-| `registry.driver` | `MS_K_REGISTRY_DRIVER` | 用于发现 IAM、SYS、Resource。 |
+| `registry.driver` | `MS_K_REGISTRY_DRIVER` | 用于发现 IAM、SYS、Resource、Realtime。 |
 | `registry.address` | `MS_K_REGISTRY_ADDRESS` | 注册中心地址。 |
 | `registry.prefix` | `MS_K_REGISTRY_PREFIX` | 注册中心 key 前缀。 |
 | `service.id` | `MS_K_SERVICE_ID` | Gateway 注册中心实例 ID；允许显式留空后自动生成。 |
@@ -51,7 +51,7 @@ Gateway 只负责 HTTP/WS 接入、鉴权代理和服务发现，不连接数据
 
 ## IAM
 
-IAM 提供认证授权 HTTP/gRPC 接口，拥有 IAM 数据、Redis 会话、JWT 和 WebSocket 配置。
+IAM 提供认证授权 HTTP/gRPC 接口，拥有 IAM 数据、Redis 会话和 JWT 配置。
 
 | YAML 键 | 环境变量 | 说明 |
 | --- | --- | --- |
@@ -75,7 +75,25 @@ IAM 提供认证授权 HTTP/gRPC 接口，拥有 IAM 数据、Redis 会话、JWT
 | `auth.tokenHeader` | `MS_K_AUTH_TOKEN_HEADER` | 读取访问令牌的 HTTP Header 名，例如 `Authorization`。 |
 | `auth.allowConcurrent` | `MS_K_AUTH_ALLOW_CONCURRENT` | 是否允许同一用户保留多个并发登录会话。 |
 | `cors.enabled` | `MS_K_CORS_ENABLED` | 是否允许跨域；生产环境必须为 `false`。 |
-| `websocket.enabled` | `MS_K_WEBSOCKET_ENABLED` | 是否启用 IAM WebSocket 模块。 |
+
+## Realtime
+
+Realtime 提供用户 WebSocket 连接、心跳和 Redis Pub/Sub 跨实例消息投递，不连接数据库。它通过 IAM gRPC 校验握手 Token。
+
+| YAML 键 | 环境变量 | 说明 |
+| --- | --- | --- |
+| `server.port` | `MS_K_SERVER_PORT` | Realtime HTTP 监听端口。 |
+| `grpc.port` | `MS_K_GRPC_PORT` | Realtime gRPC 监听端口。 |
+| `service.id` | `MS_K_SERVICE_ID` | 注册中心实例 ID；允许显式留空后自动生成。 |
+| `service.advertiseHost` | `MS_K_SERVICE_ADVERTISE_HOST` | 注册给其他进程访问的主机名或 IP。 |
+| `registry.driver` | `MS_K_REGISTRY_DRIVER` | 注册自身并发现 IAM。 |
+| `registry.address` | `MS_K_REGISTRY_ADDRESS` | 注册中心地址。 |
+| `registry.prefix` | `MS_K_REGISTRY_PREFIX` | 注册中心 key 前缀。 |
+| `redis.addr` | `MS_K_REDIS_ADDR` | Redis 地址。 |
+| `redis.password` | `MS_K_REDIS_PASSWORD` | Redis 密码；无密码时显式设为空字符串。 |
+| `redis.db` | `MS_K_REDIS_DB` | Redis DB 编号，不能为负数。 |
+| `auth.tokenHeader` | `MS_K_AUTH_TOKEN_HEADER` | 读取 WebSocket 访问令牌的 Header 名；握手也兼容同名 query 参数。 |
+| `cors.enabled` | `MS_K_CORS_ENABLED` | 是否允许跨域 WebSocket Origin。 |
 | `websocket.timeoutEnabled` | `MS_K_WEBSOCKET_TIMEOUT_ENABLED` | 是否启用 WebSocket 读写超时控制。 |
 | `websocket.readTimeoutSeconds` | `MS_K_WEBSOCKET_READ_TIMEOUT_SECONDS` | WebSocket 读超时秒数，必须大于 0。 |
 | `websocket.writeTimeoutSeconds` | `MS_K_WEBSOCKET_WRITE_TIMEOUT_SECONDS` | WebSocket 写超时秒数，必须大于 0。 |
@@ -180,7 +198,7 @@ environment:
 
 ## OpenTelemetry 标准变量
 
-Gateway、IAM、SYS、Resource、Scheduler 均初始化 OpenTelemetry Trace。这部分使用 OpenTelemetry SDK 标准环境变量，不属于 `MS_K_*` YAML 配置：
+Gateway、IAM、SYS、Resource、Realtime、Scheduler 均初始化 OpenTelemetry Trace。这部分使用 OpenTelemetry SDK 标准环境变量，不属于 `MS_K_*` YAML 配置：
 
 | 环境变量 | 说明 |
 | --- | --- |

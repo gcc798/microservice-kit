@@ -68,14 +68,15 @@ func (h *Handler) ServeWs(c *echo.Context) {
 		return
 	}
 
-	// 从查询参数或 JWT 中获取用户 ID。
-	userIdStr := c.QueryParam("userId")
-	if userIdStr == "" {
-		if userId := c.Get("userId"); userId != nil {
-			if uid, ok := userId.(int64); ok {
-				userIdStr = strconv.FormatInt(uid, 10)
-			}
+	// 优先使用已通过认证的上下文身份，避免客户端通过 query 参数伪造用户 ID。
+	userIdStr := ""
+	if userID := c.Get("userId"); userID != nil {
+		if uid, ok := userID.(int64); ok {
+			userIdStr = strconv.FormatInt(uid, 10)
 		}
+	}
+	if userIdStr == "" {
+		userIdStr = c.QueryParam("userId")
 	}
 
 	if userIdStr == "" {

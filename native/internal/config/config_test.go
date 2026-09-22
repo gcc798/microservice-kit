@@ -63,9 +63,10 @@ func TestServiceConfigsContainOnlyOwnedSections(t *testing.T) {
 		sections []string
 	}{
 		{name: "gateway", service: ServiceGateway, sections: []string{"cors", "gateway", "registry", "server", "service"}},
-		{name: "iam", service: ServiceIAM, sections: []string{"auth", "cors", "database", "grpc", "jwt", "redis", "registry", "server", "service", "websocket"}},
+		{name: "iam", service: ServiceIAM, sections: []string{"auth", "cors", "database", "grpc", "jwt", "redis", "registry", "server", "service"}},
 		{name: "sys", service: ServiceSystem, sections: []string{"auth", "cors", "database", "grpc", "redis", "registry", "server", "service"}},
 		{name: "resource", service: ServiceResource, sections: []string{"auth", "cors", "database", "grpc", "registry", "server", "service", "storage"}},
+		{name: "realtime", service: ServiceRealtime, sections: []string{"auth", "cors", "grpc", "redis", "registry", "server", "service", "websocket"}},
 		{name: "scheduler", service: ServiceScheduler, sections: []string{"database", "registry", "service"}},
 	}
 	for _, tt := range services {
@@ -98,7 +99,7 @@ func TestServiceConfigsContainOnlyOwnedSections(t *testing.T) {
 					if err != nil {
 						t.Fatalf("Load(%s/%s) error = %v", tt.name, profile, err)
 					}
-					if tt.service != ServiceGateway && cfg.Database.DSN == "" {
+					if tt.service != ServiceGateway && tt.service != ServiceRealtime && cfg.Database.DSN == "" {
 						t.Fatalf("%s config is missing database.dsn", tt.name)
 					}
 					if tt.service == ServiceIAM && (cfg.Redis.Addr == "" || cfg.JWT.Secret == "") {

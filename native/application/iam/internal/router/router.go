@@ -23,7 +23,7 @@ func Setup(r *httpx.Router, c container.Container, security iamv1.API, systemAPI
 	ctx := &RouterContext{Container: c, PermissionService: security, AuthMiddleware: middleware.Auth(security, c.GetConfig()), SystemAPI: systemAPI}
 	r.Use(middleware.PrometheusMiddleware())
 	r.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
-	registerCommonRoutes(r, ctx, true)
+	registerCommonRoutes(r, ctx)
 	if err := registerAuthRoutes(r, ctx); err != nil {
 		return fmt.Errorf("auth routes: %w", err)
 	}

@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	logging "github.com/gcc798/microservice-kit/internal/logger"
 	"github.com/gorilla/websocket"
@@ -52,4 +53,29 @@ func TestHandlerUpgradesEchoResponse(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 101, response.StatusCode)
 	require.NoError(t, conn.Close())
+}
+
+func TestHandlerUsesAuthenticatedUserIDOverQueryParameter(t *testing.T) {
+	log, err := logging.NewLoggerWithConfig(&logging.Config{Level: "error", Output: "console", Encoding: "json"})
+	require.NoError(t, err)
+	hub := NewHub(log)
+	hub.Start()
+	t.Cleanup(hub.Close)
+
+	e := echo.New()
+	handler := NewHandler(hub, log, false)
+	e.GET("/resource/websocket", func(c *echo.Context) error {
+		c.Set("userId", int64(42))
+		handler.ServeWs(c)
+		return nil
+	})
+	server := httptest.NewServer(e)
+	t.Cleanup(server.Close)
+
+	url := "ws" + strings.TrimPrefix(server.URL, "http") + "/resource/websocket?userId=99"
+	conn, _, err := websocket.DefaultDialer.Dial(url, nil)
+	require.NoError(t, err)
+	t.Cleanup(func() { _ = conn.Close() })
+	require.Eventually(t, func() bool { return hub.GetConnectionCount(42) == 1 }, time.Second, 10*time.Millisecond)
+	require.Equal(t, 0, hub.GetConnectionCount(99))
 }

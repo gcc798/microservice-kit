@@ -34,11 +34,3 @@ auth:
 
 cors:
   enabled: false
-
-websocket:
-  enabled: true
-  timeoutEnabled: true
-  readTimeoutSeconds: 60
-  writeTimeoutSeconds: 10
-  heartbeatEnabled: true
-  maxReadTimeouts: 3

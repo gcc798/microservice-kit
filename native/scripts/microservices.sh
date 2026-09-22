@@ -9,12 +9,13 @@ case "${1:-}" in
 		make init-config
 		# Let each domain owner finish its migration before replicas start.
 		docker compose up -d --build --wait --wait-timeout 300
-		docker compose up -d --no-build --wait --wait-timeout 300 \
+			docker compose up -d --no-build --wait --wait-timeout 300 \
 			--scale gateway=1 \
 			--scale scheduler=1 \
 			--scale iam=3 \
 			--scale sys=5 \
-			--scale resource=1
+			--scale resource=1 \
+			--scale realtime=2
 		docker compose ps
 		;;
 	stop)

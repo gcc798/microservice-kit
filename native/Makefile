@@ -21,7 +21,7 @@ help:
 
 # 创建本地运行配置
 init-config:
-	@for service in gateway iam sys resource scheduler; do \
+	@for service in gateway iam sys resource realtime scheduler; do \
 		for kind in conf zaplogger; do \
 			for profile in dev prod; do \
 				target="application/$$service/$$kind.$$profile.yaml"; \
@@ -37,18 +37,20 @@ swagger:
 	@echo "✅ Swagger 文档已生成: internal/openapi/"
 
 proto:
-	@protoc -I . --go_out=. --go_opt=module=github.com/gcc798/microservice-kit --go-grpc_out=. --go-grpc_opt=module=github.com/gcc798/microservice-kit api/iam/v1/iam.proto api/sys/v1/sys.proto api/resource/v1/resource.proto
+	@protoc -I . --go_out=. --go_opt=module=github.com/gcc798/microservice-kit --go-grpc_out=. --go-grpc_opt=module=github.com/gcc798/microservice-kit api/iam/v1/iam.proto api/sys/v1/sys.proto api/resource/v1/resource.proto api/realtime/v1/realtime.proto
 
 proto-check:
 	@tmp_dir=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp_dir"' EXIT; \
-	protoc -I . --go_out="$$tmp_dir" --go_opt=module=github.com/gcc798/microservice-kit --go-grpc_out="$$tmp_dir" --go-grpc_opt=module=github.com/gcc798/microservice-kit api/iam/v1/iam.proto api/sys/v1/sys.proto api/resource/v1/resource.proto; \
+	protoc -I . --go_out="$$tmp_dir" --go_opt=module=github.com/gcc798/microservice-kit --go-grpc_out="$$tmp_dir" --go-grpc_opt=module=github.com/gcc798/microservice-kit api/iam/v1/iam.proto api/sys/v1/sys.proto api/resource/v1/resource.proto api/realtime/v1/realtime.proto; \
 	diff -ru internal/api/iam/v1/iam.pb.go "$$tmp_dir/internal/api/iam/v1/iam.pb.go"; \
 	diff -ru internal/api/iam/v1/iam_grpc.pb.go "$$tmp_dir/internal/api/iam/v1/iam_grpc.pb.go"; \
 	diff -ru internal/api/sys/v1/sys.pb.go "$$tmp_dir/internal/api/sys/v1/sys.pb.go"; \
 	diff -ru internal/api/sys/v1/sys_grpc.pb.go "$$tmp_dir/internal/api/sys/v1/sys_grpc.pb.go"; \
 	diff -ru internal/api/resource/v1/resource.pb.go "$$tmp_dir/internal/api/resource/v1/resource.pb.go"; \
-	diff -ru internal/api/resource/v1/resource_grpc.pb.go "$$tmp_dir/internal/api/resource/v1/resource_grpc.pb.go"
+	diff -ru internal/api/resource/v1/resource_grpc.pb.go "$$tmp_dir/internal/api/resource/v1/resource_grpc.pb.go"; \
+	diff -ru internal/api/realtime/v1/realtime.pb.go "$$tmp_dir/internal/api/realtime/v1/realtime.pb.go"; \
+	diff -ru internal/api/realtime/v1/realtime_grpc.pb.go "$$tmp_dir/internal/api/realtime/v1/realtime_grpc.pb.go"
 
 swagger-check:
 	@tmp_dir=$$(mktemp -d); \
@@ -77,7 +79,8 @@ build: swagger
 	@go build -o bin/microservice-kit-iam ./application/iam
 	@go build -o bin/microservice-kit-sys ./application/sys
 	@go build -o bin/microservice-kit-resource ./application/resource
-	@echo "✅ 网关、IAM、SYS、Resource、Scheduler 编译完成"
+	@go build -o bin/microservice-kit-realtime ./application/realtime
+	@echo "✅ 网关、IAM、SYS、Resource、Realtime、Scheduler 编译完成"
 
 # 运行测试
 test:
@@ -91,7 +94,7 @@ vet:
 	@go vet ./...
 
 docker-build: init-config
-	@for target in gateway iam sys resource scheduler; do docker build --build-arg TARGET=$$target -t microservice-kit-native-$$target:verify . || exit 1; done
+	@for target in gateway iam sys resource realtime scheduler; do docker build --build-arg TARGET=$$target -t microservice-kit-native-$$target:verify . || exit 1; done
 
 verify: test vet test-race proto-check swagger-check
 

@@ -74,7 +74,7 @@ func main() {
 		exitCode = 1
 		return
 	}
-	if err := cont.RegisterModules(ctx, modules.NewSMSModule(), modules.NewEmailModule(), modules.NewWeChatModule(), modules.NewCaptchaModule(), modules.NewWebSocketModule(cfg.WebSocket.Enabled)); err != nil {
+	if err := cont.RegisterModules(ctx, modules.NewSMSModule(), modules.NewEmailModule(), modules.NewWeChatModule(), modules.NewCaptchaModule()); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		exitCode = 1
 		return

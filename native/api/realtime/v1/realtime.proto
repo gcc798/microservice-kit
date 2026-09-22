@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package microservice_kit.realtime.v1;
+
+option go_package = "github.com/gcc798/microservice-kit/internal/api/realtime/v1;realtimev1";
+
+// RealtimeService 提供面向用户的实时消息发布能力。
+service RealtimeService {
+  // PublishToUsers 向指定用户的全部在线连接发布同一条消息。
+  rpc PublishToUsers(PublishToUsersRequest) returns (PublishToUsersResponse);
+}
+
+// PublishToUsersRequest 是批量用户消息发布请求。
+message PublishToUsersRequest {
+  // user_ids 是目标用户 ID 列表，服务端会去重并校验正数。
+  repeated int64 user_ids = 1;
+  // type 是客户端识别的消息类型。
+  string type = 2;
+  // data_json 是业务数据的 JSON 编码。
+  bytes data_json = 3;
+}
+
+// PublishToUsersResponse 表示消息已接受并发布到 Realtime 集群。
+message PublishToUsersResponse {}

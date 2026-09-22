@@ -22,6 +22,7 @@ services:
       iam: { condition: service_healthy }
       sys: { condition: service_healthy }
       resource: { condition: service_healthy }
+      realtime: { condition: service_healthy }
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "-O", "/dev/null", "http://127.0.0.1:9009/health/live"]
       interval: 5s
@@ -95,6 +96,29 @@ services:
       consul: { condition: service_healthy }
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "-O", "/dev/null", "http://127.0.0.1:9012/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  realtime:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args: { TARGET: realtime }
+    environment:
+      <<: *registry-environment
+      MS_K_APP_ENV: prod
+      MS_K_SERVER_PORT: 9013
+      MS_K_GRPC_PORT: 9113
+      MS_K_REDIS_ADDR: redis:6379
+      MS_K_REDIS_PASSWORD: "${MS_K_REDIS_PASSWORD:-123456}"
+    depends_on:
+      redis: { condition: service_healthy }
+      consul: { condition: service_healthy }
+      iam: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "-O", "/dev/null", "http://127.0.0.1:9013/health/ready"]
       interval: 5s
       timeout: 3s
       retries: 20

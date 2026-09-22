@@ -1,0 +1,31 @@
+server:
+  port: 9013
+
+grpc:
+  port: 9113
+
+registry:
+  driver: consul
+  address: http://127.0.0.1:8500
+
+service:
+  id: ""
+  advertiseHost: 127.0.0.1
+
+redis:
+  addr: 127.0.0.1:6379
+  password: "123456"
+  db: 0
+
+auth:
+  tokenHeader: Authorization
+
+cors:
+  enabled: false
+
+websocket:
+  timeoutEnabled: true
+  readTimeoutSeconds: 60
+  writeTimeoutSeconds: 10
+  heartbeatEnabled: true
+  maxReadTimeouts: 3

@@ -40,6 +40,16 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
+  name: microservice-kit-realtime
+spec:
+  selector: { app: microservice-kit-realtime }
+  ports:
+    - { name: http, port: 9013, targetPort: http }
+    - { name: grpc, port: 9113, targetPort: grpc }
+---
+apiVersion: v1
+kind: Service
+metadata:
   name: microservice-kit-consul
 spec:
   selector: { app: microservice-kit-consul }

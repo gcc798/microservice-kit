@@ -14,6 +14,7 @@ import (
 	"time"
 
 	iamv1 "github.com/gcc798/microservice-kit/internal/api/iam/v1"
+	realtimev1 "github.com/gcc798/microservice-kit/internal/api/realtime/v1"
 	resourcev1 "github.com/gcc798/microservice-kit/internal/api/resource/v1"
 	sysv1 "github.com/gcc798/microservice-kit/internal/api/sys/v1"
 	_ "github.com/gcc798/microservice-kit/internal/openapi"
@@ -40,7 +41,7 @@ type routeTarget struct {
 	instances []registry.ServiceInstance
 }
 
-var routedServices = []string{iamv1.ServiceName, sysv1.ServiceName, resourcev1.ServiceName}
+var routedServices = []string{iamv1.ServiceName, sysv1.ServiceName, resourcev1.ServiceName, realtimev1.ServiceName}
 
 func (g *gateway) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	if request.URL.Path == "/health" || strings.HasPrefix(request.URL.Path, "/health/") {
@@ -59,7 +60,7 @@ func (g *gateway) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
 	}
 	if !publicPath(request.URL.Path) {
 		token := strings.TrimPrefix(request.Header.Get("Authorization"), "Bearer ")
-		if token == "" && request.URL.Path == "/resource/websocket" {
+		if token == "" && request.URL.Path == "/realtime/websocket" {
 			token = request.URL.Query().Get("Authorization")
 		}
 		claims, err := g.security.ValidateAccessToken(request.Context(), token)

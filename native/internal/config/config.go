@@ -22,6 +22,7 @@ const (
 	ServiceSystem      Service = "sys"
 	ServiceResource    Service = "resource"
 	ServiceScheduler   Service = "scheduler"
+	ServiceRealtime    Service = "realtime"
 	ServiceUserManager Service = "usermgr"
 )
 
@@ -108,7 +109,7 @@ func Load(configDir string, service Service) (*Config, *viper.Viper, error) {
 	if profile != "dev" && profile != "prod" {
 		return nil, nil, fmt.Errorf("%s must be dev or prod", AppEnvVar)
 	}
-	if service != ServiceGateway && service != ServiceIAM && service != ServiceSystem && service != ServiceResource && service != ServiceScheduler && service != ServiceUserManager {
+	if service != ServiceGateway && service != ServiceIAM && service != ServiceSystem && service != ServiceResource && service != ServiceScheduler && service != ServiceRealtime && service != ServiceUserManager {
 		return nil, nil, fmt.Errorf("unknown config service %q", service)
 	}
 	v := viper.New()
@@ -179,7 +180,13 @@ func requireExplicitConfiguration(v *viper.Viper, service Service) error {
 		keys = append(keys, "redis.addr", "redis.password", "redis.db", "jwt.secret", "jwt.expire")
 		keys = append(keys, auth...)
 		keys = append(keys, "auth.allowConcurrent")
-		keys = append(keys, "websocket.enabled", "websocket.timeoutEnabled", "websocket.readTimeoutSeconds", "websocket.writeTimeoutSeconds", "websocket.heartbeatEnabled", "websocket.maxReadTimeouts")
+	case ServiceRealtime:
+		keys = append(keys, server...)
+		keys = append(keys, grpc...)
+		keys = append(keys, registry...)
+		keys = append(keys, "redis.addr", "redis.password", "redis.db")
+		keys = append(keys, auth...)
+		keys = append(keys, "websocket.timeoutEnabled", "websocket.readTimeoutSeconds", "websocket.writeTimeoutSeconds", "websocket.heartbeatEnabled", "websocket.maxReadTimeouts")
 	case ServiceSystem:
 		keys = append(keys, server...)
 		keys = append(keys, grpc...)
@@ -256,13 +263,13 @@ func environmentName(key string) string {
 }
 
 func (c *Config) Validate(profile string, service Service) error {
-	if service != ServiceGateway && c.Database.DSN == "" {
+	if service != ServiceGateway && service != ServiceRealtime && c.Database.DSN == "" {
 		return fmt.Errorf("database.dsn is required")
 	}
 	if service == ServiceUserManager {
 		return nil
 	}
-	if service != ServiceGateway {
+	if service != ServiceGateway && service != ServiceRealtime {
 		if c.Database.MaxOpenConns < 1 || c.Database.MaxIdleConns < 0 || c.Database.MaxIdleConns > c.Database.MaxOpenConns {
 			return fmt.Errorf("database connection limits are invalid")
 		}
@@ -275,7 +282,7 @@ func (c *Config) Validate(profile string, service Service) error {
 			return fmt.Errorf("server.port must be between 1 and 65535")
 		}
 	}
-	if (service == ServiceIAM || service == ServiceSystem || service == ServiceResource) && (c.GRPC.Port < 1 || c.GRPC.Port > 65535) {
+	if (service == ServiceIAM || service == ServiceSystem || service == ServiceResource || service == ServiceRealtime) && (c.GRPC.Port < 1 || c.GRPC.Port > 65535) {
 		return fmt.Errorf("grpc.port must be between 1 and 65535")
 	}
 	switch c.Registry.Driver {
@@ -306,10 +313,10 @@ func (c *Config) Validate(profile string, service Service) error {
 		}
 		return nil
 	}
-	if (service == ServiceIAM || service == ServiceSystem) && c.Redis.Addr == "" {
+	if (service == ServiceIAM || service == ServiceSystem || service == ServiceRealtime) && c.Redis.Addr == "" {
 		return fmt.Errorf("redis.addr is required")
 	}
-	if (service == ServiceIAM || service == ServiceSystem) && c.Redis.DB < 0 {
+	if (service == ServiceIAM || service == ServiceSystem || service == ServiceRealtime) && c.Redis.DB < 0 {
 		return fmt.Errorf("redis.db cannot be negative")
 	}
 	if c.Auth.TokenHeader == "" {
@@ -322,6 +329,8 @@ func (c *Config) Validate(profile string, service Service) error {
 		if c.JWT.Expire < 1 {
 			return fmt.Errorf("jwt.expire must be positive")
 		}
+	}
+	if service == ServiceRealtime {
 		if c.WebSocket.ReadTimeoutSeconds < 1 || c.WebSocket.WriteTimeoutSeconds < 1 || c.WebSocket.MaxReadTimeouts < 1 {
 			return fmt.Errorf("websocket timeouts and retry limit must be positive")
 		}

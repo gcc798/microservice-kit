@@ -18,28 +18,29 @@ export MS_K_APP_ENV=dev
 go run ./application/iam
 ```
 
-网关负责统一 HTTP/WS 接入，IAM/SYS/Resource 各自提供 HTTP 与 gRPC；Scheduler、定时任务和常驻后台协程由独立进程运行：
+网关负责统一 HTTP/WS 接入，IAM/SYS/Resource/Realtime 各自提供 HTTP 与 gRPC；Scheduler、定时任务和常驻后台协程由独立进程运行：
 
 ```bash
 cd native
 go run ./application/scheduler
 ```
 
-生产环境使用 `gateway + iam + sys + resource + scheduler` 五进程拓扑；Scheduler 默认运行一个副本。
+生产环境使用 `gateway + iam + sys + resource + realtime + scheduler` 六进程拓扑；Scheduler 默认运行一个副本，Realtime 可运行多个副本。
 
-本地启动微服务时先启动 PostgreSQL、Redis、RustFS 与 Consul，然后分别运行以下进程。默认 HTTP 端口为 gateway `9009`、iam `9010`、sys `9011`、resource `9012`，gRPC 端口依次为 `9110`、`9111`、`9112`。
+本地启动微服务时先启动 PostgreSQL、Redis、RustFS 与 Consul，然后分别运行以下进程。默认 HTTP 端口为 gateway `9009`、iam `9010`、sys `9011`、resource `9012`、realtime `9013`，gRPC 端口依次为 `9110`、`9111`、`9112`、`9113`。
 
 ```bash
 go run ./application/iam
 go run ./application/sys
 go run ./application/resource
+go run ./application/realtime
 go run ./application/gateway
 go run ./application/scheduler
 ```
 
 服务间契约在 `api/<domain>/v1/*.proto`；修改后运行 `make proto`，`make verify` 会检查生成文件是否最新。默认注册中心为 Consul `http://127.0.0.1:8500`。注册中心支持 `consul`、`etcd` 和 `nacos`：etcd 使用 `MS_K_REGISTRY_PREFIX` 作为注册 key 前缀；Nacos 地址形如 `http://127.0.0.1:8848/nacos`，可选 namespace、group 和账号配置见 [`docs/configuration.md`](docs/configuration.md)。
 
-IAM、SYS、Resource 会把 Echo 中实际注册的业务 HTTP method/path 随实例写入注册中心。Gateway 启动时加载路由并每 5 秒刷新；RESTful 参数路由按 Echo 的 `:param`/`*` 语义匹配，新增或删除接口无需再修改 Gateway。`/health/*` 与 `/metrics` 不作为前端路由发布；Prometheus 应通过 Consul、Kubernetes 等服务发现直接抓取每个实例的 `/metrics`。
+IAM、SYS、Resource、Realtime 会把实际注册的业务 HTTP method/path 随实例写入注册中心。Gateway 启动时加载路由并每 5 秒刷新；RESTful 参数路由按 Echo 的 `:param`/`*` 语义匹配，新增或删除接口无需再修改 Gateway。`/health/*` 与 `/metrics` 不作为前端路由发布；Prometheus 应通过 Consul、Kubernetes 等服务发现直接抓取每个实例的 `/metrics`。
 
 `MS_K_APP_ENV` 必须显式设置为 `dev` 或 `prod`，用于在具体服务目录中选择 `conf.dev.yaml` 或 `conf.prod.yaml`。程序不会读取 `*.example.yaml`。配置没有代码默认值；每个服务使用的键必须在 YAML 或对应的 `MS_K_*` 环境变量中显式出现，环境变量优先于 YAML。
 
@@ -90,7 +91,7 @@ make verify # go test、go vet、race、Swagger freshness
 make ci     # verify + Docker build
 ```
 
-`make build` 构建 gateway、iam、sys、resource 和 scheduler 五个进程。
+`make build` 构建 gateway、iam、sys、resource、realtime 和 scheduler 六个进程。
 
 涉及通用工具、配置、认证基础设施和中间件的改动必须补充单元测试。controller 与 `application/<service>/internal/domain` 中的具体业务逻辑不强制单测，可按风险补充集成或契约测试。
 
@@ -102,15 +103,15 @@ export MS_K_JWT_SECRET='replace-with-at-least-32-random-characters'
 docker compose up -d --build
 ```
 
-所有进程使用根目录唯一的 `Dockerfile`，通过 `TARGET=gateway|iam|sys|resource|scheduler` 选择构建入口。例如：
+所有进程使用根目录唯一的 `Dockerfile`，通过 `TARGET=gateway|iam|sys|resource|realtime|scheduler` 选择构建入口。例如：
 
 ```bash
 docker build --build-arg TARGET=scheduler -t microservice-kit-native-scheduler .
 ```
 
-Compose 默认启动 Consul、gateway、iam、sys、resource、scheduler、PostgreSQL、Redis 和 RustFS，即完整微服务形态。Consul UI/API 映射到宿主机 `8501`，所有前端 HTTP 请求统一进入 gateway 的 `9009`。
+Compose 默认启动 Consul、gateway、iam、sys、resource、realtime、scheduler、PostgreSQL、Redis 和 RustFS，即完整微服务形态。Consul UI/API 映射到宿主机 `8501`，所有前端 HTTP/WS 请求统一进入 gateway 的 `9009`。
 
-启动固定的本地扩容拓扑（Gateway 1、Scheduler 1、IAM 3、SYS 5、Resource 1）：
+启动固定的本地扩容拓扑（Gateway 1、Scheduler 1、IAM 3、SYS 5、Resource 1、Realtime 2）：
 
 ```bash
 export MS_K_JWT_SECRET='replace-with-at-least-32-random-characters'
@@ -123,15 +124,15 @@ Consul 服务列表访问 `http://localhost:8501/ui/dc1/services`。容器入口
 
 PostgreSQL、Redis 和 RustFS 带有本地默认值；需要覆盖时使用 `MS_K_POSTGRES_PASSWORD`、`MS_K_REDIS_PASSWORD` 和 `MS_K_RUSTFS_*`。RustFS 提供 S3 兼容对象存储；resource 启动时会检查并按需创建 `microservice-kit` Bucket。
 
-Kubernetes 清单位于 `k8s/`，包含上述五个服务进程、Scheduler、持久化单节点 Consul、ClusterIP、Ingress 和 gateway HPA。部署前需替换镜像名并基于 `k8s/secret.yaml.example` 创建 Secret；PostgreSQL、Redis 和 RustFS 服务地址按现有 ConfigMap 接入。
+Kubernetes 清单位于 `k8s/`，包含上述六个服务进程、Scheduler、持久化单节点 Consul、ClusterIP、Ingress 和 gateway HPA。部署前需替换镜像名并基于 `k8s/secret.yaml.example` 创建 Secret；PostgreSQL、Redis 和 RustFS 服务地址按现有 ConfigMap 接入。
 
-当前 WebSocket Hub 位于 IAM 进程内，因此 IAM 清单固定为一个副本；gateway 可独立水平扩容。需要 IAM 多副本时，先增加 Redis Pub/Sub 跨实例广播，再调整 IAM 副本数。
+当前 WebSocket Hub 已迁移到 Realtime 进程。Realtime 实例通过 Redis Pub/Sub 广播消息，IAM 不再持有长连接，可以独立水平扩容。
 
 ## 代码边界
 
 ```text
 application/gateway    HTTP/WS 反向代理、鉴权和服务发现入口
-application/{iam,sys,resource}  独立领域服务入口及各自 internal 业务代码
+application/{iam,sys,resource,realtime}  独立领域服务入口及各自 internal 业务代码
 application/scheduler  Scheduler 入口与 Job 定义
 cmd/usermgr            一次性管理工具
 api                    Proto 源文件
