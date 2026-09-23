@@ -1,48 +1,36 @@
 # Native Proto/gRPC 开发约定
 
-本文是 `native` 的 Proto 契约说明，供开发者和代码 agent 修改内部 gRPC 接口时使用。
+Proto 是跨进程契约；业务代码通过手写适配层和最小 API 接口使用 gRPC，不直接保存连接或硬编码服务地址。
 
-## 目录边界
+## 目录和职责
 
-- `api/<service>/v1/*.proto`：手写的稳定契约，只放服务对外提供的 gRPC service、RPC、message 和字段。
-- `internal/api/<service>/v1/*.pb.go`：`protoc-gen-go` 生成的 message 代码。
-- `internal/api/<service>/v1/*_grpc.pb.go`：`protoc-gen-go-grpc` 生成的 client、server interface 和注册描述。
-- `internal/api/<service>/v1/contracts.go`：手写的 Go 适配层。`Remote` 通过服务发现获取连接，`API` 是业务代码依赖的最小接口。
-- `application/<service>/internal/domain/rpc.go`：服务端把领域 API 适配为生成的 gRPC server interface。
+```text
+api/<service>/v1/*.proto                 手写跨进程契约
+internal/api/<service>/v1/*.pb.go        protoc-gen-go 生成代码
+internal/api/<service>/v1/*_grpc.pb.go   gRPC 客户端、服务端和注册描述
+internal/api/<service>/v1/contracts.go   手写 Remote 和最小 API 适配层
+application/<service>/internal/domain/rpc.go  领域服务到 gRPC 的适配
+internal/transport                         服务端生命周期和动态 Client Pool
+```
 
-当前契约归属如下：
+当前跨进程契约：
 
-| Proto | 服务名 | 实现位置 |
+| Proto | 服务 | 服务端实现 |
 | --- | --- | --- |
-| `api/iam/v1/iam.proto` | `iam` | `application/iam/internal/domain/rpc.go` |
-| `api/sys/v1/sys.proto` | `sys` | `application/sys/internal/domain/rpc.go` |
-| `api/resource/v1/resource.proto` | `resource` | `application/resource/internal/domain/rpc.go` |
+| `api/iam/v1/iam.proto` | IAM | `application/iam/internal/domain/rpc.go` |
+| `api/sys/v1/sys.proto` | SYS | `application/sys/internal/domain/rpc.go` |
+| `api/resource/v1/resource.proto` | Resource | `application/resource/internal/domain/rpc.go` |
+| `api/realtime/v1/realtime.proto` | Realtime | `application/realtime/internal/domain/rpc.go` |
 
 ## 编写规则
 
-1. 文件使用 `syntax = "proto3"`，包名使用 `microservice-kit.<service>.v1`。
-2. `go_package` 必须指向 `github.com/gcc798/microservice-kit/internal/api/<service>/v1`，并使用稳定的别名，例如 `iamv1`。
-3. 每个 `service`、每个 `rpc`、每个 `message` 以及每个 message 字段都必须紧邻写一行 `//` 注释。注释说明业务含义；有单位、状态值或约束时一并写明。
-4. 字段编号一旦发布就不能复用或改变含义。删除字段使用 `reserved` 保留编号和名称。
-5. 优先新增字段保持向后兼容；不要为了重命名、换类型或调整语义直接复用旧编号。破坏性变更应新建 `v2` 包。
-6. Proto 只描述跨进程契约，不放数据库模型、HTTP DTO 或实现细节。
-7. 不要手工编辑 `*.pb.go` 和 `*_grpc.pb.go`。
-
-示例：
-
-```proto
-// IAMService 提供身份认证和权限校验的内部 gRPC 能力。
-service IAMService {
-  // CheckPermission 校验用户是否拥有指定资源和动作的权限。
-  rpc CheckPermission(CheckPermissionRequest) returns (CheckPermissionResponse);
-}
-
-// CheckPermissionRequest 是权限校验请求。
-message CheckPermissionRequest {
-  // user_id 是待校验权限的用户 ID。
-  int64 user_id = 1;
-}
-```
+1. 使用 `syntax = "proto3"`，包名为 `microservice_kit.<service>.v1`。
+2. `go_package` 指向 `github.com/gcc798/microservice-kit/internal/api/<service>/v1`，并使用稳定别名。
+3. `service`、`rpc`、`message` 和字段都要紧邻中文注释；单位、状态值和约束一并说明。
+4. 已发布字段编号不能复用或改变语义；删除字段使用 `reserved`。
+5. 破坏性契约变更新建 `v2` 包，不在旧包中改语义。
+6. Proto 不放数据库模型、HTTP DTO 或实现细节。
+7. 不手工修改 `*.pb.go` 和 `*_grpc.pb.go`。
 
 ## 生成代码
 
@@ -50,79 +38,46 @@ message CheckPermissionRequest {
 
 ```bash
 make proto
+make proto-check
 ```
 
-该命令等价于：
-
-```bash
-protoc -I . \
-  --go_out=. --go_opt=module=github.com/gcc798/microservice-kit \
-  --go-grpc_out=. --go-grpc_opt=module=github.com/gcc798/microservice-kit \
-  api/iam/v1/iam.proto api/sys/v1/sys.proto api/resource/v1/resource.proto
-```
-
-生成文件落在 `native/internal/api/<service>/v1/`。新增或修改 Proto 文件时，要同步把文件加入 `native/Makefile` 的 `proto` 和 `proto-check` 目标；生成器版本以本机安装的 `protoc`、`protoc-gen-go`、`protoc-gen-go-grpc` 为准。
+生成器使用本机的 `protoc`、`protoc-gen-go` 和 `protoc-gen-go-grpc`。新增 Proto 文件时必须同步更新 `native/Makefile` 的生成目标。
 
 ## 服务端注册
 
-服务入口先创建注册中心管理的 gRPC server，再注册生成的实现：
+IAM、SYS、Resource、Realtime 都由各自组合根创建注册中心管理的 gRPC 服务：
 
 ```go
 grpcServer, err := transport.StartRegisteredGRPC(ctx, registry, transport.RegisteredGRPCOptions{
-	GRPCPort: cfg.GRPC.Port, HTTPPort: cfg.Server.Port, ServiceID: cfg.Service.ID,
-	ServiceName: iamv1.ServiceName, AdvertiseHost: cfg.Service.AdvertiseHost,
+	GRPCPort: cfg.GRPC.Port,
+	HTTPPort: cfg.Server.Port,
+	ServiceID: cfg.Service.ID,
+	ServiceName: serviceName,
+	AdvertiseHost: cfg.Service.AdvertiseHost,
+	Routes: routes,
 }, func(server *grpc.Server) {
-	iamv1.RegisterIAMServiceServer(server, iam.NewGRPCServer(security))
+	// 在此注册当前服务的生成 gRPC 实现。
 })
-if err != nil {
-	return err
-}
-defer grpcServer.Stop(shutdown)
 ```
 
-对应入口是 `application/iam/main.go`、`application/sys/main.go` 和 `application/resource/main.go`。`StartRegisteredGRPC` 只接收 gRPC 端口和服务注册参数，会把 HTTP/gRPC endpoint 注册到配置的 Consul、etcd 或 in-process 注册中心，并在退出时注销。
+`StartRegisteredGRPC` 只接受 gRPC 端口、HTTP 端口、实例信息和路由，不依赖共享全量配置。退出时 `RegisteredGRPC.Stop` 先注销实例，再优雅停止服务端。
 
 ## 客户端调用
 
-业务代码依赖 `contracts.go` 暴露的 `API`，不直接保存连接，也不绕过服务发现：
-
 ```go
-reg, err := registry.New(cfg.Registry.Driver, cfg.Registry.Address, cfg.Registry.Prefix)
-if err != nil {
+pool := transport.NewClientPool(registry)
+defer pool.Close()
+systemAPI := sysv1.NewRemote(pool)
+if err := systemAPI.RecordLogin(ctx, request); err != nil {
 	return err
 }
-pool := transport.NewClientPool(reg)
-defer pool.Close()
-
-systemAPI := sysv1.NewRemote(pool)
-err = systemAPI.RecordLogin(ctx, request)
 ```
 
-`Remote` 内部调用 `pool.Conn(ctx, service)`，从注册中心选择健康实例并缓存 gRPC connection；生成的 `NewSystemServiceClient`、`NewIAMServiceClient` 和 `NewResourceServiceClient` 只在适配层使用。
+`Remote` 通过 `ClientPool.Conn` 查询健康实例并复用连接。Gateway 使用 IAM Remote 校验令牌；SYS 和 Resource 使用 IAM Remote 做权限检查；SYS、Resource 通过 Realtime gRPC 发布实时消息。业务代码不直接依赖 Redis Pub/Sub。
 
-- Gateway 通过 `iamv1.NewRemote(pool)` 校验访问令牌。
-- SYS 和 Resource 的清理 Worker 直接调用各自领域服务，不经过 gRPC。
-- SYS、Resource 服务也通过同样的 IAM Remote 做权限校验。
+## 修改闭环
 
-## 修改流程和闭环检查
-
-1. 先修改 `api/<service>/v1/*.proto`，为所有新增声明写注释，并确认字段编号没有冲突。
-2. 执行 `make proto` 重新生成代码；不要直接修改生成文件。
-3. 在 `contracts.go` 更新业务适配接口，在目标服务的 `internal/domain/rpc.go` 更新 server 实现和注册逻辑。
-4. 执行以下检查：
-
-```bash
-make proto-check  # 生成结果与已提交文件一致，同时检查生成器输出
-go test ./...     # 包含 Proto 注释规则测试
-make verify       # test、vet、race、proto-check、swagger-check
-```
-
-5. 查看 `git diff --check`，确认只包含预期的 Proto、手写适配和生成文件变化。
-
-### Agent 修改清单
-
-- [ ] 找到正确的服务 Proto 和对应的 domain RPC 实现。
-- [ ] service、rpc、message、字段都有紧邻 `//` 注释。
-- [ ] 未复用已发布字段编号，未手改生成文件。
-- [ ] 已执行 `make proto`、`make proto-check` 和 `go test ./...`。
-- [ ] 客户端通过 `Remote`/`ClientPool` 使用服务发现，未硬编码服务地址。
+1. 修改正确服务的 Proto，并补齐新增声明的中文注释。
+2. 执行 `make proto`，不要手工编辑生成文件。
+3. 更新 `contracts.go` 和目标服务 `internal/domain/rpc.go`。
+4. 执行 `make proto-check`、`go test ./...`、`make verify` 和 `git diff --check`。

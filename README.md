@@ -12,6 +12,8 @@
 
 地图只描述 `native` 的真实能力边界，不把 Kratos / go-zero 的包结构当成业务能力。源规格见 [system-capability-map/system-capability-map.json](system-capability-map/system-capability-map.json)。
 
+架构原则、轻量 DDD 使用范围、组合根和部署边界见 [native/docs/architecture.md](native/docs/architecture.md)。
+
 ## 能力与边界
 
 ```text
@@ -72,6 +74,8 @@ SYS / Resource
 `PublishToUsers` 是尽力而为的实时提醒，不代表客户端已经收到。不能丢失的通知由所属领域持久化，客户端重连后通过领域 API 查询最终状态。业务服务依赖 Realtime gRPC，不直接依赖 Redis channel。
 
 渐进拆分沿事务、数据所有权和独立部署边界进行。每个领域服务在自己的 `internal/` 中拥有业务代码、数据模型和 Goose 迁移；不按 controller 数量拆服务，也不提前引入共享业务层或分布式事务。
+
+Native 使用轻量 DDD：限界上下文、事务不变量、领域服务和跨进程契约必须明确；简单 CRUD 不强制套用聚合、仓储接口或命令对象。每个进程由自己的 `internal/bootstrap` 作为组合根，根 `internal` 只保留跨进程共享技术设施。
 
 ## 工程组成
 

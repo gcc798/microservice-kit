@@ -1,198 +1,139 @@
-# Native 配置与环境变量
+# Native 配置说明
 
-本文记录 `native` 各进程实际读取的配置和可用环境变量。配置事实以 `internal/config/config.go` 和各服务的 `conf.example.yaml` 为准。
+本文以当前代码为准，说明五类进程的配置文件、环境变量和启动约束。配置加载器位于 `internal/config`，每个服务的完整配置类型位于自己的 `application/<service>/internal/config`。
 
 ## 加载规则
 
-1. 每个进程都必须通过环境变量显式设置 `MS_K_APP_ENV=dev` 或 `MS_K_APP_ENV=prod`。
-2. 程序据此读取当前服务目录的 `conf.dev.yaml` 或 `conf.prod.yaml`，不会读取 `conf.example.yaml`。
-3. Git 只管理 `conf.example.yaml`。执行 `make init-config` 可创建缺失的 dev/prod 文件，已有文件不会被覆盖。
-4. `conf.<env>.yaml` 提供完整配置；同名且非空的 `MS_K_*` 环境变量覆盖 YAML，适合容器地址和密钥注入。空环境变量不会清空 YAML 值。
-5. 配置没有代码默认值。服务拥有的每个键必须在 YAML 或环境变量中出现；允许空值的键必须在 YAML 中显式声明。
-6. 环境变量布尔值使用 `true`/`false`，整数使用十进制数字。
+1. 必须设置 `MS_K_APP_ENV=dev` 或 `MS_K_APP_ENV=prod`。
+2. 服务只读取自身目录的 `conf.dev.yaml` 或 `conf.prod.yaml`，不会读取 `conf.example.yaml`。
+3. 执行 `make init-config` 可从模板创建缺失的 dev/prod 文件，已有文件不会覆盖。
+4. 非空的 `MS_K_*` 环境变量覆盖 YAML；空值不会覆盖 YAML。布尔值使用 `true`/`false`，整数使用十进制。
+5. 配置没有隐式业务默认值。服务实际使用的键必须在 YAML 或环境变量中显式出现；允许空值的键也必须在 YAML 中声明。
+6. `zaplogger.dev.yaml` 和 `zaplogger.prod.yaml` 只从文件加载，不接受字段级环境变量覆盖。
 
-`zaplogger.dev.yaml` 和 `zaplogger.prod.yaml` 只从文件加载，目前不支持字段级环境变量覆盖。对日志配置而言，`MS_K_APP_ENV` 只负责选择文件。
-
-## 公共变量
-
-以下变量被多个服务使用，具体归属以各服务章节为准。
+## 共享配置段
 
 | YAML 键 | 环境变量 | 说明 |
 | --- | --- | --- |
-| `registry.driver` | `MS_K_REGISTRY_DRIVER` | 注册中心驱动：`consul`、`etcd`、`nacos` 或 `inprocess`。跨进程部署使用前三者。 |
-| `registry.address` | `MS_K_REGISTRY_ADDRESS` | 注册中心地址；Nacos 支持逗号分隔多个地址，例如 `http://nacos:8848/nacos`。 |
-| `registry.prefix` | `MS_K_REGISTRY_PREFIX` | etcd 服务注册 key 前缀，其他驱动不使用。 |
-| `registry.namespace` | `MS_K_REGISTRY_NAMESPACE` | 可选的 Nacos namespace ID；留空使用 public。 |
-| `registry.group` | `MS_K_REGISTRY_GROUP` | 可选的 Nacos group；留空使用 `DEFAULT_GROUP`。 |
-| `registry.username` | `MS_K_REGISTRY_USERNAME` | 可选的 Nacos 用户名。 |
-| `registry.password` | `MS_K_REGISTRY_PASSWORD` | 可选的 Nacos 密码，生产环境从 Secret 注入。 |
-| `database.dsn` | `MS_K_DATABASE_DSN` | PostgreSQL DSN，包含主机、账号、数据库、端口等连接信息。 |
+| `registry.driver` | `MS_K_REGISTRY_DRIVER` | `consul`、`etcd`、`nacos` 或测试用 `inprocess`。 |
+| `registry.address` | `MS_K_REGISTRY_ADDRESS` | 注册中心地址；Nacos 可使用逗号分隔的地址列表。 |
+| `registry.prefix` | `MS_K_REGISTRY_PREFIX` | etcd 注册键前缀。 |
+| `registry.namespace` | `MS_K_REGISTRY_NAMESPACE` | Nacos 命名空间。 |
+| `registry.group` | `MS_K_REGISTRY_GROUP` | Nacos 服务分组。 |
+| `registry.username` / `registry.password` | `MS_K_REGISTRY_USERNAME` / `MS_K_REGISTRY_PASSWORD` | Nacos 认证信息。 |
+| `server.port` | `MS_K_SERVER_PORT` | HTTP 监听端口，范围 1-65535。 |
+| `grpc.port` | `MS_K_GRPC_PORT` | IAM、SYS、Resource、Realtime 的 gRPC 监听端口。 |
+| `service.id` | `MS_K_SERVICE_ID` | 注册中心实例 ID；留空时按服务名和主机名生成。 |
+| `service.advertiseHost` | `MS_K_SERVICE_ADVERTISE_HOST` | 写入注册中心、供其他实例访问的地址，不是监听地址。 |
+| `database.dsn` | `MS_K_DATABASE_DSN` | PostgreSQL 连接串。 |
 | `database.maxOpenConns` | `MS_K_DATABASE_MAX_OPEN_CONNS` | 最大打开连接数，必须大于 0。 |
-| `database.maxIdleConns` | `MS_K_DATABASE_MAX_IDLE_CONNS` | 最大空闲连接数，范围为 0 到最大打开连接数。 |
-| `database.connMaxLifetimeMinutes` | `MS_K_DATABASE_CONN_MAX_LIFETIME_MINUTES` | 单连接最大存活时间，单位为分钟，必须大于 0。 |
-| `database.slowThreshold` | `MS_K_DATABASE_SLOW_THRESHOLD` | 慢 SQL 阈值，单位为毫秒，必须大于 0。 |
+| `database.maxIdleConns` | `MS_K_DATABASE_MAX_IDLE_CONNS` | 最大空闲连接数，不能超过最大打开连接数。 |
+| `database.connMaxLifetimeMinutes` | `MS_K_DATABASE_CONN_MAX_LIFETIME_MINUTES` | 连接最大存活时间，单位为分钟。 |
+| `database.slowThreshold` | `MS_K_DATABASE_SLOW_THRESHOLD` | 慢 SQL 阈值，单位为毫秒。 |
+| `redis.addr` | `MS_K_REDIS_ADDR` | Redis 地址。 |
+| `redis.password` | `MS_K_REDIS_PASSWORD` | Redis 密码；无密码时显式设置为空字符串。 |
+| `redis.db` | `MS_K_REDIS_DB` | Redis 逻辑库编号，不能为负数。 |
+| `auth.tokenHeader` | `MS_K_AUTH_TOKEN_HEADER` | 访问令牌请求头名称，通常为 `Authorization`。 |
+| `cors.enabled` | `MS_K_CORS_ENABLED` | 是否启用跨域；生产环境建议关闭。 |
 
 ## Gateway
 
-Gateway 只负责 HTTP/WS 接入、鉴权代理和服务发现，不连接数据库。
+Gateway 是唯一对外 HTTP/WS 入口，不连接数据库，不拥有业务数据。
 
 | YAML 键 | 环境变量 | 说明 |
 | --- | --- | --- |
-| `server.port` | `MS_K_SERVER_PORT` | Gateway HTTP 监听端口，范围 1-65535。 |
-| `server.tlsCertFile` | `MS_K_SERVER_TLS_CERT_FILE` | TLS 证书路径；不启用 TLS 时显式设为空字符串。 |
-| `server.tlsKeyFile` | `MS_K_SERVER_TLS_KEY_FILE` | TLS 私钥路径；必须和证书同时为空或同时非空。 |
-| `registry.driver` | `MS_K_REGISTRY_DRIVER` | 用于发现 IAM、SYS、Resource、Realtime。 |
-| `registry.address` | `MS_K_REGISTRY_ADDRESS` | 注册中心地址。 |
-| `registry.prefix` | `MS_K_REGISTRY_PREFIX` | 注册中心 key 前缀。 |
-| `service.id` | `MS_K_SERVICE_ID` | Gateway 注册中心实例 ID；允许显式留空后自动生成。 |
-| `service.advertiseHost` | `MS_K_SERVICE_ADVERTISE_HOST` | Gateway 注册的 HTTP 地址主机名或 IP；Docker 镜像未显式注入时使用当前容器 IP。 |
-| `gateway.rateLimitPerMinute` | `MS_K_GATEWAY_RATE_LIMIT_PER_MINUTE` | 单来源 IP 每分钟请求上限；`0` 表示不限制，不能为负数。 |
-| `cors.enabled` | `MS_K_CORS_ENABLED` | 是否允许跨域；生产环境必须为 `false`。 |
+| `server.tlsCertFile` | `MS_K_SERVER_TLS_CERT_FILE` | TLS 证书路径；与私钥必须同时为空或同时非空。 |
+| `server.tlsKeyFile` | `MS_K_SERVER_TLS_KEY_FILE` | TLS 私钥路径。 |
+| `gateway.rateLimitPerMinute` | `MS_K_GATEWAY_RATE_LIMIT_PER_MINUTE` | 单来源 IP 每分钟请求上限，`0` 表示不限制。 |
+
+Gateway 使用 `registry` 发现 IAM、SYS、Resource、Realtime，并根据服务实例发布的 HTTP 路由动态构建代理路由表。
 
 ## IAM
 
-IAM 提供认证授权 HTTP/gRPC 接口，拥有 IAM 数据、Redis 会话和 JWT 配置。
+IAM 拥有用户、角色、API 权限、登录会话和 JWT 能力，使用 PostgreSQL 与 Redis。
 
 | YAML 键 | 环境变量 | 说明 |
 | --- | --- | --- |
-| `server.port` | `MS_K_SERVER_PORT` | IAM HTTP 监听端口。 |
-| `grpc.port` | `MS_K_GRPC_PORT` | IAM gRPC 监听端口。 |
-| `service.id` | `MS_K_SERVICE_ID` | 注册中心实例 ID；可显式留空，由配置加载器按服务名和主机名生成。 |
-| `service.advertiseHost` | `MS_K_SERVICE_ADVERTISE_HOST` | 注册给其他进程访问的主机名或 IP，不是监听地址；Docker 镜像未显式注入时使用当前容器 IP。 |
-| `registry.driver` | `MS_K_REGISTRY_DRIVER` | 注册自身并发现 SYS。 |
-| `registry.address` | `MS_K_REGISTRY_ADDRESS` | 注册中心地址。 |
-| `registry.prefix` | `MS_K_REGISTRY_PREFIX` | 注册中心 key 前缀。 |
-| `database.dsn` | `MS_K_DATABASE_DSN` | IAM PostgreSQL DSN。 |
-| `database.maxOpenConns` | `MS_K_DATABASE_MAX_OPEN_CONNS` | IAM 数据库最大打开连接数。 |
-| `database.maxIdleConns` | `MS_K_DATABASE_MAX_IDLE_CONNS` | IAM 数据库最大空闲连接数。 |
-| `database.connMaxLifetimeMinutes` | `MS_K_DATABASE_CONN_MAX_LIFETIME_MINUTES` | 数据库连接最大存活分钟数。 |
-| `database.slowThreshold` | `MS_K_DATABASE_SLOW_THRESHOLD` | 慢 SQL 阈值，单位毫秒。 |
-| `redis.addr` | `MS_K_REDIS_ADDR` | Resource Worker 分布式抢占使用的 Redis 地址。 |
-| `redis.password` | `MS_K_REDIS_PASSWORD` | Redis 密码。 |
-| `redis.db` | `MS_K_REDIS_DB` | Redis DB。 |
-| `redis.addr` | `MS_K_REDIS_ADDR` | Redis 地址，例如 `redis:6379`。 |
-| `redis.password` | `MS_K_REDIS_PASSWORD` | Redis 密码；Redis 无密码时显式设为空字符串。 |
-| `redis.db` | `MS_K_REDIS_DB` | Redis DB 编号，不能为负数。 |
-| `jwt.secret` | `MS_K_JWT_SECRET` | JWT 签名密钥，至少 32 个字符；生产环境应从 Secret 注入。 |
-| `jwt.expire` | `MS_K_JWT_EXPIRE` | Access Token 有效期，单位秒，必须大于 0。 |
-| `auth.tokenHeader` | `MS_K_AUTH_TOKEN_HEADER` | 读取访问令牌的 HTTP Header 名，例如 `Authorization`。 |
-| `auth.allowConcurrent` | `MS_K_AUTH_ALLOW_CONCURRENT` | 是否允许同一用户保留多个并发登录会话。 |
-| `cors.enabled` | `MS_K_CORS_ENABLED` | 是否允许跨域；生产环境必须为 `false`。 |
+| `jwt.secret` | `MS_K_JWT_SECRET` | JWT 密钥，至少 32 个字符。 |
+| `jwt.expire` | `MS_K_JWT_EXPIRE` | Access Token 有效期，单位为秒，必须大于 0。 |
+| `auth.allowConcurrent` | `MS_K_AUTH_ALLOW_CONCURRENT` | 是否允许同一用户保留多个并发会话。 |
 
-## Realtime
-
-Realtime 提供用户 WebSocket 连接、心跳和 Redis Pub/Sub 跨实例消息投递，不连接数据库。它通过 IAM gRPC 校验握手 Token。
-
-| YAML 键 | 环境变量 | 说明 |
-| --- | --- | --- |
-| `server.port` | `MS_K_SERVER_PORT` | Realtime HTTP 监听端口。 |
-| `grpc.port` | `MS_K_GRPC_PORT` | Realtime gRPC 监听端口。 |
-| `service.id` | `MS_K_SERVICE_ID` | 注册中心实例 ID；允许显式留空后自动生成。 |
-| `service.advertiseHost` | `MS_K_SERVICE_ADVERTISE_HOST` | 注册给其他进程访问的主机名或 IP。 |
-| `registry.driver` | `MS_K_REGISTRY_DRIVER` | 注册自身并发现 IAM。 |
-| `registry.address` | `MS_K_REGISTRY_ADDRESS` | 注册中心地址。 |
-| `registry.prefix` | `MS_K_REGISTRY_PREFIX` | 注册中心 key 前缀。 |
-| `redis.addr` | `MS_K_REDIS_ADDR` | Redis 地址。 |
-| `redis.password` | `MS_K_REDIS_PASSWORD` | Redis 密码；无密码时显式设为空字符串。 |
-| `redis.db` | `MS_K_REDIS_DB` | Redis DB 编号，不能为负数。 |
-| `auth.tokenHeader` | `MS_K_AUTH_TOKEN_HEADER` | 读取 WebSocket 访问令牌的 Header 名；握手也兼容同名 query 参数。 |
-| `cors.enabled` | `MS_K_CORS_ENABLED` | 是否允许跨域 WebSocket Origin。 |
-| `websocket.timeoutEnabled` | `MS_K_WEBSOCKET_TIMEOUT_ENABLED` | 是否启用 WebSocket 读写超时控制。 |
-| `websocket.readTimeoutSeconds` | `MS_K_WEBSOCKET_READ_TIMEOUT_SECONDS` | WebSocket 读超时秒数，必须大于 0。 |
-| `websocket.writeTimeoutSeconds` | `MS_K_WEBSOCKET_WRITE_TIMEOUT_SECONDS` | WebSocket 写超时秒数，必须大于 0。 |
-| `websocket.heartbeatEnabled` | `MS_K_WEBSOCKET_HEARTBEAT_ENABLED` | 是否启用 WebSocket 心跳。 |
-| `websocket.maxReadTimeouts` | `MS_K_WEBSOCKET_MAX_READ_TIMEOUTS` | 连续读超时上限，必须大于 0。 |
+其余 `server`、`grpc`、`registry`、`service`、`database`、`redis`、`auth.tokenHeader`、`cors` 使用共享配置段。
 
 ## SYS
 
-SYS 提供系统配置和日志 HTTP/gRPC 接口，依赖 IAM 鉴权、PostgreSQL 和 Redis。
+SYS 拥有组织、菜单、字典、系统配置、登录日志和操作日志。它的私有 Worker 负责定期清理过期系统日志。
 
 | YAML 键 | 环境变量 | 说明 |
 | --- | --- | --- |
-| `server.port` | `MS_K_SERVER_PORT` | SYS HTTP 监听端口。 |
-| `grpc.port` | `MS_K_GRPC_PORT` | SYS gRPC 监听端口。 |
-| `service.id` | `MS_K_SERVICE_ID` | 注册中心实例 ID；允许显式留空后自动生成。 |
-| `service.advertiseHost` | `MS_K_SERVICE_ADVERTISE_HOST` | 其他进程访问 SYS 的主机名或 IP；Docker 镜像未显式注入时使用当前容器 IP。 |
-| `registry.driver` | `MS_K_REGISTRY_DRIVER` | 注册自身并发现 IAM。 |
-| `registry.address` | `MS_K_REGISTRY_ADDRESS` | 注册中心地址。 |
-| `registry.prefix` | `MS_K_REGISTRY_PREFIX` | 注册中心 key 前缀。 |
-| `database.dsn` | `MS_K_DATABASE_DSN` | SYS PostgreSQL DSN。 |
-| `database.maxOpenConns` | `MS_K_DATABASE_MAX_OPEN_CONNS` | SYS 数据库最大打开连接数。 |
-| `database.maxIdleConns` | `MS_K_DATABASE_MAX_IDLE_CONNS` | SYS 数据库最大空闲连接数。 |
-| `database.connMaxLifetimeMinutes` | `MS_K_DATABASE_CONN_MAX_LIFETIME_MINUTES` | 数据库连接最大存活分钟数。 |
-| `database.slowThreshold` | `MS_K_DATABASE_SLOW_THRESHOLD` | 慢 SQL 阈值，单位毫秒。 |
-| `redis.addr` | `MS_K_REDIS_ADDR` | Redis 地址。 |
-| `redis.password` | `MS_K_REDIS_PASSWORD` | Redis 密码；无密码时显式设为空字符串。 |
-| `redis.db` | `MS_K_REDIS_DB` | Redis DB 编号，不能为负数。 |
-| `auth.tokenHeader` | `MS_K_AUTH_TOKEN_HEADER` | 读取访问令牌的 HTTP Header 名。 |
-| `cors.enabled` | `MS_K_CORS_ENABLED` | 是否允许跨域；生产环境必须为 `false`。 |
+| `workers.logCleanup.enabled` | `MS_K_WORKERS_LOG_CLEANUP_ENABLED` | 是否启用日志清理。 |
+| `workers.logCleanup.cron` | `MS_K_WORKERS_LOG_CLEANUP_CRON` | 六段式 Cron 表达式。 |
+| `workers.logCleanup.retentionDays` | `MS_K_WORKERS_LOG_CLEANUP_RETENTION_DAYS` | 日志保留天数，必须大于 0。 |
+| `workers.logCleanup.lockTTLMinutes` | `MS_K_WORKERS_LOG_CLEANUP_LOCK_TTL_MINUTES` | Redis 抢占锁有效期，必须短于 Cron 周期。 |
 
 ## Resource
 
-Resource 提供资源 HTTP/gRPC 接口，依赖 IAM 鉴权、PostgreSQL 和 S3 兼容对象存储。
+Resource 拥有附件元数据和对象存储能力。它的私有 Worker 负责清理过期附件。
 
 | YAML 键 | 环境变量 | 说明 |
 | --- | --- | --- |
-| `server.port` | `MS_K_SERVER_PORT` | Resource HTTP 监听端口。 |
-| `grpc.port` | `MS_K_GRPC_PORT` | Resource gRPC 监听端口。 |
-| `service.id` | `MS_K_SERVICE_ID` | 注册中心实例 ID；允许显式留空后自动生成。 |
-| `service.advertiseHost` | `MS_K_SERVICE_ADVERTISE_HOST` | 其他进程访问 Resource 的主机名或 IP；Docker 镜像未显式注入时使用当前容器 IP。 |
-| `registry.driver` | `MS_K_REGISTRY_DRIVER` | 注册自身并发现 IAM、SYS。 |
-| `registry.address` | `MS_K_REGISTRY_ADDRESS` | 注册中心地址。 |
-| `registry.prefix` | `MS_K_REGISTRY_PREFIX` | 注册中心 key 前缀。 |
-| `database.dsn` | `MS_K_DATABASE_DSN` | Resource PostgreSQL DSN。 |
-| `database.maxOpenConns` | `MS_K_DATABASE_MAX_OPEN_CONNS` | Resource 数据库最大打开连接数。 |
-| `database.maxIdleConns` | `MS_K_DATABASE_MAX_IDLE_CONNS` | Resource 数据库最大空闲连接数。 |
-| `database.connMaxLifetimeMinutes` | `MS_K_DATABASE_CONN_MAX_LIFETIME_MINUTES` | 数据库连接最大存活分钟数。 |
-| `database.slowThreshold` | `MS_K_DATABASE_SLOW_THRESHOLD` | 慢 SQL 阈值，单位毫秒。 |
-| `storage.endpoint` | `MS_K_STORAGE_ENDPOINT` | S3 兼容服务地址，不包含协议，例如 `rustfs:9000`。 |
-| `storage.accessKey` | `MS_K_STORAGE_ACCESS_KEY` | 对象存储 Access Key；生产环境应从 Secret 注入。 |
-| `storage.secretKey` | `MS_K_STORAGE_SECRET_KEY` | 对象存储 Secret Key；生产环境应从 Secret 注入。 |
-| `storage.region` | `MS_K_STORAGE_REGION` | 对象存储区域，例如 `us-east-1`。 |
-| `storage.bucket` | `MS_K_STORAGE_BUCKET` | 附件 Bucket 名称。 |
-| `storage.useSSL` | `MS_K_STORAGE_USE_SSL` | 是否使用 TLS 连接对象存储。 |
-| `auth.tokenHeader` | `MS_K_AUTH_TOKEN_HEADER` | 读取访问令牌的 HTTP Header 名。 |
-| `cors.enabled` | `MS_K_CORS_ENABLED` | 是否允许跨域；生产环境必须为 `false`。 |
+| `storage.endpoint` | `MS_K_STORAGE_ENDPOINT` | S3 兼容服务地址，不含协议。 |
+| `storage.accessKey` | `MS_K_STORAGE_ACCESS_KEY` | 对象存储访问密钥标识。 |
+| `storage.secretKey` | `MS_K_STORAGE_SECRET_KEY` | 对象存储访问密钥。 |
+| `storage.region` | `MS_K_STORAGE_REGION` | 对象存储区域。 |
+| `storage.bucket` | `MS_K_STORAGE_BUCKET` | 附件存储桶。 |
+| `storage.useSSL` | `MS_K_STORAGE_USE_SSL` | 是否使用 TLS。 |
+| `workers.expiredAttachmentCleanup.enabled` | `MS_K_WORKERS_EXPIRED_ATTACHMENT_CLEANUP_ENABLED` | 是否启用附件清理。 |
+| `workers.expiredAttachmentCleanup.cron` | `MS_K_WORKERS_EXPIRED_ATTACHMENT_CLEANUP_CRON` | 六段式 Cron 表达式。 |
+| `workers.expiredAttachmentCleanup.lockTTLMinutes` | `MS_K_WORKERS_EXPIRED_ATTACHMENT_CLEANUP_LOCK_TTL_MINUTES` | Redis 抢占锁有效期，必须短于 Cron 周期。 |
+
+## Realtime
+
+Realtime 只拥有 WebSocket 连接、心跳和跨实例投递，不连接数据库。握手通过 IAM gRPC 校验令牌，实例之间通过 Redis Pub/Sub 广播。
+
+| YAML 键 | 环境变量 | 说明 |
+| --- | --- | --- |
+| `websocket.enabled` | `MS_K_WEBSOCKET_ENABLED` | 是否启用 WebSocket。 |
+| `websocket.timeoutEnabled` | `MS_K_WEBSOCKET_TIMEOUT_ENABLED` | 是否启用读写超时。 |
+| `websocket.readTimeoutSeconds` | `MS_K_WEBSOCKET_READ_TIMEOUT_SECONDS` | 读取超时秒数。 |
+| `websocket.writeTimeoutSeconds` | `MS_K_WEBSOCKET_WRITE_TIMEOUT_SECONDS` | 写入超时秒数。 |
+| `websocket.heartbeatEnabled` | `MS_K_WEBSOCKET_HEARTBEAT_ENABLED` | 是否启用心跳。 |
+| `websocket.maxReadTimeouts` | `MS_K_WEBSOCKET_MAX_READ_TIMEOUTS` | 连续读取超时上限。 |
+
+Realtime 还使用共享的 `server`、`grpc`、`registry`、`service`、`redis`、`auth` 和 `cors` 配置段。
 
 ## User Manager
 
-`cmd/usermgr` 是一次性管理工具，不是服务。默认读取 IAM 配置目录，但实际只使用数据库 DSN：
+`cmd/usermgr` 是一次性管理员维护工具，不是部署服务。它读取 IAM 配置目录，但实际只使用数据库连接和命令行操作参数。
 
-| 来源 | 变量 | 说明 |
-| --- | --- | --- |
-| 配置选择 | `MS_K_APP_ENV` | 选择 IAM 目录中的 `conf.dev.yaml` 或 `conf.prod.yaml`。 |
-| YAML 覆盖 | `MS_K_DATABASE_DSN` | 覆盖工具连接的 PostgreSQL DSN。 |
-| 工具输入 | `MS_K_USERMGR_PASSWORD` | 创建或重置的用户密码，至少 8 个字符；只能通过环境变量传入。 |
-
-## 容器注入示例
-
-```yaml
-environment:
-  MS_K_APP_ENV: prod
-  MS_K_SERVER_PORT: "9010"
-  MS_K_GRPC_PORT: "9110"
-  MS_K_SERVICE_ADVERTISE_HOST: iam
-  MS_K_REGISTRY_DRIVER: consul
-  MS_K_REGISTRY_ADDRESS: http://consul:8500
-  MS_K_DATABASE_DSN: "host=postgres user=postgres password=... dbname=microservice_kit port=5432 sslmode=disable"
-  MS_K_REDIS_ADDR: redis:6379
-  MS_K_JWT_SECRET: "从 Secret 注入至少 32 个字符的随机值"
+```bash
+export MS_K_APP_ENV=dev
+export MS_K_USERMGR_PASSWORD='至少 8 个字符的强密码'
+go run ./cmd/usermgr --operation=create --username=admin --nickname=管理员 --role=super_admin
+go run ./cmd/usermgr --operation=reset --username=admin
 ```
 
-环境变量只覆盖当前进程使用的配置。不要向 Gateway 注入数据库变量；未归属该进程的变量不会形成有效的服务配置。
+## OpenTelemetry 环境变量
 
-## OpenTelemetry 标准变量
-
-Gateway、IAM、SYS、Resource、Realtime 均初始化 OpenTelemetry Trace。这部分使用 OpenTelemetry SDK 标准环境变量，不属于 `MS_K_*` YAML 配置：
+以下变量由 OpenTelemetry SDK 读取，不属于 `MS_K_*` 配置：
 
 | 环境变量 | 说明 |
 | --- | --- |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | Collector 通用 OTLP 地址；不设置时不创建 exporter。 |
-| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | 仅 Trace 使用的 OTLP 地址，优先级高于通用地址。 |
-| `OTEL_EXPORTER_OTLP_PROTOCOL` | OTLP 协议；当前 exporter 使用 gRPC。 |
-| `OTEL_EXPORTER_OTLP_HEADERS` | Collector 要求认证时使用的请求 Header。 |
-| `OTEL_TRACES_SAMPLER` | Trace 采样器，例如 `parentbased_traceidratio`。 |
-| `OTEL_TRACES_SAMPLER_ARG` | 比例采样参数，例如 `0.1`。 |
-| `OTEL_TRACES_EXPORTER` | 设置为 `none` 时强制关闭 Trace 导出。 |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | 通用 OTLP gRPC 地址。 |
+| `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` | Trace 专用 OTLP 地址。 |
+| `OTEL_EXPORTER_OTLP_PROTOCOL` | 当前使用 gRPC。 |
+| `OTEL_EXPORTER_OTLP_HEADERS` | Collector 认证请求头。 |
+| `OTEL_TRACES_SAMPLER` / `OTEL_TRACES_SAMPLER_ARG` | Trace 采样器及参数。 |
+| `OTEL_TRACES_EXPORTER=none` | 强制关闭 Trace 导出。 |
 
-服务名、实例 ID 和 `dev`/`prod` 环境由各进程根据已有服务配置写入 OTel Resource，不通过 `OTEL_SERVICE_NAME` 重复配置。完整插桩边界和业务 Span 写法见 [`opentelemetry.md`](opentelemetry.md)。
+未配置 OTLP 地址时仍生成可用于日志关联的 `trace_id` 和 `span_id`，但不会导出 Span。
+
+## Docker 示例
+
+```bash
+make init-config
+export MS_K_JWT_SECRET='replace-with-at-least-32-random-characters'
+./scripts/microservices.sh start
+```
+
+该脚本构建并启动 Gateway 1 个、IAM 3 个、SYS 5 个、Resource 1 个、Realtime 2 个实例。停止但保留数据使用 `./scripts/microservices.sh stop`；删除容器和数据卷使用 `./scripts/microservices.sh destroy`。

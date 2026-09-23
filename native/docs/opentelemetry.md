@@ -1,62 +1,58 @@
 # Native OpenTelemetry 链路追踪
 
-Native 使用 OpenTelemetry 生成和传播 Trace。应用未配置 OTLP 接收端时仍会生成 `trace_id`、`span_id` 并写入关联日志，但不会导出或持久化 Span，也不会影响业务启动。
+Native 在组合根初始化 OpenTelemetry。未配置 OTLP 接收端时仍生成 `trace_id`、`span_id` 并写入日志，但不导出 Span，也不影响服务启动。
 
 ## 自动插桩边界
 
-- Gateway HTTP 入口与反向代理：自动创建并传播 HTTP Span。
-- IAM、SYS、Resource HTTP 入口：Echo 中间件自动提取 W3C `traceparent` 并创建 Server Span。
-- gRPC：`internal/transport` 为全部客户端和服务端自动创建、传播 Span。
-- PostgreSQL：各服务私有 `internal/bootstrap` 通过共享数据库连接工具创建带 OpenTelemetry 的数据库连接；业务查询必须继续使用 `db.WithContext(ctx)`。
-- Redis：各服务私有 `internal/bootstrap` 创建 Redis 客户端并注册 go-redis tracing hook；业务调用必须传入当前 `ctx`。
-- SYS、Resource Worker：定时任务使用所属服务 Context，并通过日志记录执行结果。
-- `/health/*` 和 `/metrics` 不创建 HTTP Span，避免健康检查噪声。
+- Gateway HTTP 入口和反向代理：HTTP Server/Client Span。
+- IAM、SYS、Resource、Realtime HTTP 入口：Echo Server Span。
+- gRPC：共享传输层为客户端和服务端传播 Trace Context。
+- PostgreSQL：IAM、SYS、Resource 的组合根通过共享数据库连接注册 SQL Trace。
+- Redis：各服务组合根注册 go-redis Trace Hook；业务调用必须继续传递入口 `ctx`。
+- SYS、Resource Worker：使用所属服务生命周期 Context。
+- `/health/*` 和 `/metrics` 不创建 HTTP Span，避免探针噪声。
 
-业务 controller、domain 和 model 不需要为 HTTP、gRPC、PostgreSQL、Redis 重复创建 Span。不得使用 `context.Background()` 替换入口传下来的 `ctx`。
+业务 controller、domain、model 不应重复为 HTTP、gRPC、PostgreSQL、Redis 创建基础设施 Span，也不应使用 `context.Background()` 替换入口传入的上下文。
 
-## 业务 Span 示例
+## 业务 Span
 
-只有框架 Span 无法表达、且排障确实关心的业务阶段才手工创建 Span。登录流程 `application/iam/internal/domain/auth.go` 中的 `auth.login` 是参考实现：
+只有框架 Span 无法表达且确实有排障价值的业务阶段才手动创建 Span。当前登录流程在 `application/iam/internal/domain/auth.go` 中使用 `auth.login`：
 
 ```go
 ctx, span := otel.Tracer("github.com/gcc798/microservice-kit/application/iam").Start(ctx, "auth.login")
 defer span.End()
 ```
 
-错误需要同时记录到 Span：
+业务错误同时写入 Span：
 
 ```go
 span.RecordError(err)
 span.SetStatus(codes.Error, err.Error())
 ```
 
-Span 属性只记录排障需要的非敏感信息。禁止记录密码、Token、验证码、Cookie、完整请求体或 SQL 参数。
+Span 属性只能记录排障需要的非敏感信息，禁止记录密码、Token、验证码、Cookie、完整请求体和 SQL 参数。
 
 ## 日志关联
-
-需要关联当前调用链的日志通过 `logger.WithContext` 输出：
 
 ```go
 logging.WithContext(ctx, log).Info("login succeeded", zap.Int64("user_id", userID))
 ```
 
-有效 Span 上下文会产生：
+`logger.WithContext` 会把当前有效 Span 的 Trace ID 和 Span ID 附加到日志字段：
 
 ```json
 {"msg":"login succeeded","trace_id":"4bf92f3577b34da6a3ce929d0e0e4736","span_id":"00f067aa0ba902b7"}
 ```
 
-`trace_id` 标识完整的跨服务请求，`span_id` 标识其中一个具体操作。HTTP 访问日志和登录示例日志已接入该关联方式。
+## OTLP 导出
 
-## 可选 OTLP 导出
-
-不部署采集组件时无需设置任何 `OTEL_*` 变量。需要导出到 OpenTelemetry Collector 时，至少显式设置：
+不部署 Collector 时无需设置 `OTEL_*` 变量。需要导出时至少设置：
 
 ```bash
 export OTEL_EXPORTER_OTLP_ENDPOINT=http://127.0.0.1:4317
 export OTEL_EXPORTER_OTLP_PROTOCOL=grpc
 ```
 
-容器中通常把 Endpoint 设置为 Collector 的 Compose 服务地址。SDK 使用批量异步导出，进程退出时在 `main` 中执行 flush。可用 `OTEL_TRACES_EXPORTER=none` 强制关闭导出；Native 只有检测到 `OTEL_EXPORTER_OTLP_ENDPOINT` 或 `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` 时才创建 exporter。
+Native 只有检测到 `OTEL_EXPORTER_OTLP_ENDPOINT` 或 `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` 时才创建 OTLP exporter；进程退出时由各入口执行 Provider shutdown。`OTEL_TRACES_EXPORTER=none` 可强制关闭导出。
 
-部署 Collector、Tempo、Loki、Grafana 不属于业务源码要求，可在需要集中存储和展示时独立增加。
+服务名、实例 ID 和环境由服务配置写入 OTel Resource，不重复使用 `OTEL_SERVICE_NAME`。

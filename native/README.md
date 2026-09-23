@@ -32,7 +32,7 @@ go run ./application/realtime
 go run ./application/gateway
 ```
 
-服务间契约在 `api/<domain>/v1/*.proto`；修改后运行 `make proto`，`make verify` 会检查生成文件是否最新。默认注册中心为 Consul `http://127.0.0.1:8500`。注册中心支持 `consul`、`etcd` 和 `nacos`：etcd 使用 `MS_K_REGISTRY_PREFIX` 作为注册 key 前缀；Nacos 地址形如 `http://127.0.0.1:8848/nacos`，可选 namespace、group 和账号配置见 [`docs/configuration.md`](docs/configuration.md)。
+服务间契约在 `api/<domain>/v1/*.proto`；修改后运行 `make proto`，`make verify` 会检查生成文件是否最新。默认注册中心为 Consul `http://127.0.0.1:8500`。注册中心支持 `consul`、`etcd` 和 `nacos`：etcd 使用 `MS_K_REGISTRY_PREFIX` 作为注册 key 前缀；Nacos 地址形如 `http://127.0.0.1:8848/nacos`。配置细节见 [`docs/configuration.md`](docs/configuration.md)，Proto 约定见 [`docs/protobuf.md`](docs/protobuf.md)。
 
 IAM、SYS、Resource、Realtime 会把实际注册的业务 HTTP method/path 随实例写入注册中心。Gateway 启动时加载路由并每 5 秒刷新；RESTful 参数路由按 Echo 的 `:param`/`*` 语义匹配，新增或删除接口无需再修改 Gateway。`/health/*` 与 `/metrics` 不作为前端路由发布；Prometheus 应通过 Consul、Kubernetes 等服务发现直接抓取每个实例的 `/metrics`。
 
@@ -42,7 +42,7 @@ IAM、SYS、Resource、Realtime 会把实际注册的业务 HTTP method/path 随
 
 Git 只管理每个服务的 `conf.example.yaml` 和 `zaplogger.example.yaml`。`make init-config` 会在文件不存在时把模板分别复制为 `*.dev.yaml` 和 `*.prod.yaml`，不会覆盖已有配置；这些实际运行配置已被 Git 忽略。模板只声明该进程实际使用的配置段，例如 Gateway 只配置接入与注册中心，Resource 配置数据库、Redis 和对象存储。创建后应按环境修改地址和凭据；生产敏感值也可以通过对应的 `MS_K_*` 环境变量注入。
 
-Gateway、IAM、SYS、Resource 的 `service.id` 是注册中心中的实例唯一标识；留空时程序按“服务名 + 主机名”自动生成，只有需要固定实例 ID 时才填写。它们的 `service.advertiseHost` 是写入注册中心、供其他进程访问该实例的地址；本机开发使用 `127.0.0.1`，容器部署使用实例自身可达的地址。它不是监听地址，HTTP/gRPC 仍由 `server.port` 和 `grpc.port` 监听。
+Gateway、IAM、SYS、Resource、Realtime 的 `service.id` 是注册中心中的实例唯一标识；留空时程序按“服务名 + 主机名”自动生成，只有需要固定实例 ID 时才填写。`service.advertiseHost` 是写入注册中心、供其他进程访问该实例的地址；本机开发使用 `127.0.0.1`，容器部署使用实例自身可达的地址。它不是监听地址，HTTP/gRPC 仍由 `server.port` 和 `grpc.port` 监听。
 
 生产环境默认关闭 CORS，前后端通过 Nginx 同源代理；开发环境可在 `conf.dev.yaml` 中开启。
 
@@ -120,9 +120,13 @@ Kubernetes 清单位于 `k8s/`，包含上述五类服务进程、持久化单�
 
 ## 代码边界
 
+架构原则、轻量 DDD 使用程度、组合根职责和服务调用路径见 [`docs/architecture.md`](docs/architecture.md)。
+
 ```text
 application/gateway    HTTP/WS 反向代理、鉴权和服务发现入口
 application/{iam,sys,resource,realtime}  独立领域服务入口及各自 internal 业务代码
+application/<service>/internal/bootstrap  服务私有组合根和生命周期装配
+application/<service>/internal/config     服务私有完整配置
 cmd/usermgr            一次性管理工具
 api                    Proto 源文件
 internal/api           gRPC 契约生成代码与薄适配
