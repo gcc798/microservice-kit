@@ -1,0 +1,3 @@
+interface:
+  display_name: "Microservice Kit Evolution"
+  short_description: "同步微服务架构、契约、文档和验证"
