@@ -6,7 +6,6 @@ import (
 	iam "github.com/gcc798/microservice-kit/application/iam/internal/domain"
 	"github.com/gcc798/microservice-kit/application/iam/internal/request"
 	"github.com/gcc798/microservice-kit/application/iam/internal/response"
-	"github.com/gcc798/microservice-kit/internal/container"
 	"github.com/labstack/echo/v5"
 )
 
@@ -27,10 +26,8 @@ type apiPermissionController struct {
 	service iam.ApiPermissionService
 }
 
-func NewApiPermissionController(c container.Container) ApiPermissionController {
-	return &apiPermissionController{
-		service: iam.NewApiPermissionService(c.GetDB()),
-	}
+func NewApiPermissionController(service iam.ApiPermissionService) ApiPermissionController {
+	return &apiPermissionController{service: service}
 }
 
 func (c *apiPermissionController) Tree(ctx *echo.Context) {

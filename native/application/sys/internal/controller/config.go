@@ -6,9 +6,11 @@ import (
 	sys "github.com/gcc798/microservice-kit/application/sys/internal/domain"
 	"github.com/gcc798/microservice-kit/application/sys/internal/request"
 	"github.com/gcc798/microservice-kit/application/sys/internal/response"
-	"github.com/gcc798/microservice-kit/internal/container"
+	logging "github.com/gcc798/microservice-kit/internal/logger"
+	"github.com/gcc798/microservice-kit/internal/runtimeconfig"
 	_ "github.com/gcc798/microservice-kit/internal/utils/pagination"
 	"github.com/labstack/echo/v5"
+	"gorm.io/gorm"
 )
 
 // ConfigController 配置控制器接口
@@ -24,16 +26,12 @@ type ConfigController interface {
 }
 
 type configController struct {
-	ctr           container.Container
 	configService sys.ConfigService
 }
 
 // NewConfigController 创建组件实例。
-func NewConfigController(c container.Container) ConfigController {
-	return &configController{
-		ctr:           c,
-		configService: sys.NewConfigService(c.GetDB(), c.GetLogger(), c.GetRuntimeConfig(), c),
-	}
+func NewConfigController(db *gorm.DB, logger logging.Logger, store *runtimeconfig.Store, modules sys.ModuleRefresher) ConfigController {
+	return &configController{configService: sys.NewConfigService(db, logger, store, modules)}
 }
 
 // CreateConfig 创建配置

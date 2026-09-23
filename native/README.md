@@ -18,14 +18,9 @@ export MS_K_APP_ENV=dev
 go run ./application/iam
 ```
 
-网关负责统一 HTTP/WS 接入，IAM/SYS/Resource/Realtime 各自提供 HTTP 与 gRPC；Scheduler、定时任务和常驻后台协程由独立进程运行：
+网关负责统一 HTTP/WS 接入，IAM/SYS/Resource/Realtime 各自提供 HTTP 与 gRPC；领域定时任务和常驻后台协程由所属服务管理。
 
-```bash
-cd native
-go run ./application/scheduler
-```
-
-生产环境使用 `gateway + iam + sys + resource + realtime + scheduler` 六进程拓扑；Scheduler 默认运行一个副本，Realtime 可运行多个副本。
+生产环境使用 `gateway + iam + sys + resource + realtime` 五类进程拓扑，所有领域服务均可水平扩容。
 
 本地启动微服务时先启动 PostgreSQL、Redis、RustFS 与 Consul，然后分别运行以下进程。默认 HTTP 端口为 gateway `9009`、iam `9010`、sys `9011`、resource `9012`、realtime `9013`，gRPC 端口依次为 `9110`、`9111`、`9112`、`9113`。
 
@@ -35,7 +30,6 @@ go run ./application/sys
 go run ./application/resource
 go run ./application/realtime
 go run ./application/gateway
-go run ./application/scheduler
 ```
 
 服务间契约在 `api/<domain>/v1/*.proto`；修改后运行 `make proto`，`make verify` 会检查生成文件是否最新。默认注册中心为 Consul `http://127.0.0.1:8500`。注册中心支持 `consul`、`etcd` 和 `nacos`：etcd 使用 `MS_K_REGISTRY_PREFIX` 作为注册 key 前缀；Nacos 地址形如 `http://127.0.0.1:8848/nacos`，可选 namespace、group 和账号配置见 [`docs/configuration.md`](docs/configuration.md)。
@@ -46,17 +40,17 @@ IAM、SYS、Resource、Realtime 会把实际注册的业务 HTTP method/path 随
 
 各服务支持的环境变量、对应 YAML 键和约束见 [`docs/configuration.md`](docs/configuration.md)。日志配置只从 `zaplogger.<env>.yaml` 读取，不支持字段级环境变量覆盖。
 
-Git 只管理每个服务的 `conf.example.yaml` 和 `zaplogger.example.yaml`。`make init-config` 会在文件不存在时把模板分别复制为 `*.dev.yaml` 和 `*.prod.yaml`，不会覆盖已有配置；这些实际运行配置已被 Git 忽略。模板只声明该进程实际使用的配置段，例如 Gateway 只配置接入与注册中心，Resource 配置数据库和对象存储，Scheduler 配置数据库和注册中心。创建后应按环境修改地址和凭据；生产敏感值也可以通过对应的 `MS_K_*` 环境变量注入。
+Git 只管理每个服务的 `conf.example.yaml` 和 `zaplogger.example.yaml`。`make init-config` 会在文件不存在时把模板分别复制为 `*.dev.yaml` 和 `*.prod.yaml`，不会覆盖已有配置；这些实际运行配置已被 Git 忽略。模板只声明该进程实际使用的配置段，例如 Gateway 只配置接入与注册中心，Resource 配置数据库、Redis 和对象存储。创建后应按环境修改地址和凭据；生产敏感值也可以通过对应的 `MS_K_*` 环境变量注入。
 
-Gateway、IAM、SYS、Resource 的 `service.id` 是注册中心中的实例唯一标识；留空时程序按“服务名 + 主机名”自动生成，只有需要固定实例 ID 时才填写。它们的 `service.advertiseHost` 是写入注册中心、供其他进程访问该实例的地址；本机开发使用 `127.0.0.1`，容器部署使用实例自身可达的地址。它不是监听地址，HTTP/gRPC 仍由 `server.port` 和 `grpc.port` 监听。Scheduler 不提供网络 endpoint，因此只使用注册中心发现其他服务，不注册自身。
+Gateway、IAM、SYS、Resource 的 `service.id` 是注册中心中的实例唯一标识；留空时程序按“服务名 + 主机名”自动生成，只有需要固定实例 ID 时才填写。它们的 `service.advertiseHost` 是写入注册中心、供其他进程访问该实例的地址；本机开发使用 `127.0.0.1`，容器部署使用实例自身可达的地址。它不是监听地址，HTTP/gRPC 仍由 `server.port` 和 `grpc.port` 监听。
 
 生产环境默认关闭 CORS，前后端通过 Nginx 同源代理；开发环境可在 `conf.dev.yaml` 中开启。
 
-验证码、微信、短信、邮件和 Scheduler 属于运行期模块配置，不在 YAML 或环境变量中定义。它们持久化在 `s_config`；IAM 的运行期模块通过 Redis 共享读取，缓存缺失时在分布式锁内从数据库加载并回填。单实例 Scheduler 直接周期读取数据库中的调度配置，不依赖 Redis。每个配置编码只保留一条最新记录，不使用配置版本号和 Redis Pub/Sub。
+验证码、微信、短信和邮件属于运行期模块配置，不在 YAML 或环境变量中定义。它们持久化在 `s_config`；IAM 的运行期模块通过 Redis 共享读取，缓存缺失时在分布式锁内从数据库加载并回填。每个配置编码只保留一条最新记录，不使用配置版本号和 Redis Pub/Sub。
 
 ## 数据库迁移与初始管理员
 
-IAM、SYS、Resource 启动时分别执行自己嵌入二进制的 Goose 迁移，SQL 位于 `application/<service>/internal/migrations/sql/`，版本表分别为 `goose_iam_version`、`goose_sys_version`、`goose_resource_version`。数据库结构不使用 GORM AutoMigrate；Scheduler 不执行迁移。
+IAM、SYS、Resource 启动时分别执行自己嵌入二进制的 Goose 迁移，SQL 位于 `application/<service>/internal/migrations/sql/`，版本表分别为 `goose_iam_version`、`goose_sys_version`、`goose_resource_version`。数据库结构不使用 GORM AutoMigrate。
 
 IAM 迁移会创建逻辑客户端 `web-admin`、内置角色、后台基础菜单及其 API 权限映射。普通用户角色默认拥有全部业务页面的只读权限；超级管理员通过角色标识读取全部菜单和 API 权限。
 
@@ -82,7 +76,7 @@ go run ./cmd/usermgr --operation=reset --username=admin
 
 Access Token 与 Refresh Token 都关联服务端 Redis 会话；刷新令牌单次使用并在刷新后轮换，登出会立即撤销当前会话。
 
-HTTP、gRPC、PostgreSQL、Redis 和 Scheduler Job 已接入 OpenTelemetry Trace。未配置 OTLP 地址时只生成用于 JSON 日志关联的 `trace_id`、`span_id`，不要求部署 Collector；接入方式和业务 Span 示例见 [`docs/opentelemetry.md`](docs/opentelemetry.md)。
+HTTP、gRPC、PostgreSQL 和 Redis 已接入 OpenTelemetry Trace。未配置 OTLP 地址时只生成用于 JSON 日志关联的 `trace_id`、`span_id`，不要求部署 Collector；接入方式和业务 Span 示例见 [`docs/opentelemetry.md`](docs/opentelemetry.md)。
 
 ## 质量检查
 
@@ -91,7 +85,7 @@ make verify # go test、go vet、race、Swagger freshness
 make ci     # verify + Docker build
 ```
 
-`make build` 构建 gateway、iam、sys、resource、realtime 和 scheduler 六个进程。
+`make build` 构建 gateway、iam、sys、resource 和 realtime 五个进程。
 
 涉及通用工具、配置、认证基础设施和中间件的改动必须补充单元测试。controller 与 `application/<service>/internal/domain` 中的具体业务逻辑不强制单测，可按风险补充集成或契约测试。
 
@@ -103,15 +97,11 @@ export MS_K_JWT_SECRET='replace-with-at-least-32-random-characters'
 docker compose up -d --build
 ```
 
-所有进程使用根目录唯一的 `Dockerfile`，通过 `TARGET=gateway|iam|sys|resource|realtime|scheduler` 选择构建入口。例如：
+所有进程使用根目录唯一的 `Dockerfile`，通过 `TARGET=gateway|iam|sys|resource|realtime` 选择构建入口。
 
-```bash
-docker build --build-arg TARGET=scheduler -t microservice-kit-native-scheduler .
-```
+Compose 默认启动 Consul、gateway、iam、sys、resource、realtime、PostgreSQL、Redis 和 RustFS，即完整微服务形态。Consul UI/API 映射到宿主机 `8501`，所有前端 HTTP/WS 请求统一进入 gateway 的 `9009`。
 
-Compose 默认启动 Consul、gateway、iam、sys、resource、realtime、scheduler、PostgreSQL、Redis 和 RustFS，即完整微服务形态。Consul UI/API 映射到宿主机 `8501`，所有前端 HTTP/WS 请求统一进入 gateway 的 `9009`。
-
-启动固定的本地扩容拓扑（Gateway 1、Scheduler 1、IAM 3、SYS 5、Resource 1、Realtime 2）：
+启动固定的本地扩容拓扑（Gateway 1、IAM 3、SYS 5、Resource 1、Realtime 2）：
 
 ```bash
 export MS_K_JWT_SECRET='replace-with-at-least-32-random-characters'
@@ -124,7 +114,7 @@ Consul 服务列表访问 `http://localhost:8501/ui/dc1/services`。容器入口
 
 PostgreSQL、Redis 和 RustFS 带有本地默认值；需要覆盖时使用 `MS_K_POSTGRES_PASSWORD`、`MS_K_REDIS_PASSWORD` 和 `MS_K_RUSTFS_*`。RustFS 提供 S3 兼容对象存储；resource 启动时会检查并按需创建 `microservice-kit` Bucket。
 
-Kubernetes 清单位于 `k8s/`，包含上述六个服务进程、Scheduler、持久化单节点 Consul、ClusterIP、Ingress 和 gateway HPA。部署前需替换镜像名并基于 `k8s/secret.yaml.example` 创建 Secret；PostgreSQL、Redis 和 RustFS 服务地址按现有 ConfigMap 接入。
+Kubernetes 清单位于 `k8s/`，包含上述五类服务进程、持久化单节点 Consul、ClusterIP、Ingress 和 gateway HPA。部署前需替换镜像名并基于 `k8s/secret.yaml.example` 创建 Secret；PostgreSQL、Redis 和 RustFS 服务地址按现有 ConfigMap 接入。
 
 当前 WebSocket Hub 已迁移到 Realtime 进程。Realtime 实例通过 Redis Pub/Sub 广播消息，IAM 不再持有长连接，可以独立水平扩容。
 
@@ -133,7 +123,6 @@ Kubernetes 清单位于 `k8s/`，包含上述六个服务进程、Scheduler、�
 ```text
 application/gateway    HTTP/WS 反向代理、鉴权和服务发现入口
 application/{iam,sys,resource,realtime}  独立领域服务入口及各自 internal 业务代码
-application/scheduler  Scheduler 入口与 Job 定义
 cmd/usermgr            一次性管理工具
 api                    Proto 源文件
 internal/api           gRPC 契约生成代码与薄适配

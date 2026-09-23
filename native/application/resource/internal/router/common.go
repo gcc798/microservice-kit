@@ -7,8 +7,7 @@ import (
 
 // 注册公共路由（健康检查等）。
 func registerCommonRoutes(r *httpx.Router, ctx *RouterContext, _ bool) {
-	c := ctx.Container
-	healthController := health.NewHandler(c)
+	healthController := health.NewHandler(ctx.DB, ctx.Redis)
 
 	// 健康检查接口（公开接口，无需认证）
 	r.GET("/health", healthController.Health)          // 基础健康检查

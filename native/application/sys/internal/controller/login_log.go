@@ -6,9 +6,10 @@ import (
 	sys "github.com/gcc798/microservice-kit/application/sys/internal/domain"
 	"github.com/gcc798/microservice-kit/application/sys/internal/request"
 	"github.com/gcc798/microservice-kit/application/sys/internal/response"
-	"github.com/gcc798/microservice-kit/internal/container"
+	logging "github.com/gcc798/microservice-kit/internal/logger"
 	_ "github.com/gcc798/microservice-kit/internal/utils/pagination"
 	"github.com/labstack/echo/v5"
+	"gorm.io/gorm"
 )
 
 // LoginLogController 定义业务数据结构。
@@ -23,16 +24,12 @@ type LoginLogController interface {
 }
 
 type loginLogController struct {
-	ctr             container.Container
 	loginLogService sys.LoginLogService
 }
 
 // NewLoginLogController 创建组件实例。
-func NewLoginLogController(c container.Container) LoginLogController {
-	return &loginLogController{
-		ctr:             c,
-		loginLogService: sys.NewLoginLogService(c.GetDB(), c.GetLogger()),
-	}
+func NewLoginLogController(db *gorm.DB, logger logging.Logger) LoginLogController {
+	return &loginLogController{loginLogService: sys.NewLoginLogService(db, logger)}
 }
 
 // CreateLoginLog 创建登录日志

@@ -32,7 +32,7 @@ func TestServiceLoggerExamples(t *testing.T) {
 		t.Fatal("resolve logger test path")
 	}
 	nativeDir := filepath.Join(filepath.Dir(sourceFile), "..", "..")
-	for _, service := range []string{"gateway", "iam", "sys", "resource", "scheduler"} {
+	for _, service := range []string{"gateway", "iam", "sys", "resource", "realtime"} {
 		path := filepath.Join(nativeDir, "application", service, "zaplogger.example.yaml")
 		data, err := os.ReadFile(path)
 		if err != nil {

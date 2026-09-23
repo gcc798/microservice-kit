@@ -22,22 +22,22 @@ type Storage interface {
 
 // FileInfo 文件元信息。
 type FileInfo struct {
-	Key          string
-	Size         int64
-	LastModified time.Time
-	ContentType  string
-	ETag         string
+	Key          string    // 对象键。
+	Size         int64     // 对象大小，单位为字节。
+	LastModified time.Time // 最后修改时间。
+	ContentType  string    // 内容类型。
+	ETag         string    // 对象实体标签。
 }
 
 // Config S3 兼容存储的启动配置，同时作为 YAML 配置结构，
 // 避免在配置包中重复定义一遍字段。
 type Config struct {
-	Endpoint  string `mapstructure:"endpoint"`
-	AccessKey string `mapstructure:"accessKey"`
-	SecretKey string `mapstructure:"secretKey"`
-	Bucket    string `mapstructure:"bucket"`
-	Region    string `mapstructure:"region"`
-	UseSSL    bool   `mapstructure:"useSSL"`
+	Endpoint  string `mapstructure:"endpoint"`  // 存储服务地址。
+	AccessKey string `mapstructure:"accessKey"` // 访问密钥标识。
+	SecretKey string `mapstructure:"secretKey"` // 访问密钥。
+	Bucket    string `mapstructure:"bucket"`    // 默认存储桶。
+	Region    string `mapstructure:"region"`    // 存储区域。
+	UseSSL    bool   `mapstructure:"useSSL"`    // 是否使用 HTTPS。
 }
 
 // Validate 校验存储配置在启动阶段是否完整。

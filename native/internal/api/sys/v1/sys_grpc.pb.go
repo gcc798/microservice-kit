@@ -21,7 +21,6 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	SystemService_RecordLogin_FullMethodName      = "/microservice_kit.sys.v1.SystemService/RecordLogin"
 	SystemService_RecordOperations_FullMethodName = "/microservice_kit.sys.v1.SystemService/RecordOperations"
-	SystemService_CleanLogs_FullMethodName        = "/microservice_kit.sys.v1.SystemService/CleanLogs"
 )
 
 // SystemServiceClient is the client API for SystemService service.
@@ -34,8 +33,6 @@ type SystemServiceClient interface {
 	RecordLogin(ctx context.Context, in *RecordLoginRequest, opts ...grpc.CallOption) (*Empty, error)
 	// RecordOperations 批量写入操作日志。
 	RecordOperations(ctx context.Context, in *RecordOperationsRequest, opts ...grpc.CallOption) (*Empty, error)
-	// CleanLogs 清理指定天数以前的登录日志和操作日志。
-	CleanLogs(ctx context.Context, in *CleanLogsRequest, opts ...grpc.CallOption) (*CleanLogsResponse, error)
 }
 
 type systemServiceClient struct {
@@ -66,16 +63,6 @@ func (c *systemServiceClient) RecordOperations(ctx context.Context, in *RecordOp
 	return out, nil
 }
 
-func (c *systemServiceClient) CleanLogs(ctx context.Context, in *CleanLogsRequest, opts ...grpc.CallOption) (*CleanLogsResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CleanLogsResponse)
-	err := c.cc.Invoke(ctx, SystemService_CleanLogs_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // SystemServiceServer is the server API for SystemService service.
 // All implementations must embed UnimplementedSystemServiceServer
 // for forward compatibility.
@@ -86,8 +73,6 @@ type SystemServiceServer interface {
 	RecordLogin(context.Context, *RecordLoginRequest) (*Empty, error)
 	// RecordOperations 批量写入操作日志。
 	RecordOperations(context.Context, *RecordOperationsRequest) (*Empty, error)
-	// CleanLogs 清理指定天数以前的登录日志和操作日志。
-	CleanLogs(context.Context, *CleanLogsRequest) (*CleanLogsResponse, error)
 	mustEmbedUnimplementedSystemServiceServer()
 }
 
@@ -103,9 +88,6 @@ func (UnimplementedSystemServiceServer) RecordLogin(context.Context, *RecordLogi
 }
 func (UnimplementedSystemServiceServer) RecordOperations(context.Context, *RecordOperationsRequest) (*Empty, error) {
 	return nil, status.Error(codes.Unimplemented, "method RecordOperations not implemented")
-}
-func (UnimplementedSystemServiceServer) CleanLogs(context.Context, *CleanLogsRequest) (*CleanLogsResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CleanLogs not implemented")
 }
 func (UnimplementedSystemServiceServer) mustEmbedUnimplementedSystemServiceServer() {}
 func (UnimplementedSystemServiceServer) testEmbeddedByValue()                       {}
@@ -164,24 +146,6 @@ func _SystemService_RecordOperations_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SystemService_CleanLogs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CleanLogsRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(SystemServiceServer).CleanLogs(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: SystemService_CleanLogs_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SystemServiceServer).CleanLogs(ctx, req.(*CleanLogsRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // SystemService_ServiceDesc is the grpc.ServiceDesc for SystemService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -196,10 +160,6 @@ var SystemService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "RecordOperations",
 			Handler:    _SystemService_RecordOperations_Handler,
-		},
-		{
-			MethodName: "CleanLogs",
-			Handler:    _SystemService_CleanLogs_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

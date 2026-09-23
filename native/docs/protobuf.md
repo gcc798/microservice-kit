@@ -68,7 +68,10 @@ protoc -I . \
 服务入口先创建注册中心管理的 gRPC server，再注册生成的实现：
 
 ```go
-grpcServer, err := transport.StartRegisteredGRPC(ctx, cfg, iamv1.ServiceName, func(server *grpc.Server) {
+grpcServer, err := transport.StartRegisteredGRPC(ctx, registry, transport.RegisteredGRPCOptions{
+	GRPCPort: cfg.GRPC.Port, HTTPPort: cfg.Server.Port, ServiceID: cfg.Service.ID,
+	ServiceName: iamv1.ServiceName, AdvertiseHost: cfg.Service.AdvertiseHost,
+}, func(server *grpc.Server) {
 	iamv1.RegisterIAMServiceServer(server, iam.NewGRPCServer(security))
 })
 if err != nil {
@@ -77,7 +80,7 @@ if err != nil {
 defer grpcServer.Stop(shutdown)
 ```
 
-对应入口是 `application/iam/main.go`、`application/sys/main.go` 和 `application/resource/main.go`。`StartRegisteredGRPC` 会监听 `grpc.port`，把 HTTP/gRPC endpoint 注册到配置的 Consul、etcd 或 in-process 注册中心，并在退出时注销。
+对应入口是 `application/iam/main.go`、`application/sys/main.go` 和 `application/resource/main.go`。`StartRegisteredGRPC` 只接收 gRPC 端口和服务注册参数，会把 HTTP/gRPC endpoint 注册到配置的 Consul、etcd 或 in-process 注册中心，并在退出时注销。
 
 ## 客户端调用
 
@@ -92,13 +95,13 @@ pool := transport.NewClientPool(reg)
 defer pool.Close()
 
 systemAPI := sysv1.NewRemote(pool)
-response, err := systemAPI.CleanLogs(ctx, 30)
+err = systemAPI.RecordLogin(ctx, request)
 ```
 
 `Remote` 内部调用 `pool.Conn(ctx, service)`，从注册中心选择健康实例并缓存 gRPC connection；生成的 `NewSystemServiceClient`、`NewIAMServiceClient` 和 `NewResourceServiceClient` 只在适配层使用。
 
 - Gateway 通过 `iamv1.NewRemote(pool)` 校验访问令牌。
-- Scheduler 通过 `sysv1.NewRemote(pool)` 和 `resourcev1.NewRemote(pool)` 执行日志、资源清理任务。
+- SYS 和 Resource 的清理 Worker 直接调用各自领域服务，不经过 gRPC。
 - SYS、Resource 服务也通过同样的 IAM Remote 做权限校验。
 
 ## 修改流程和闭环检查

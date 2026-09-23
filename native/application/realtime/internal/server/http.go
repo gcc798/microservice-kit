@@ -7,7 +7,6 @@ import (
 	"time"
 
 	iamv1 "github.com/gcc798/microservice-kit/internal/api/iam/v1"
-	"github.com/gcc798/microservice-kit/internal/config"
 	logging "github.com/gcc798/microservice-kit/internal/logger"
 	websocketx "github.com/gcc798/microservice-kit/internal/platform/websocket"
 	"github.com/labstack/echo/v5"
@@ -16,24 +15,34 @@ import (
 
 const WebSocketPath = "/realtime/websocket"
 
-func NewHTTP(cfg *config.Config, security iamv1.API, client *goredis.Client, relay ReadyRelay, hub *websocketx.Hub, log logging.Logger) *http.Server {
+type HTTPOptions struct {
+	Port                int
+	CORS                bool
+	TokenHeader         string
+	TimeoutEnabled      bool
+	ReadTimeoutSeconds  int
+	WriteTimeoutSeconds int
+	HeartbeatEnabled    bool
+	MaxReadTimeouts     int
+}
+
+func NewHTTP(opts HTTPOptions, security iamv1.API, client *goredis.Client, relay ReadyRelay, hub *websocketx.Hub, log logging.Logger) *http.Server {
 	e := echo.New()
 	e.GET("/health", healthHandler(client, relay))
 	e.GET("/health/ready", healthHandler(client, relay))
 	e.GET("/health/live", func(c *echo.Context) error { return c.JSON(http.StatusOK, map[string]string{"status": "alive"}) })
 	e.GET("/health/startup", healthHandler(client, relay))
 
-	wsHandler := websocketx.NewHandler(hub, log, cfg.CORS.Enabled)
-	wsCfg := cfg.WebSocket
-	if wsCfg.TimeoutEnabled {
-		wsHandler.ConfigureTimeouts(time.Duration(wsCfg.ReadTimeoutSeconds)*time.Second, time.Duration(wsCfg.WriteTimeoutSeconds)*time.Second)
+	wsHandler := websocketx.NewHandler(hub, log, opts.CORS)
+	if opts.TimeoutEnabled {
+		wsHandler.ConfigureTimeouts(time.Duration(opts.ReadTimeoutSeconds)*time.Second, time.Duration(opts.WriteTimeoutSeconds)*time.Second)
 	}
-	if wsCfg.HeartbeatEnabled {
-		wsHandler.RegisterHeartbeatMessageBuilder(wsCfg.MaxReadTimeouts, func(*websocketx.Client) any { return map[string]string{"type": "ping"} })
+	if opts.HeartbeatEnabled {
+		wsHandler.RegisterHeartbeatMessageBuilder(opts.MaxReadTimeouts, func(*websocketx.Client) any { return map[string]string{"type": "ping"} })
 	}
-	e.GET(WebSocketPath, authenticatedWebSocketHandler(security, cfg.Auth.TokenHeader, wsHandler))
+	e.GET(WebSocketPath, authenticatedWebSocketHandler(security, opts.TokenHeader, wsHandler))
 
-	return &http.Server{Addr: ":" + strconv.Itoa(cfg.Server.Port), Handler: e, ReadHeaderTimeout: 10 * time.Second, MaxHeaderBytes: 1 << 20}
+	return &http.Server{Addr: ":" + strconv.Itoa(opts.Port), Handler: e, ReadHeaderTimeout: 10 * time.Second, MaxHeaderBytes: 1 << 20}
 }
 
 type ReadyRelay interface{ Ready() bool }

@@ -11,7 +11,6 @@ import (
 
 	"github.com/gcc798/microservice-kit/application/iam/internal/domain/model"
 	sysv1 "github.com/gcc798/microservice-kit/internal/api/sys/v1"
-	"github.com/gcc798/microservice-kit/internal/config"
 	logging "github.com/gcc798/microservice-kit/internal/logger"
 	"github.com/gcc798/microservice-kit/internal/platform/captcha"
 	"github.com/gcc798/microservice-kit/internal/platform/thirdparty/wechat"
@@ -44,7 +43,7 @@ type AuthService interface {
 type authService struct {
 	db             *gorm.DB
 	redis          *redis.Client
-	config         *config.Config
+	allowConcurrent bool
 	logger         logging.Logger
 	clients        ClientService
 	tokens         TokenManager
@@ -61,7 +60,7 @@ type loginAuthenticator interface {
 func NewAuthService(
 	db *gorm.DB,
 	redisClient *redis.Client,
-	cfg *config.Config,
+	allowConcurrent bool,
 	logger logging.Logger,
 	clients ClientService,
 	tokens TokenManager,
@@ -72,7 +71,7 @@ func NewAuthService(
 	s := &authService{
 		db:      db,
 		redis:   redisClient,
-		config:  cfg,
+		allowConcurrent: allowConcurrent,
 		logger:  logger,
 		clients: clients,
 		tokens:  tokens,
@@ -123,7 +122,7 @@ func (s *authService) Login(ctx context.Context, req *LoginRequest) (_ *LoginRes
 		s.recordLogin(ctx, req, resolveLoginAccount(req), client.ClientId, 1, err.Error())
 		return nil, err
 	}
-	if !s.config.Auth.AllowConcurrent {
+	if !s.allowConcurrent {
 		if err := s.tokens.RevokeUserSessions(ctx, user.ID, client.ClientId); err != nil {
 			return nil, fmt.Errorf("清理旧会话失败: %w", err)
 		}

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	sysv1 "github.com/gcc798/microservice-kit/internal/api/sys/v1"
-	"github.com/gcc798/microservice-kit/internal/container"
 	middleware "github.com/gcc798/microservice-kit/internal/httpmiddleware"
 	"github.com/gcc798/microservice-kit/internal/httpx"
 	logging "github.com/gcc798/microservice-kit/internal/logger"
@@ -23,26 +22,35 @@ import (
 	"go.uber.org/zap"
 )
 
+// Server 封装 Echo HTTP 服务及其生命周期资源。
 type Server struct {
-	http       *http.Server
-	log        logging.Logger
-	stopWriter func()
+	http       *http.Server   // 底层 HTTP 服务。
+	log        logging.Logger // 日志记录器。
+	stopWriter func()         // 停止操作日志写入器。
 }
 
-// New builds the HTTP server and returns its public business routes for service registration.
-func New(cont container.Container, systemAPI sysv1.API, setup func(*httpx.Router) error) (*Server, []registry.HTTPRoute, error) {
+// Options 描述 HTTP 服务启动参数。
+type Options struct {
+	Port      int            // 监听端口。
+	CORS      bool           // 是否启用跨域中间件。
+	Logger    logging.Logger // 日志记录器。
+	SystemAPI sysv1.API      // 操作日志写入所需的 SYS 接口，可为空。
+}
+
+// New 创建 HTTP 服务，并返回用于服务注册的业务路由列表。
+func New(opts Options, setup func(*httpx.Router) error) (*Server, []registry.HTTPRoute, error) {
 	e := echo.New()
 	validator.Init()
 	e.Validator = validator.EchoValidator{}
 	e.Binder = &validator.EchoBinder{}
 	e.Use(
 		echootel.NewMiddlewareWithConfig(echootel.Config{
-			ServerName: fmt.Sprintf("0.0.0.0:%d", cont.GetConfig().Server.Port),
+			ServerName: fmt.Sprintf("0.0.0.0:%d", opts.Port),
 			Skipper: func(c *echo.Context) bool {
 				return !telemetry.TraceHTTPPath(c.Request().URL.Path)
 			},
 		}),
-		middleware.Recovery(cont.GetLogger()),
+		middleware.Recovery(opts.Logger),
 		echoMiddleware.RequestLoggerWithConfig(echoMiddleware.RequestLoggerConfig{
 			LogLatency: true, LogRemoteIP: true, LogMethod: true, LogURIPath: true,
 			LogRoutePath: true, LogRequestID: true, LogStatus: true,
@@ -59,18 +67,18 @@ func New(cont container.Container, systemAPI sysv1.API, setup func(*httpx.Router
 				if values.Error != nil {
 					fields = append(fields, zap.Error(values.Error))
 				}
-				logging.WithContext(c.Request().Context(), cont.GetLogger()).Info("http request", fields...)
+				logging.WithContext(c.Request().Context(), opts.Logger).Info("http request", fields...)
 				return nil
 			},
 		}),
 	)
-	if cont.GetConfig().CORS.Enabled {
+	if opts.CORS {
 		e.Use(middleware.CORS())
 	}
 	e.Use(middleware.StringIDConverter())
 	stopWriter := func() {}
-	if systemAPI != nil {
-		writer := middleware.NewOperLogWriter(systemAPI, cont.GetLogger())
+	if opts.SystemAPI != nil {
+		writer := middleware.NewOperLogWriter(opts.SystemAPI, opts.Logger)
 		stopWriter = writer.Stop
 		e.Use(middleware.OperationLog(writer))
 	}
@@ -78,7 +86,7 @@ func New(cont container.Container, systemAPI sysv1.API, setup func(*httpx.Router
 		stopWriter()
 		return nil, nil, err
 	}
-	addr := fmt.Sprintf(":%d", cont.GetConfig().Server.Port)
+	addr := fmt.Sprintf(":%d", opts.Port)
 	srv := &http.Server{Addr: addr, Handler: e, ReadTimeout: 30 * time.Second, WriteTimeout: 30 * time.Second, MaxHeaderBytes: 1 << 20}
 	routes := make([]registry.HTTPRoute, 0, len(e.Router().Routes()))
 	for _, route := range e.Router().Routes() {
@@ -93,7 +101,7 @@ func New(cont container.Container, systemAPI sysv1.API, setup func(*httpx.Router
 		}
 		return routes[i].Path < routes[j].Path
 	})
-	return &Server{http: srv, log: cont.GetLogger(), stopWriter: stopWriter}, routes, nil
+	return &Server{http: srv, log: opts.Logger, stopWriter: stopWriter}, routes, nil
 }
 
 func (s *Server) Run(ctx context.Context) error {

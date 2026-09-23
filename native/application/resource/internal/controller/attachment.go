@@ -6,7 +6,6 @@ import (
 
 	"github.com/gcc798/microservice-kit/application/resource/internal/domain"
 	"github.com/gcc798/microservice-kit/application/resource/internal/request"
-	"github.com/gcc798/microservice-kit/internal/container"
 	"github.com/gcc798/microservice-kit/internal/httpresponse"
 	"github.com/gcc798/microservice-kit/internal/httputils"
 	"github.com/gcc798/microservice-kit/internal/logger"
@@ -33,11 +32,8 @@ type attachmentController struct {
 }
 
 // NewAttachmentController 创建组件实例。
-func NewAttachmentController(c container.Container) AttachmentController {
-	return &attachmentController{
-		attachmentService: resource.NewAttachmentService(c.GetDB(), c.GetStorage(), c.GetLogger()),
-		logger:            c.GetLogger(),
-	}
+func NewAttachmentController(attachments resource.AttachmentService, log logger.Logger) AttachmentController {
+	return &attachmentController{attachmentService: attachments, logger: log}
 }
 
 // UploadFile 上传文件（步骤1：只上传文件）

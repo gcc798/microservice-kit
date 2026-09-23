@@ -8,12 +8,13 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/gcc798/microservice-kit/internal/platform/storage"
 	"github.com/spf13/viper"
 )
 
+// AppEnvVar 是运行环境变量名。
 const AppEnvVar = "MS_K_APP_ENV"
 
+// Service 标识一个可独立部署的服务。
 type Service string
 
 const (
@@ -21,136 +22,115 @@ const (
 	ServiceIAM         Service = "iam"
 	ServiceSystem      Service = "sys"
 	ServiceResource    Service = "resource"
-	ServiceScheduler   Service = "scheduler"
 	ServiceRealtime    Service = "realtime"
 	ServiceUserManager Service = "usermgr"
 )
 
+// Server 描述 HTTP 或 gRPC 服务的监听配置。
 type Server struct {
-	Port        int    `mapstructure:"port"`
-	TLSCertFile string `mapstructure:"tlsCertFile"`
-	TLSKeyFile  string `mapstructure:"tlsKeyFile"`
+	Port        int    `mapstructure:"port"`        // 监听端口。
+	TLSCertFile string `mapstructure:"tlsCertFile"` // TLS 证书路径。
+	TLSKeyFile  string `mapstructure:"tlsKeyFile"`  // TLS 私钥路径。
 }
 
+// Registry 描述服务注册中心连接配置。
 type Registry struct {
-	Driver    string `mapstructure:"driver"`
-	Address   string `mapstructure:"address"`
-	Prefix    string `mapstructure:"prefix"`
-	Namespace string `mapstructure:"namespace"`
-	Group     string `mapstructure:"group"`
-	Username  string `mapstructure:"username"`
-	Password  string `mapstructure:"password"`
+	Driver    string `mapstructure:"driver"`    // 注册中心类型。
+	Address   string `mapstructure:"address"`   // 注册中心地址。
+	Prefix    string `mapstructure:"prefix"`    // 服务键前缀。
+	Namespace string `mapstructure:"namespace"` // 命名空间。
+	Group     string `mapstructure:"group"`     // 服务分组。
+	Username  string `mapstructure:"username"`  // 认证用户名。
+	Password  string `mapstructure:"password"`  // 认证密码。
 }
 
+// ServiceEndpoint 描述服务实例的标识和通告地址。
 type ServiceEndpoint struct {
-	ID            string `mapstructure:"id"`
-	AdvertiseHost string `mapstructure:"advertiseHost"`
+	ID            string `mapstructure:"id"`            // 实例唯一标识。
+	AdvertiseHost string `mapstructure:"advertiseHost"` // 对外通告地址。
 }
 
+// Gateway 描述网关专属配置。
 type Gateway struct {
-	RateLimitPerMinute int `mapstructure:"rateLimitPerMinute"`
+	RateLimitPerMinute int `mapstructure:"rateLimitPerMinute"` // 每分钟请求上限。
 }
 
+// Database 描述数据库连接池配置。
 type Database struct {
-	DSN                    string `mapstructure:"dsn"`
-	MaxOpenConns           int    `mapstructure:"maxOpenConns"`
-	MaxIdleConns           int    `mapstructure:"maxIdleConns"`
-	ConnMaxLifetimeMinutes int    `mapstructure:"connMaxLifetimeMinutes"`
-	SlowThreshold          int    `mapstructure:"slowThreshold"`
+	DSN                    string `mapstructure:"dsn"`                    // 数据库连接串。
+	MaxOpenConns           int    `mapstructure:"maxOpenConns"`           // 最大打开连接数。
+	MaxIdleConns           int    `mapstructure:"maxIdleConns"`           // 最大空闲连接数。
+	ConnMaxLifetimeMinutes int    `mapstructure:"connMaxLifetimeMinutes"` // 连接最大存活时间，单位为分钟。
+	SlowThreshold          int    `mapstructure:"slowThreshold"`          // 慢查询阈值，单位为毫秒。
 }
 
+// Redis 描述 Redis 连接配置。
 type Redis struct {
-	Addr     string `mapstructure:"addr"`
-	Password string `mapstructure:"password"`
-	DB       int    `mapstructure:"db"`
+	Addr     string `mapstructure:"addr"`     // Redis 地址。
+	Password string `mapstructure:"password"` // Redis 密码。
+	DB       int    `mapstructure:"db"`       // Redis 逻辑库编号。
 }
 
+// JWT 描述 JSON Web Token 配置。
 type JWT struct {
-	Secret string `mapstructure:"secret"`
-	Expire int64  `mapstructure:"expire"`
+	Secret string `mapstructure:"secret"` // 签名密钥。
+	Expire int64  `mapstructure:"expire"` // 默认有效期，单位为秒。
 }
 
+// Auth 描述 HTTP 身份认证配置。
 type Auth struct {
-	TokenHeader     string `mapstructure:"tokenHeader"`
-	AllowConcurrent bool   `mapstructure:"allowConcurrent"`
+	TokenHeader     string `mapstructure:"tokenHeader"`     // 令牌请求头名称。
+	AllowConcurrent bool   `mapstructure:"allowConcurrent"` // 是否允许同一用户并发登录。
 }
 
+// CORS 描述跨域资源共享配置。
 type CORS struct {
-	Enabled bool `mapstructure:"enabled"`
+	Enabled bool `mapstructure:"enabled"` // 是否启用跨域中间件。
 }
 
+// WebSocket 描述 WebSocket 连接配置。
 type WebSocket struct {
-	Enabled             bool `mapstructure:"enabled"`
-	TimeoutEnabled      bool `mapstructure:"timeoutEnabled"`
-	ReadTimeoutSeconds  int  `mapstructure:"readTimeoutSeconds"`
-	WriteTimeoutSeconds int  `mapstructure:"writeTimeoutSeconds"`
-	HeartbeatEnabled    bool `mapstructure:"heartbeatEnabled"`
-	MaxReadTimeouts     int  `mapstructure:"maxReadTimeouts"`
+	Enabled             bool `mapstructure:"enabled"`             // 是否启用 WebSocket。
+	TimeoutEnabled      bool `mapstructure:"timeoutEnabled"`      // 是否启用读写超时。
+	ReadTimeoutSeconds  int  `mapstructure:"readTimeoutSeconds"`  // 读取超时时间，单位为秒。
+	WriteTimeoutSeconds int  `mapstructure:"writeTimeoutSeconds"` // 写入超时时间，单位为秒。
+	HeartbeatEnabled    bool `mapstructure:"heartbeatEnabled"`    // 是否启用心跳。
+	MaxReadTimeouts     int  `mapstructure:"maxReadTimeouts"`     // 最大连续读取超时次数。
 }
 
-type Config struct {
-	AppDir    string          `mapstructure:"-"`
-	Server    Server          `mapstructure:"server"`
-	GRPC      Server          `mapstructure:"grpc"`
-	Registry  Registry        `mapstructure:"registry"`
-	Service   ServiceEndpoint `mapstructure:"service"`
-	Database  Database        `mapstructure:"database"`
-	Redis     Redis           `mapstructure:"redis"`
-	JWT       JWT             `mapstructure:"jwt"`
-	Auth      Auth            `mapstructure:"auth"`
-	CORS      CORS            `mapstructure:"cors"`
-	Storage   storage.Config  `mapstructure:"storage"`
-	WebSocket WebSocket       `mapstructure:"websocket"`
-	Gateway   Gateway         `mapstructure:"gateway"`
-}
-
-func Load(configDir string, service Service) (*Config, *viper.Viper, error) {
+// LoadInto 加载并校验服务所需配置，再解码到服务私有配置类型。
+func LoadInto(configDir string, service Service, target any) (*viper.Viper, string, error) {
 	profile := CurrentEnv()
 	if profile != "dev" && profile != "prod" {
-		return nil, nil, fmt.Errorf("%s must be dev or prod", AppEnvVar)
+		return nil, "", fmt.Errorf("%s must be dev or prod", AppEnvVar)
 	}
-	if service != ServiceGateway && service != ServiceIAM && service != ServiceSystem && service != ServiceResource && service != ServiceScheduler && service != ServiceRealtime && service != ServiceUserManager {
-		return nil, nil, fmt.Errorf("unknown config service %q", service)
+	if service != ServiceGateway && service != ServiceIAM && service != ServiceSystem && service != ServiceResource && service != ServiceRealtime && service != ServiceUserManager {
+		return nil, "", fmt.Errorf("unknown config service %q", service)
 	}
 	v := viper.New()
 	v.SetEnvPrefix("MS_K")
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 	if err := bindEnvironment(v); err != nil {
-		return nil, nil, err
+		return nil, "", err
 	}
-
 	configFileName := fmt.Sprintf("conf.%s.yaml", profile)
 	foundPath, err := ResolveFilePath(configDir, configFileName)
 	if err != nil {
-		return nil, nil, err
+		return nil, "", err
 	}
 	v.SetConfigFile(foundPath)
 	v.SetConfigType("yaml")
 	if err := v.ReadInConfig(); err != nil {
-		return nil, nil, fmt.Errorf("read config from %s: %w", foundPath, err)
+		return nil, "", fmt.Errorf("read config from %s: %w", foundPath, err)
 	}
 	if err := requireExplicitConfiguration(v, service); err != nil {
-		return nil, nil, err
+		return nil, "", err
 	}
-
-	var cfg Config
-	if err := v.Unmarshal(&cfg); err != nil {
-		return nil, nil, fmt.Errorf("decode config: %w", err)
+	if err := v.Unmarshal(target); err != nil {
+		return nil, "", fmt.Errorf("decode config: %w", err)
 	}
-	cfg.Service.ID = strings.TrimSpace(cfg.Service.ID)
-	if service != ServiceUserManager && cfg.Service.ID == "" {
-		host, err := os.Hostname()
-		if err != nil {
-			return nil, nil, fmt.Errorf("resolve service instance ID: %w", err)
-		}
-		cfg.Service.ID = string(service) + "-" + host
-	}
-	cfg.AppDir = filepath.Dir(foundPath)
-	if err := cfg.Validate(profile, service); err != nil {
-		return nil, nil, err
-	}
-	return &cfg, v, nil
+	return v, filepath.Dir(foundPath), nil
 }
 
 func requireExplicitConfiguration(v *viper.Viper, service Service) error {
@@ -199,12 +179,9 @@ func requireExplicitConfiguration(v *viper.Viper, service Service) error {
 		keys = append(keys, grpc...)
 		keys = append(keys, registry...)
 		keys = append(keys, database...)
+		keys = append(keys, "redis.addr", "redis.password", "redis.db")
 		keys = append(keys, "storage.endpoint", "storage.accessKey", "storage.secretKey", "storage.region", "storage.bucket", "storage.useSSL")
 		keys = append(keys, auth...)
-	case ServiceScheduler:
-		keys = append(keys, database...)
-		keys = append(keys, registry...)
-		keys = append(keys, "service.id")
 	case ServiceUserManager:
 		keys = []string{"database.dsn"}
 	}
@@ -262,87 +239,94 @@ func environmentName(key string) string {
 	return name.String()
 }
 
-func (c *Config) Validate(profile string, service Service) error {
-	if service != ServiceGateway && service != ServiceRealtime && c.Database.DSN == "" {
-		return fmt.Errorf("database.dsn is required")
+func (s Server) Validate(name string) error {
+	if s.Port < 1 || s.Port > 65535 {
+		return fmt.Errorf("%s.port must be between 1 and 65535", name)
 	}
-	if service == ServiceUserManager {
-		return nil
-	}
-	if service != ServiceGateway && service != ServiceRealtime {
-		if c.Database.MaxOpenConns < 1 || c.Database.MaxIdleConns < 0 || c.Database.MaxIdleConns > c.Database.MaxOpenConns {
-			return fmt.Errorf("database connection limits are invalid")
-		}
-		if c.Database.ConnMaxLifetimeMinutes < 1 || c.Database.SlowThreshold < 1 {
-			return fmt.Errorf("database lifetimes and thresholds must be positive")
-		}
-	}
-	if c.Server.Port < 1 || c.Server.Port > 65535 {
-		if service != ServiceScheduler {
-			return fmt.Errorf("server.port must be between 1 and 65535")
-		}
-	}
-	if (service == ServiceIAM || service == ServiceSystem || service == ServiceResource || service == ServiceRealtime) && (c.GRPC.Port < 1 || c.GRPC.Port > 65535) {
-		return fmt.Errorf("grpc.port must be between 1 and 65535")
-	}
-	switch c.Registry.Driver {
+	return nil
+}
+
+func (r Registry) Validate() error {
+	switch r.Driver {
 	case "consul", "nacos":
-		if c.Registry.Address == "" {
-			return fmt.Errorf("registry.address is required for %s", c.Registry.Driver)
+		if r.Address == "" {
+			return fmt.Errorf("registry.address is required for %s", r.Driver)
 		}
 	case "etcd":
-		if c.Registry.Address == "" || c.Registry.Prefix == "" {
+		if r.Address == "" || r.Prefix == "" {
 			return fmt.Errorf("registry.address and registry.prefix are required for etcd")
 		}
 	case "inprocess":
 	default:
-		return fmt.Errorf("unsupported registry driver %q", c.Registry.Driver)
+		return fmt.Errorf("unsupported registry driver %q", r.Driver)
 	}
-	if service == ServiceScheduler {
-		return nil
-	}
-	if c.Service.AdvertiseHost == "" {
+	return nil
+}
+
+func (s ServiceEndpoint) Validate() error {
+	if s.AdvertiseHost == "" {
 		return fmt.Errorf("service.advertiseHost is required")
 	}
-	if service == ServiceGateway {
-		if (c.Server.TLSCertFile == "") != (c.Server.TLSKeyFile == "") {
-			return fmt.Errorf("both server.tlsCertFile and server.tlsKeyFile are required for TLS")
-		}
-		if c.Gateway.RateLimitPerMinute < 0 {
-			return fmt.Errorf("gateway.rateLimitPerMinute cannot be negative")
-		}
-		return nil
+	return nil
+}
+
+func (d Database) Validate() error {
+	if d.DSN == "" {
+		return fmt.Errorf("database.dsn is required")
 	}
-	if (service == ServiceIAM || service == ServiceSystem || service == ServiceRealtime) && c.Redis.Addr == "" {
+	if d.MaxOpenConns < 1 || d.MaxIdleConns < 0 || d.MaxIdleConns > d.MaxOpenConns {
+		return fmt.Errorf("database connection limits are invalid")
+	}
+	if d.ConnMaxLifetimeMinutes < 1 || d.SlowThreshold < 1 {
+		return fmt.Errorf("database lifetimes and thresholds must be positive")
+	}
+	return nil
+}
+
+func (r Redis) Validate() error {
+	if r.Addr == "" {
 		return fmt.Errorf("redis.addr is required")
 	}
-	if (service == ServiceIAM || service == ServiceSystem || service == ServiceRealtime) && c.Redis.DB < 0 {
+	if r.DB < 0 {
 		return fmt.Errorf("redis.db cannot be negative")
 	}
-	if c.Auth.TokenHeader == "" {
+	return nil
+}
+
+func (j JWT) Validate() error {
+	if len(j.Secret) < 32 {
+		return fmt.Errorf("jwt.secret must contain at least 32 characters")
+	}
+	if j.Expire < 1 {
+		return fmt.Errorf("jwt.expire must be positive")
+	}
+	return nil
+}
+
+func (a Auth) Validate() error {
+	if a.TokenHeader == "" {
 		return fmt.Errorf("auth.tokenHeader is required")
 	}
-	if service == ServiceIAM {
-		if len(c.JWT.Secret) < 32 {
-			return fmt.Errorf("jwt.secret must contain at least 32 characters")
-		}
-		if c.JWT.Expire < 1 {
-			return fmt.Errorf("jwt.expire must be positive")
-		}
-	}
-	if service == ServiceRealtime {
-		if c.WebSocket.ReadTimeoutSeconds < 1 || c.WebSocket.WriteTimeoutSeconds < 1 || c.WebSocket.MaxReadTimeouts < 1 {
-			return fmt.Errorf("websocket timeouts and retry limit must be positive")
-		}
-	}
-	if profile == "prod" && c.CORS.Enabled {
+	return nil
+}
+
+func (c CORS) Validate(profile string) error {
+	if profile == "prod" && c.Enabled {
 		return fmt.Errorf("cors must be disabled in prod")
 	}
-	if service == ServiceResource {
-		if c.Storage.Region == "" {
-			return fmt.Errorf("storage.region is required")
-		}
-		return c.Storage.Validate()
+	return nil
+}
+
+func (w WebSocket) Validate() error {
+	if w.ReadTimeoutSeconds < 1 || w.WriteTimeoutSeconds < 1 || w.MaxReadTimeouts < 1 {
+		return fmt.Errorf("websocket timeouts and retry limit must be positive")
+	}
+	return nil
+}
+
+func (g Gateway) Validate() error {
+	if g.RateLimitPerMinute < 0 {
+		return fmt.Errorf("gateway.rateLimitPerMinute cannot be negative")
 	}
 	return nil
 }

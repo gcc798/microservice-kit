@@ -9,7 +9,7 @@ import (
 
 // registerLoginLogRoutes 注册登录日志路由
 func registerLoginLogRoutes(r *httpx.Router, ctx *RouterContext) {
-	loginLogController := controller.NewLoginLogController(ctx.Container)
+	loginLogController := controller.NewLoginLogController(ctx.DB, ctx.Logger)
 
 	// API v1 路由组
 	v1 := r.Group("/api/v1")

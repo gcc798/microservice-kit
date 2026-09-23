@@ -5,7 +5,7 @@ import (
 	"sync"
 )
 
-// InProcess is a unit-test-only registry; its state cannot be shared across processes.
+// InProcess 仅用于单元测试，状态不能跨进程共享。
 type InProcess struct {
 	mu       sync.RWMutex
 	services map[string]map[string]ServiceInstance
@@ -13,6 +13,7 @@ type InProcess struct {
 	closed   bool
 }
 
+// NewInProcess 创建进程内注册中心。
 func NewInProcess() *InProcess {
 	return &InProcess{services: make(map[string]map[string]ServiceInstance), watchers: make(map[string]map[chan struct{}]struct{})}
 }

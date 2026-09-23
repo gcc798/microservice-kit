@@ -120,3 +120,23 @@ func TestWithLockReleasesAfterPanic(t *testing.T) {
 		t.Fatal("lock remained after panic")
 	}
 }
+
+func TestTryClaimAllowsOnlyOneCallerUntilTTL(t *testing.T) {
+	locker, server := testLocker(t, WithTTL(time.Second))
+	ctx := t.Context()
+
+	claimed, err := locker.TryClaim(ctx, "worker:cleanup")
+	if err != nil || !claimed {
+		t.Fatalf("first TryClaim() = %v, %v; want true, nil", claimed, err)
+	}
+	claimed, err = locker.TryClaim(ctx, "worker:cleanup")
+	if err != nil || claimed {
+		t.Fatalf("second TryClaim() = %v, %v; want false, nil", claimed, err)
+	}
+
+	server.FastForward(2 * time.Second)
+	claimed, err = locker.TryClaim(ctx, "worker:cleanup")
+	if err != nil || !claimed {
+		t.Fatalf("TryClaim() after TTL = %v, %v; want true, nil", claimed, err)
+	}
+}

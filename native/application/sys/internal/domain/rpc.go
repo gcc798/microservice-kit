@@ -8,11 +8,35 @@ import (
 	sysv1 "github.com/gcc798/microservice-kit/internal/api/sys/v1"
 	logging "github.com/gcc798/microservice-kit/internal/logger"
 	"github.com/gcc798/microservice-kit/internal/utils"
-	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gorm.io/gorm"
 )
+
+type LogCleanupService interface {
+	Clean(ctx context.Context, retentionDays int) (loginLogs, operationLogs int64, err error)
+}
+
+type logCleanupService struct {
+	login     LoginLogService
+	operation OperLogService
+}
+
+func NewLogCleanupService(login LoginLogService, operation OperLogService) LogCleanupService {
+	return &logCleanupService{login: login, operation: operation}
+}
+
+func (s *logCleanupService) Clean(ctx context.Context, retentionDays int) (int64, int64, error) {
+	loginLogs, err := s.login.CleanOldLogs(ctx, retentionDays)
+	if err != nil {
+		return 0, 0, err
+	}
+	operationLogs, err := s.operation.CleanOldLogs(ctx, retentionDays)
+	if err != nil {
+		return loginLogs, 0, err
+	}
+	return loginLogs, operationLogs, nil
+}
 
 type API struct {
 	db     *gorm.DB
@@ -47,23 +71,6 @@ func (a *API) RecordOperations(ctx context.Context, request *sysv1.RecordOperati
 	return a.db.WithContext(ctx).Create(&entries).Error
 }
 
-func (a *API) CleanLogs(ctx context.Context, days int32) (*sysv1.CleanLogsResponse, error) {
-	if days <= 0 {
-		return nil, status.Error(codes.InvalidArgument, "days must be positive")
-	}
-	cutoff := time.Now().AddDate(0, 0, -int(days))
-	login := a.db.WithContext(ctx).Where("login_time < ?", cutoff).Delete(&model.LoginLog{})
-	if login.Error != nil {
-		return nil, login.Error
-	}
-	operation := a.db.WithContext(ctx).Where("oper_time < ?", cutoff).Delete(&model.OperLog{})
-	if operation.Error != nil {
-		return nil, operation.Error
-	}
-	a.logger.Info("cleaned system logs", zap.Int64("loginLogs", login.RowsAffected), zap.Int64("operationLogs", operation.RowsAffected))
-	return &sysv1.CleanLogsResponse{LoginLogs: login.RowsAffected, OperationLogs: operation.RowsAffected}, nil
-}
-
 type GRPCServer struct {
 	sysv1.UnimplementedSystemServiceServer
 	api sysv1.API
@@ -83,8 +90,4 @@ func (s *GRPCServer) RecordOperations(ctx context.Context, request *sysv1.Record
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	return &sysv1.Empty{}, nil
-}
-
-func (s *GRPCServer) CleanLogs(ctx context.Context, request *sysv1.CleanLogsRequest) (*sysv1.CleanLogsResponse, error) {
-	return s.api.CleanLogs(ctx, request.Days)
 }

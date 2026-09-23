@@ -48,7 +48,7 @@ type OperLogWriter struct {
 	stopOnce sync.Once
 }
 
-// NewOperLogWriter creates and starts one application-scoped operation log writer.
+// NewOperLogWriter 创建并启动一个应用级操作日志写入器。
 func NewOperLogWriter(api sysv1.API, logger logging.Logger) *OperLogWriter {
 	ctx, cancel := context.WithCancel(context.Background())
 	w := &OperLogWriter{

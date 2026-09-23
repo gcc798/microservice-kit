@@ -6,9 +6,10 @@ import (
 	sys "github.com/gcc798/microservice-kit/application/sys/internal/domain"
 	"github.com/gcc798/microservice-kit/application/sys/internal/request"
 	"github.com/gcc798/microservice-kit/application/sys/internal/response"
-	"github.com/gcc798/microservice-kit/internal/container"
+	logging "github.com/gcc798/microservice-kit/internal/logger"
 	_ "github.com/gcc798/microservice-kit/internal/utils/pagination"
 	"github.com/labstack/echo/v5"
+	"gorm.io/gorm"
 )
 
 // OperLogController 定义业务数据结构。
@@ -23,16 +24,12 @@ type OperLogController interface {
 }
 
 type operLogController struct {
-	ctr            container.Container
 	operLogService sys.OperLogService
 }
 
 // NewOperLogController 创建组件实例。
-func NewOperLogController(c container.Container) OperLogController {
-	return &operLogController{
-		ctr:            c,
-		operLogService: sys.NewOperLogService(c.GetDB(), c.GetLogger()),
-	}
+func NewOperLogController(db *gorm.DB, logger logging.Logger) OperLogController {
+	return &operLogController{operLogService: sys.NewOperLogService(db, logger)}
 }
 
 // CreateOperLog 创建操作日志

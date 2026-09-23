@@ -14,7 +14,7 @@ import (
 
 type CaptchaModule struct {
 	mu      sync.RWMutex
-	cont    Container
+	deps    Dependencies
 	digest  [sha256.Size]byte
 	config  runtimeconfig.CaptchaConfig
 	manager *captcha.CaptchaManager
@@ -22,20 +22,13 @@ type CaptchaModule struct {
 	email   Email
 }
 
-func NewCaptchaModule() *CaptchaModule { return &CaptchaModule{} }
-func (*CaptchaModule) Name() string    { return CaptchaName }
+func NewCaptchaModule(sms SMS, email Email) *CaptchaModule {
+	return &CaptchaModule{sms: sms, email: email}
+}
+func (*CaptchaModule) Name() string { return CaptchaName }
 
-func (m *CaptchaModule) Init(ctx context.Context, cont Container) error {
-	m.cont = cont
-	var err error
-	m.sms, err = GetSMS(cont)
-	if err != nil {
-		return err
-	}
-	m.email, err = GetEmail(cont)
-	if err != nil {
-		return err
-	}
+func (m *CaptchaModule) Init(ctx context.Context, deps Dependencies) error {
+	m.deps = deps
 	return m.reload(ctx)
 }
 
@@ -95,7 +88,7 @@ func (m *CaptchaModule) current(ctx context.Context) (*captcha.CaptchaManager, e
 }
 
 func (m *CaptchaModule) reloadIfChanged(ctx context.Context) error {
-	raw, err := m.cont.GetRuntimeConfig().GetRaw(ctx, runtimeconfig.CodeCaptcha)
+	raw, err := m.deps.RuntimeConfig.GetRaw(ctx, runtimeconfig.CodeCaptcha)
 	if err != nil {
 		return err
 	}
@@ -110,7 +103,7 @@ func (m *CaptchaModule) reloadIfChanged(ctx context.Context) error {
 }
 
 func (m *CaptchaModule) reload(ctx context.Context) error {
-	raw, err := m.cont.GetRuntimeConfig().GetRaw(ctx, runtimeconfig.CodeCaptcha)
+	raw, err := m.deps.RuntimeConfig.GetRaw(ctx, runtimeconfig.CodeCaptcha)
 	if err != nil {
 		return err
 	}
@@ -127,19 +120,19 @@ func (m *CaptchaModule) apply(raw []byte, digest [sha256.Size]byte) error {
 		manager.RegisterProvider(captcha.NewImageCaptchaProvider(&captcha.ImageCaptchaConfig{
 			Enabled: true, Length: cfg.Image.Length, Width: cfg.Image.Width,
 			Height: cfg.Image.Height, Expire: cfg.Image.Expire,
-		}, m.cont.GetRedis()))
+		}, m.deps.Redis))
 	}
 	if cfg.SMS.Enabled {
 		manager.RegisterProvider(captcha.NewSMSCaptchaProvider(&captcha.SMSCaptchaConfig{
 			Enabled: true, Length: cfg.SMS.Length, Expire: cfg.SMS.Expire,
 			Template: cfg.SMS.Template, Provider: cfg.SMS.Provider,
-		}, m.cont.GetRedis(), m.sms))
+		}, m.deps.Redis, m.sms))
 	}
 	if cfg.Email.Enabled {
 		manager.RegisterProvider(captcha.NewEmailCaptchaProvider(&captcha.EmailCaptchaConfig{
 			Enabled: true, Length: cfg.Email.Length, Expire: cfg.Email.Expire,
 			Template: cfg.Email.Template,
-		}, m.cont.GetRedis(), m.email))
+		}, m.deps.Redis, m.email))
 	}
 	m.mu.Lock()
 	m.digest, m.config, m.manager = digest, cfg, manager

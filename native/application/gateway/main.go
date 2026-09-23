@@ -4,23 +4,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
-	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 
-	iamv1 "github.com/gcc798/microservice-kit/internal/api/iam/v1"
-	"github.com/gcc798/microservice-kit/internal/config"
+	"github.com/gcc798/microservice-kit/application/gateway/internal/bootstrap"
+	serviceconfig "github.com/gcc798/microservice-kit/application/gateway/internal/config"
+	sharedconfig "github.com/gcc798/microservice-kit/internal/config"
 	logging "github.com/gcc798/microservice-kit/internal/logger"
-	"github.com/gcc798/microservice-kit/internal/registry"
 	"github.com/gcc798/microservice-kit/internal/telemetry"
-	"github.com/gcc798/microservice-kit/internal/transport"
-	"github.com/google/uuid"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
-	"go.uber.org/zap"
 )
 
 // @title microservice-kit API
@@ -33,176 +26,38 @@ import (
 // @name Authorization
 
 func main() {
-	exitCode := 0
-	defer func() {
-		if exitCode != 0 {
-			os.Exit(exitCode)
-		}
-	}()
+	if err := run(); err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func run() (err error) {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
-	cfg, _, err := config.Load("application/gateway", config.ServiceGateway)
+
+	cfg, _, err := serviceconfig.Load("application/gateway")
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		exitCode = 1
-		return
+		return err
 	}
-	log, err := logging.NewLogger(config.CurrentEnv(), cfg.AppDir)
+	log, err := logging.NewLogger(sharedconfig.CurrentEnv(), cfg.AppDir)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		exitCode = 1
-		return
+		return err
 	}
-	shutdownTelemetry, err := telemetry.Init(ctx, string(config.ServiceGateway), cfg.Service.ID, config.CurrentEnv())
+	shutdownTelemetry, err := telemetry.Init(ctx, string(sharedconfig.ServiceGateway), cfg.Service.ID, sharedconfig.CurrentEnv())
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		exitCode = 1
-		return
+		return err
 	}
 	defer func() {
 		shutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		_ = shutdownTelemetry(shutdown)
+		err = errors.Join(err, shutdownTelemetry(shutdown))
 	}()
-	reg, err := registry.New(registry.Options{
-		Driver: cfg.Registry.Driver, Address: cfg.Registry.Address, Prefix: cfg.Registry.Prefix,
-		Namespace: cfg.Registry.Namespace, Group: cfg.Registry.Group, Username: cfg.Registry.Username, Password: cfg.Registry.Password,
-	})
+
+	app, err := bootstrap.New(cfg, log)
 	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		exitCode = 1
-		return
+		return err
 	}
-	defer reg.Close()
-	pool := transport.NewClientPool(reg)
-	defer pool.Close()
-	security := iamv1.NewCached(iamv1.NewRemote(pool), 5*time.Second)
-	proxyGateway := &gateway{registry: reg, selector: registry.NewSelector(), security: security}
-	if err := proxyGateway.refreshRoutes(ctx); err != nil {
-		log.Warn("initial gateway route discovery failed", zap.Error(err))
-	}
-	go func() {
-		ticker := time.NewTicker(5 * time.Second)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ticker.C:
-				if err := proxyGateway.refreshRoutes(ctx); err != nil {
-					log.Warn("gateway route refresh failed", zap.Error(err))
-				}
-			case <-ctx.Done():
-				return
-			}
-		}
-	}()
-	handler := withGatewayMiddleware(proxyGateway, cfg, log)
-	handler = otelhttp.NewHandler(handler, "gateway HTTP", otelhttp.WithFilter(func(request *http.Request) bool {
-		return telemetry.TraceHTTPPath(request.URL.Path)
-	}))
-	srv := &http.Server{Addr: fmt.Sprintf(":%d", cfg.Server.Port), Handler: handler, ReadHeaderTimeout: 10 * time.Second, MaxHeaderBytes: 1 << 20}
-	errorsCh := make(chan error, 1)
-	go func() {
-		var serveErr error
-		if cfg.Server.TLSCertFile != "" || cfg.Server.TLSKeyFile != "" {
-			if cfg.Server.TLSCertFile == "" || cfg.Server.TLSKeyFile == "" {
-				serveErr = errors.New("both server.tlsCertFile and server.tlsKeyFile are required")
-			} else {
-				serveErr = srv.ListenAndServeTLS(cfg.Server.TLSCertFile, cfg.Server.TLSKeyFile)
-			}
-		} else {
-			serveErr = srv.ListenAndServe()
-		}
-		if serveErr != nil && !errors.Is(serveErr, http.ErrServerClosed) {
-			errorsCh <- serveErr
-		}
-	}()
-	scheme := "http"
-	if cfg.Server.TLSCertFile != "" {
-		scheme = "https"
-	}
-	instance, err := transport.RegisterService(ctx, reg, string(config.ServiceGateway), cfg.Service.ID, map[string]string{
-		registry.EndpointHTTP: fmt.Sprintf("%s://%s:%d", scheme, cfg.Service.AdvertiseHost, cfg.Server.Port),
-	})
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		exitCode = 1
-		return
-	}
-	defer func() {
-		shutdown, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		defer cancel()
-		_ = reg.Deregister(shutdown, instance)
-	}()
-	log.Info("gateway started")
-	select {
-	case <-ctx.Done():
-		shutdown, cancel := context.WithTimeout(context.Background(), 30*time.Second)
-		defer cancel()
-		if err := srv.Shutdown(shutdown); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			exitCode = 1
-			return
-		}
-	case err := <-errorsCh:
-		fmt.Fprintln(os.Stderr, err)
-		exitCode = 1
-		return
-	}
-}
-
-type rateLimiter struct {
-	mu     sync.Mutex
-	window time.Time
-	counts map[string]int
-	limit  int
-}
-
-func withGatewayMiddleware(next http.Handler, cfg *config.Config, log logging.Logger) http.Handler {
-	limiter := &rateLimiter{window: time.Now(), counts: make(map[string]int), limit: cfg.Gateway.RateLimitPerMinute}
-	return http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
-		started := time.Now()
-		requestID := request.Header.Get("X-Request-ID")
-		if requestID == "" {
-			requestID = uuid.NewString()
-			request.Header.Set("X-Request-ID", requestID)
-		}
-		writer.Header().Set("X-Request-ID", requestID)
-		defer func() {
-			logging.WithContext(request.Context(), log).Info("http request",
-				zap.String("method", request.Method),
-				zap.String("path", request.URL.Path),
-				zap.Duration("latency", time.Since(started)),
-				zap.String("request_id", requestID),
-			)
-		}()
-		if cfg.CORS.Enabled {
-			writer.Header().Set("Access-Control-Allow-Origin", "*")
-			writer.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type, clientid, X-Request-ID")
-			writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-			if request.Method == http.MethodOptions {
-				writer.WriteHeader(http.StatusNoContent)
-				return
-			}
-		}
-		host, _, _ := net.SplitHostPort(request.RemoteAddr)
-		if !limiter.allow(host) {
-			writeError(writer, http.StatusTooManyRequests, "请求过于频繁")
-			return
-		}
-		next.ServeHTTP(writer, request)
-	})
-}
-
-func (l *rateLimiter) allow(key string) bool {
-	if l.limit <= 0 {
-		return true
-	}
-	l.mu.Lock()
-	defer l.mu.Unlock()
-	if time.Since(l.window) >= time.Minute {
-		l.window = time.Now()
-		clear(l.counts)
-	}
-	l.counts[key]++
-	return l.counts[key] <= l.limit
+	defer func() { err = errors.Join(err, app.Close()) }()
+	return app.Run(ctx)
 }

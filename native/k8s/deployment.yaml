@@ -187,6 +187,12 @@ spec:
             - name: MS_K_DATABASE_DSN
               valueFrom:
                 secretKeyRef: { name: microservice-kit-secret, key: database-dsn }
+            - name: MS_K_REDIS_ADDR
+              valueFrom:
+                configMapKeyRef: { name: microservice-kit-config, key: redis-addr }
+            - name: MS_K_REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef: { name: microservice-kit-secret, key: redis-password }
             - name: MS_K_STORAGE_ENDPOINT
               valueFrom:
                 configMapKeyRef: { name: microservice-kit-config, key: storage-endpoint }
@@ -267,35 +273,6 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 3
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: microservice-kit-scheduler
-spec:
-  replicas: 1
-  selector:
-    matchLabels: { app: microservice-kit-scheduler }
-  template:
-    metadata:
-      labels: { app: microservice-kit-scheduler }
-    spec:
-      terminationGracePeriodSeconds: 40
-      containers:
-        - name: scheduler
-          image: ghcr.io/your-org/microservice-kit-scheduler:0.1.0
-          env:
-            - { name: MS_K_APP_ENV, value: prod }
-            - name: MS_K_DATABASE_DSN
-              valueFrom:
-                secretKeyRef: { name: microservice-kit-secret, key: database-dsn }
-            - { name: MS_K_REGISTRY_DRIVER, value: consul }
-            - name: MS_K_REGISTRY_ADDRESS
-              valueFrom:
-                configMapKeyRef: { name: microservice-kit-config, key: registry-address }
-          resources:
-            requests: { cpu: 100m, memory: 128Mi }
-            limits: { cpu: 500m, memory: 512Mi }
 ---
 apiVersion: apps/v1
 kind: StatefulSet

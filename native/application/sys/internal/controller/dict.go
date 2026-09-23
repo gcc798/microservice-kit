@@ -6,9 +6,10 @@ import (
 	sys "github.com/gcc798/microservice-kit/application/sys/internal/domain"
 	"github.com/gcc798/microservice-kit/application/sys/internal/request"
 	"github.com/gcc798/microservice-kit/application/sys/internal/response"
-	"github.com/gcc798/microservice-kit/internal/container"
+	logging "github.com/gcc798/microservice-kit/internal/logger"
 	_ "github.com/gcc798/microservice-kit/internal/utils/pagination"
 	"github.com/labstack/echo/v5"
+	"gorm.io/gorm"
 )
 
 // DictController 字典控制器接口
@@ -24,16 +25,12 @@ type DictController interface {
 }
 
 type dictController struct {
-	ctr         container.Container
 	dictService sys.DictService
 }
 
 // NewDictController 创建组件实例。
-func NewDictController(c container.Container) DictController {
-	return &dictController{
-		ctr:         c,
-		dictService: sys.NewDictService(c.GetDB(), c.GetLogger()),
-	}
+func NewDictController(db *gorm.DB, logger logging.Logger) DictController {
+	return &dictController{dictService: sys.NewDictService(db, logger)}
 }
 
 // CreateDict 创建字典

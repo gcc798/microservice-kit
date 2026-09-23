@@ -32,7 +32,7 @@
 | Gateway | 统一 HTTP/WS 入口、Token 前置校验、服务发现和反向代理。 |
 | IAM | 登录、会话、Token 签发与校验、权限判断。 |
 | Realtime | WebSocket 升级、连接与心跳管理、Redis 订阅、本地消息投递。 |
-| SYS、Resource、Scheduler 等 | 产生业务结果，通过 Realtime 内部 API 请求实时推送。 |
+| SYS、Resource 等 | 产生业务结果，通过 Realtime 内部 API 请求实时推送。 |
 | Redis Pub/Sub | 只负责 Realtime 实例之间的瞬时消息广播。 |
 
 Realtime 不拥有 IAM 数据库，也不执行数据库迁移。它只依赖注册中心、Redis 和 IAM gRPC。

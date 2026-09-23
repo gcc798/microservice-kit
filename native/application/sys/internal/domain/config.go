@@ -27,7 +27,6 @@ type ConfigService interface {
 }
 
 type ModuleRefresher interface {
-	GetModule(name string) modules.Module
 	RefreshModule(ctx context.Context, name string, req modules.ModuleRefreshRequest) error
 }
 
@@ -202,7 +201,7 @@ func (s *configService) GetDataByCode(ctx context.Context, configCode string) (j
 
 func (s *configService) refresh(ctx context.Context, code, reason string) error {
 	name := moduleNameForCode(code)
-	if name == "" || s.modules == nil || s.modules.GetModule(name) == nil {
+	if name == "" || s.modules == nil {
 		return nil
 	}
 	return s.modules.RefreshModule(ctx, name, modules.ModuleRefreshRequest{Codes: []string{code}, Reason: reason})
@@ -218,8 +217,6 @@ func moduleNameForCode(code string) string {
 		return modules.EmailName
 	case runtimeconfig.CodeCaptcha:
 		return modules.CaptchaName
-	case runtimeconfig.CodeScheduler:
-		return modules.SchedulerName
 	default:
 		return ""
 	}

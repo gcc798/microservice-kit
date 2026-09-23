@@ -1,4 +1,4 @@
-// Package runtimeconfig owns database-backed module configuration contracts.
+// Package runtimeconfig 定义基于数据库的模块运行时配置契约。
 package runtimeconfig
 
 import (
@@ -6,46 +6,43 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-
-	"github.com/robfig/cron/v3"
 )
 
 const (
-	CodeWeChat    = "integration.wechat"
-	CodeSMS       = "integration.sms"
-	CodeEmail     = "integration.email"
-	CodeCaptcha   = "auth.captcha"
-	CodeScheduler = "scheduler"
+	CodeWeChat  = "integration.wechat"
+	CodeSMS     = "integration.sms"
+	CodeEmail   = "integration.email"
+	CodeCaptcha = "auth.captcha"
 )
 
-// WeChatConfig configures the WeChat capability.
+// WeChatConfig 描述微信能力配置。
 type WeChatConfig struct {
-	Enabled    bool   `json:"enabled"`
-	AppID      string `json:"appId"`
-	Secret     string `json:"secret"`
-	TemplateID string `json:"templateId"`
+	Enabled    bool   `json:"enabled"`    // 是否启用。
+	AppID      string `json:"appId"`      // 应用标识。
+	Secret     string `json:"secret"`     // 应用密钥。
+	TemplateID string `json:"templateId"` // 模板标识。
 }
 
-// SMSConfig configures the SMS capability.
+// SMSConfig 描述短信能力配置。
 type SMSConfig struct {
-	Enabled         bool   `json:"enabled"`
-	AccessKeyID     string `json:"accessKeyId"`
-	AccessKeySecret string `json:"accessKeySecret"`
-	SignName        string `json:"signName"`
-	TemplateCode    string `json:"templateCode"`
+	Enabled         bool   `json:"enabled"`         // 是否启用。
+	AccessKeyID     string `json:"accessKeyId"`     // 访问密钥标识。
+	AccessKeySecret string `json:"accessKeySecret"` // 访问密钥。
+	SignName        string `json:"signName"`        // 短信签名。
+	TemplateCode    string `json:"templateCode"`    // 短信模板编码。
 }
 
-// EmailConfig configures the email capability.
+// EmailConfig 描述邮件能力配置。
 type EmailConfig struct {
-	Enabled  bool   `json:"enabled"`
-	Host     string `json:"host"`
-	Port     int    `json:"port"`
-	Username string `json:"username"`
-	Password string `json:"password"`
-	From     string `json:"from"`
+	Enabled  bool   `json:"enabled"`  // 是否启用。
+	Host     string `json:"host"`     // 邮件服务器地址。
+	Port     int    `json:"port"`     // 邮件服务器端口。
+	Username string `json:"username"` // 登录用户名。
+	Password string `json:"password"` // 登录密码。
+	From     string `json:"from"`     // 发件人地址。
 }
 
-// CaptchaConfig configures all captcha providers.
+// CaptchaConfig 描述全部验证码提供方配置。
 type CaptchaConfig struct {
 	Image ImageCaptchaConfig `json:"image"`
 	SMS   SMSCaptchaConfig   `json:"sms"`
@@ -53,41 +50,29 @@ type CaptchaConfig struct {
 }
 
 type ImageCaptchaConfig struct {
-	Enabled bool `json:"enabled"`
-	Length  int  `json:"length"`
-	Width   int  `json:"width"`
-	Height  int  `json:"height"`
-	Expire  int  `json:"expire"`
+	Enabled bool `json:"enabled"` // 是否启用。
+	Length  int  `json:"length"`  // 验证码长度。
+	Width   int  `json:"width"`   // 图片宽度。
+	Height  int  `json:"height"`  // 图片高度。
+	Expire  int  `json:"expire"`  // 有效期，单位为秒。
 }
 
 type SMSCaptchaConfig struct {
-	Enabled  bool   `json:"enabled"`
-	Length   int    `json:"length"`
-	Expire   int    `json:"expire"`
-	Template string `json:"template"`
-	Provider string `json:"provider"`
+	Enabled  bool   `json:"enabled"`  // 是否启用。
+	Length   int    `json:"length"`   // 验证码长度。
+	Expire   int    `json:"expire"`   // 有效期，单位为秒。
+	Template string `json:"template"` // 短信模板。
+	Provider string `json:"provider"` // 提供方名称。
 }
 
 type EmailCaptchaConfig struct {
-	Enabled  bool   `json:"enabled"`
-	Length   int    `json:"length"`
-	Expire   int    `json:"expire"`
-	Template string `json:"template"`
+	Enabled  bool   `json:"enabled"`  // 是否启用。
+	Length   int    `json:"length"`   // 验证码长度。
+	Expire   int    `json:"expire"`   // 有效期，单位为秒。
+	Template string `json:"template"` // 邮件模板。
 }
 
-// SchedulerConfig configures code-registered jobs.
-type SchedulerConfig struct {
-	Enabled                bool                 `json:"enabled"`
-	RefreshIntervalSeconds int                  `json:"refreshIntervalSeconds"`
-	Jobs                   map[string]JobConfig `json:"jobs"`
-}
-
-type JobConfig struct {
-	Enabled bool   `json:"enabled"`
-	Cron    string `json:"cron"`
-}
-
-// Validate validates JSON for known runtime module configuration codes.
+// Validate 校验已知运行时模块配置编码对应的 JSON 数据。
 func Validate(code string, data []byte) error {
 	if len(data) == 0 || !json.Valid(data) {
 		return errors.New("configuration data must be valid JSON")
@@ -130,25 +115,6 @@ func Validate(code string, data []byte) error {
 		}
 		if cfg.Email.Enabled && (cfg.Email.Length <= 0 || cfg.Email.Expire <= 0 || cfg.Email.Template == "") {
 			return errors.New("enabled email captcha requires positive length and expire and template")
-		}
-	case CodeScheduler:
-		var cfg SchedulerConfig
-		if err := decodeStrict(data, &cfg); err != nil {
-			return err
-		}
-		if cfg.Enabled && cfg.RefreshIntervalSeconds <= 0 {
-			return errors.New("enabled scheduler requires a positive refreshIntervalSeconds")
-		}
-		parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
-		for name, job := range cfg.Jobs {
-			if strings.TrimSpace(name) == "" {
-				return errors.New("scheduler job name cannot be empty")
-			}
-			if job.Enabled {
-				if _, err := parser.Parse(job.Cron); err != nil {
-					return fmt.Errorf("scheduler job %q has invalid cron: %w", name, err)
-				}
-			}
 		}
 	}
 	return nil

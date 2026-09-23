@@ -13,7 +13,7 @@ import (
 
 type EmailModule struct {
 	mu      sync.RWMutex
-	cont    Container
+	deps    Dependencies
 	digest  [sha256.Size]byte
 	enabled bool
 	manager *thirdpartyemail.Manager
@@ -22,8 +22,8 @@ type EmailModule struct {
 func NewEmailModule() *EmailModule { return &EmailModule{} }
 func (*EmailModule) Name() string  { return EmailName }
 
-func (m *EmailModule) Init(ctx context.Context, cont Container) error {
-	m.cont = cont
+func (m *EmailModule) Init(ctx context.Context, deps Dependencies) error {
+	m.deps = deps
 	return m.reload(ctx)
 }
 
@@ -58,7 +58,7 @@ func (m *EmailModule) current(ctx context.Context) (*thirdpartyemail.Manager, er
 }
 
 func (m *EmailModule) reloadIfChanged(ctx context.Context) error {
-	raw, err := m.cont.GetRuntimeConfig().GetRaw(ctx, runtimeconfig.CodeEmail)
+	raw, err := m.deps.RuntimeConfig.GetRaw(ctx, runtimeconfig.CodeEmail)
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (m *EmailModule) reloadIfChanged(ctx context.Context) error {
 }
 
 func (m *EmailModule) reload(ctx context.Context) error {
-	raw, err := m.cont.GetRuntimeConfig().GetRaw(ctx, runtimeconfig.CodeEmail)
+	raw, err := m.deps.RuntimeConfig.GetRaw(ctx, runtimeconfig.CodeEmail)
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func (m *EmailModule) apply(raw []byte, digest [sha256.Size]byte) error {
 		created, err := thirdpartyemail.NewManager(thirdpartyemail.Config{
 			Host: cfg.Host, Port: cfg.Port, Username: cfg.Username,
 			Password: cfg.Password, From: cfg.From,
-		}, m.cont.GetRedis(), m.cont.GetLogger())
+		}, m.deps.Redis, m.deps.Logger)
 		if err != nil {
 			return err
 		}

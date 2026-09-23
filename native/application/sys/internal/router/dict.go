@@ -9,7 +9,7 @@ import (
 
 // registerDictRoutes 注册字典管理路由
 func registerDictRoutes(r *httpx.Router, ctx *RouterContext) {
-	dictController := controller.NewDictController(ctx.Container)
+	dictController := controller.NewDictController(ctx.DB, ctx.Logger)
 
 	// API v1 路由组
 	v1 := r.Group("/api/v1")

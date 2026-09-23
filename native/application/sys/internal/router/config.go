@@ -9,7 +9,7 @@ import (
 
 // registerConfigRoutes 注册配置管理路由
 func registerConfigRoutes(r *httpx.Router, ctx *RouterContext) {
-	configController := controller.NewConfigController(ctx.Container)
+	configController := controller.NewConfigController(ctx.DB, ctx.Logger, ctx.RuntimeConfig, ctx.Modules)
 
 	// API v1 路由组
 	v1 := r.Group("/api/v1")

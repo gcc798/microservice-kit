@@ -2,7 +2,7 @@ package model
 
 import "github.com/gcc798/microservice-kit/internal/utils"
 
-// MMenuApiPermission declares which API permissions a menu requires.
+// MMenuApiPermission 描述菜单所需的 API 权限。
 type MMenuApiPermission struct {
 	ID           int64           `gorm:"column:id;type:bigint;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
 	MenuId       int64           `gorm:"column:menu_id;type:bigint;not null;uniqueIndex:idx_menu_api_permission" json:"menuId"`

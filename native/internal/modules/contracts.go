@@ -1,24 +1,21 @@
-// Package modules contains runtime contracts and capabilities composed by application entrypoints.
 package modules
 
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/gcc798/microservice-kit/internal/platform/captcha"
 	"github.com/gcc798/microservice-kit/internal/platform/thirdparty/wechat"
 )
 
-const (
-	WeChatName    = "wechat"
-	SMSName       = "sms"
-	EmailName     = "email"
-	CaptchaName   = "captcha"
-	SchedulerName = "scheduler"
-)
-
 var ErrDisabled = errors.New("module is disabled")
+
+const (
+	WeChatName  = "wechat"
+	SMSName     = "sms"
+	EmailName   = "email"
+	CaptchaName = "captcha"
+)
 
 type WeChat interface {
 	Module
@@ -42,36 +39,4 @@ type Captcha interface {
 	Verify(ctx context.Context, captchaType captcha.CaptchaType, params any) error
 	GetEnabledTypes(ctx context.Context) ([]captcha.CaptchaType, error)
 	ImageEnabled(ctx context.Context) (bool, error)
-}
-
-func GetWeChat(cont Container) (WeChat, error) {
-	value, ok := cont.GetModule(WeChatName).(WeChat)
-	if !ok {
-		return nil, fmt.Errorf("module %q is not registered as a WeChat capability", WeChatName)
-	}
-	return value, nil
-}
-
-func GetSMS(cont Container) (SMS, error) {
-	value, ok := cont.GetModule(SMSName).(SMS)
-	if !ok {
-		return nil, fmt.Errorf("module %q is not registered as an SMS capability", SMSName)
-	}
-	return value, nil
-}
-
-func GetEmail(cont Container) (Email, error) {
-	value, ok := cont.GetModule(EmailName).(Email)
-	if !ok {
-		return nil, fmt.Errorf("module %q is not registered as an email capability", EmailName)
-	}
-	return value, nil
-}
-
-func GetCaptcha(cont Container) (Captcha, error) {
-	value, ok := cont.GetModule(CaptchaName).(Captcha)
-	if !ok {
-		return nil, fmt.Errorf("module %q is not registered as a captcha capability", CaptchaName)
-	}
-	return value, nil
 }

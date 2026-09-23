@@ -7,7 +7,6 @@ import (
 	"github.com/gcc798/microservice-kit/application/iam/internal/domain/model"
 	"github.com/gcc798/microservice-kit/application/iam/internal/request"
 	"github.com/gcc798/microservice-kit/application/iam/internal/response"
-	"github.com/gcc798/microservice-kit/internal/container"
 	"github.com/gcc798/microservice-kit/internal/logger"
 	_ "github.com/gcc798/microservice-kit/internal/utils/pagination"
 	"github.com/labstack/echo/v5"
@@ -37,10 +36,10 @@ type roleController struct {
 }
 
 // NewRoleController 创建组件实例。
-func NewRoleController(c container.Container) RoleController {
+func NewRoleController(service iam.RoleService, log logger.Logger) RoleController {
 	return &roleController{
-		roleService: iam.NewRoleService(c.GetDB(), c.GetLogger()),
-		logger:      c.GetLogger(),
+		roleService: service,
+		logger:      log,
 	}
 }
 

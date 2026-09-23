@@ -14,8 +14,8 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.39.0"
 )
 
-// Init installs process-wide tracing. Without an OTLP endpoint spans still get
-// valid IDs for log correlation, but are not exported.
+// Init 安装进程级链路追踪。
+// 未配置 OTLP 端点时仍会生成可用于日志关联的追踪 ID，但不会导出链路数据。
 func Init(ctx context.Context, serviceName, instanceID, environment string) (func(context.Context) error, error) {
 	if strings.TrimSpace(serviceName) == "" {
 		return nil, errors.New("telemetry service name is required")
@@ -45,6 +45,7 @@ func Init(ctx context.Context, serviceName, instanceID, environment string) (fun
 	return provider.Shutdown, nil
 }
 
+// exporterConfigured 判断是否配置了 OTLP 链路导出端点。
 func exporterConfigured() bool {
 	if strings.EqualFold(strings.TrimSpace(os.Getenv("OTEL_TRACES_EXPORTER")), "none") {
 		return false
@@ -52,7 +53,8 @@ func exporterConfigured() bool {
 	return os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT") != "" || os.Getenv("OTEL_EXPORTER_OTLP_TRACES_ENDPOINT") != ""
 }
 
-// TraceHTTPPath filters high-frequency infrastructure probes from tracing.
+// TraceHTTPPath 判断 HTTP 路径是否应创建追踪跨度。
+// 高频基础设施探针不创建跨度，以减少无意义的追踪数据。
 func TraceHTTPPath(path string) bool {
 	switch path {
 	case "/health", "/health/live", "/health/ready", "/health/startup", "/metrics":

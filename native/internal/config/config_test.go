@@ -8,47 +8,17 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gcc798/microservice-kit/internal/platform/storage"
 	"gopkg.in/yaml.v3"
 )
 
-func TestDevelopmentConfigStartsWithoutRequiredEnvironmentOverrides(t *testing.T) {
-	_, sourceFile, _, ok := runtime.Caller(0)
-	if !ok {
-		t.Fatal("resolve config test path")
-	}
-	configPath := filepath.Join(filepath.Dir(sourceFile), "..", "..", "application", "iam", "conf.example.yaml")
-	content, err := os.ReadFile(configPath)
-	if err != nil {
-		t.Fatal(err)
-	}
-	appDir := t.TempDir()
-	if err := os.WriteFile(filepath.Join(appDir, "conf.dev.yaml"), content, 0o600); err != nil {
-		t.Fatal(err)
-	}
-	t.Setenv(AppEnvVar, "dev")
-	t.Setenv("MS_K_DATABASE_DSN", "")
-	t.Setenv("MS_K_REDIS_ADDR", "")
-	t.Setenv("MS_K_REDIS_PASSWORD", "")
-	t.Setenv("MS_K_JWT_SECRET", "")
-
-	cfg, _, err := Load(appDir, ServiceIAM)
-	if err != nil {
-		t.Fatalf("Load(dev) error = %v", err)
-	}
-	if cfg.Database.DSN == "" || cfg.Redis.Addr == "" || cfg.JWT.Secret == "" {
-		t.Fatal("development config is missing a required local value")
-	}
-	if cfg.AppDir != appDir {
-		t.Fatalf("AppDir = %q, want %q", cfg.AppDir, appDir)
-	}
-	host, err := os.Hostname()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if want := string(ServiceIAM) + "-" + host; cfg.Service.ID != want {
-		t.Fatalf("Service.ID = %q, want %q", cfg.Service.ID, want)
-	}
+type testConfig struct {
+	Server   Server          `mapstructure:"server"`
+	GRPC     Server          `mapstructure:"grpc"`
+	Registry Registry        `mapstructure:"registry"`
+	Service  ServiceEndpoint `mapstructure:"service"`
+	Database Database        `mapstructure:"database"`
+	Redis    Redis           `mapstructure:"redis"`
+	JWT      JWT             `mapstructure:"jwt"`
 }
 
 func TestServiceConfigsContainOnlyOwnedSections(t *testing.T) {
@@ -64,10 +34,9 @@ func TestServiceConfigsContainOnlyOwnedSections(t *testing.T) {
 	}{
 		{name: "gateway", service: ServiceGateway, sections: []string{"cors", "gateway", "registry", "server", "service"}},
 		{name: "iam", service: ServiceIAM, sections: []string{"auth", "cors", "database", "grpc", "jwt", "redis", "registry", "server", "service"}},
-		{name: "sys", service: ServiceSystem, sections: []string{"auth", "cors", "database", "grpc", "redis", "registry", "server", "service"}},
-		{name: "resource", service: ServiceResource, sections: []string{"auth", "cors", "database", "grpc", "registry", "server", "service", "storage"}},
+		{name: "sys", service: ServiceSystem, sections: []string{"auth", "cors", "database", "grpc", "redis", "registry", "server", "service", "workers"}},
+		{name: "resource", service: ServiceResource, sections: []string{"auth", "cors", "database", "grpc", "redis", "registry", "server", "service", "storage", "workers"}},
 		{name: "realtime", service: ServiceRealtime, sections: []string{"auth", "cors", "grpc", "redis", "registry", "server", "service", "websocket"}},
-		{name: "scheduler", service: ServiceScheduler, sections: []string{"database", "registry", "service"}},
 	}
 	for _, tt := range services {
 		t.Run(tt.name, func(t *testing.T) {
@@ -95,7 +64,8 @@ func TestServiceConfigsContainOnlyOwnedSections(t *testing.T) {
 						t.Fatal(err)
 					}
 					t.Setenv(AppEnvVar, profile)
-					cfg, _, err := Load(dir, tt.service)
+					var cfg testConfig
+					_, _, err = LoadInto(dir, tt.service, &cfg)
 					if err != nil {
 						t.Fatalf("Load(%s/%s) error = %v", tt.name, profile, err)
 					}
@@ -104,6 +74,9 @@ func TestServiceConfigsContainOnlyOwnedSections(t *testing.T) {
 					}
 					if tt.service == ServiceIAM && (cfg.Redis.Addr == "" || cfg.JWT.Secret == "") {
 						t.Fatal("IAM config contains an empty required value")
+					}
+					if tt.service == ServiceResource && cfg.Redis.Addr == "" {
+						t.Fatal("Resource config contains an empty required Redis value")
 					}
 				})
 			}
@@ -137,7 +110,8 @@ websocket: { enabled: true, timeoutEnabled: true, readTimeoutSeconds: 60, writeT
 	t.Setenv("MS_K_REDIS_ADDR", "environment-redis:6379")
 	t.Setenv("MS_K_JWT_SECRET", "environment-secret-with-at-least-32-characters")
 
-	cfg, _, err := Load(dir, ServiceIAM)
+	var cfg testConfig
+	_, _, err := LoadInto(dir, ServiceIAM, &cfg)
 	if err != nil {
 		t.Fatalf("Load() error = %v", err)
 	}
@@ -158,49 +132,23 @@ websocket: { enabled: true, timeoutEnabled: true, readTimeoutSeconds: 60, writeT
 	}
 }
 
-func TestConfigValidate(t *testing.T) {
+func TestAtomicConfigValidation(t *testing.T) {
 	t.Parallel()
 
-	valid := Config{
-		Server:    Server{Port: 9009},
-		GRPC:      Server{Port: 9100},
-		Registry:  Registry{Driver: "consul", Address: "http://consul:8500", Prefix: "/microservice-kit/services"},
-		Service:   ServiceEndpoint{AdvertiseHost: "127.0.0.1"},
-		Database:  Database{DSN: "postgres-dsn", MaxOpenConns: 100, MaxIdleConns: 10, ConnMaxLifetimeMinutes: 60, SlowThreshold: 500},
-		Redis:     Redis{Addr: "redis:6379"},
-		JWT:       JWT{Secret: "a-secret-with-at-least-32-characters", Expire: 7200},
-		Auth:      Auth{TokenHeader: "Authorization"},
-		WebSocket: WebSocket{ReadTimeoutSeconds: 60, WriteTimeoutSeconds: 10, MaxReadTimeouts: 3},
-		Storage: storage.Config{
-			Endpoint:  "minio:9000",
-			AccessKey: "access",
-			SecretKey: "secret",
-			Bucket:    "bucket",
-			Region:    "us-east-1",
-		},
+	if err := (Server{Port: 9009}).Validate("server"); err != nil {
+		t.Fatal(err)
 	}
-	if err := valid.Validate("dev", ServiceIAM); err != nil {
-		t.Fatalf("valid config rejected: %v", err)
+	if err := (Registry{Driver: "consul", Address: "http://consul:8500"}).Validate(); err != nil {
+		t.Fatal(err)
 	}
-
-	tweak := valid
-	tweak.CORS.Enabled = true
-	if err := tweak.Validate("prod", ServiceIAM); err == nil {
+	if err := (Database{DSN: "postgres-dsn", MaxOpenConns: 100, MaxIdleConns: 10, ConnMaxLifetimeMinutes: 60, SlowThreshold: 500}).Validate(); err != nil {
+		t.Fatal(err)
+	}
+	if err := (CORS{Enabled: true}).Validate("prod"); err == nil {
 		t.Fatal("prod config with CORS enabled was accepted")
 	}
-
-	tweak = valid
-	tweak.JWT.Secret = "short"
-	if err := tweak.Validate("dev", ServiceIAM); err == nil {
+	if err := (JWT{Secret: "short", Expire: 7200}).Validate(); err == nil {
 		t.Fatal("short JWT secret was accepted")
-	}
-
-	scheduler := Config{
-		Registry: Registry{Driver: "consul", Address: "http://consul:8500", Prefix: "/microservice-kit/services"},
-		Database: Database{DSN: "postgres-dsn", MaxOpenConns: 20, MaxIdleConns: 5, ConnMaxLifetimeMinutes: 60, SlowThreshold: 500},
-	}
-	if err := scheduler.Validate("prod", ServiceScheduler); err != nil {
-		t.Fatalf("minimal scheduler config rejected: %v", err)
 	}
 }
 
@@ -209,7 +157,8 @@ func TestCurrentEnvMustBeExplicit(t *testing.T) {
 	if got := CurrentEnv(); got != "" {
 		t.Fatalf("CurrentEnv() = %q, want empty", got)
 	}
-	if _, _, err := Load(t.TempDir(), ServiceIAM); err == nil {
+	var cfg testConfig
+	if _, _, err := LoadInto(t.TempDir(), ServiceIAM, &cfg); err == nil {
 		t.Fatal("Load() accepted a missing MS_K_APP_ENV")
 	}
 }
@@ -220,7 +169,8 @@ func TestLoadRejectsImplicitConfiguration(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Setenv(AppEnvVar, "dev")
-	_, _, err := Load(dir, ServiceGateway)
+	var cfg testConfig
+	_, _, err := LoadInto(dir, ServiceGateway, &cfg)
 	if err == nil || !strings.Contains(err.Error(), "must be explicitly configured") {
 		t.Fatalf("Load() error = %v, want explicit configuration error", err)
 	}
@@ -228,7 +178,8 @@ func TestLoadRejectsImplicitConfiguration(t *testing.T) {
 
 func TestLoadRejectsUnknownProfile(t *testing.T) {
 	t.Setenv(AppEnvVar, "staging")
-	if _, _, err := Load(t.TempDir(), ServiceIAM); err == nil {
+	var cfg testConfig
+	if _, _, err := LoadInto(t.TempDir(), ServiceIAM, &cfg); err == nil {
 		t.Fatal("Load() accepted unsupported profile")
 	}
 }

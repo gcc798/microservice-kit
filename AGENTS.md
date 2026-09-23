@@ -48,7 +48,7 @@ microservice-kit/
 
 - `native/application/gateway/`：唯一对外 HTTP/WS 入口，负责服务发现和反向代理，不拥有业务数据。
 - `native/application/{iam,sys,resource}/internal/`：各领域服务私有的 controller、router、DTO、domain、model 和 Goose 迁移。
-- `native/application/scheduler/`：Scheduler 进程与异步 Job，不执行数据库迁移。
+- `native/application/{sys,resource}/internal/workers/`：服务私有后台任务，由所属服务管理生命周期并通过 Redis 防止多实例重复执行。
 - `native/cmd/usermgr/`：管理员维护工具，不是 `application/` 部署单元。
 - `native/api/<service>/v1/`：Proto 源文件。
 - `native/internal/api/<service>/v1/`：生成的 gRPC 契约和薄适配。
@@ -62,7 +62,7 @@ microservice-kit/
 每个进程在自己的目录版本化 `conf.example.yaml` 和 `zaplogger.example.yaml`；开发者通过 `make init-config` 基于模板创建被 Git 忽略的 `*.dev.yaml` 和 `*.prod.yaml`。程序只按 `MS_K_APP_ENV=dev|prod` 读取对应运行配置，不直接读取 example 文件；部署环境变量可覆盖其中的地址和敏感值。
 每个服务的 YAML 模板只声明自身实际依赖，不得为了复用配置结构加入未使用字段。
 
-IAM、SYS、Resource 分别拥有 `application/<service>/internal/migrations/sql/`，启动时只执行自己的迁移，并使用独立的 `goose_<service>_version` 表。Scheduler 不执行迁移。
+IAM、SYS、Resource 分别拥有 `application/<service>/internal/migrations/sql/`，启动时只执行自己的迁移，并使用独立的 `goose_<service>_version` 表。
 
 `native` 不使用顶层 `pkg/` 存放普通共享代码。仅当某个包明确作为稳定 API 供当前 Go Module 之外的工程导入时，才考虑新增 `pkg/`；仓库内多应用共享代码应保留在 `internal/`。
 

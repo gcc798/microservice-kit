@@ -1,7 +1,0 @@
-level: info
-output: console
-encoding: json
-console:
-  colorful: false
-caller: true
-stacktrace: true

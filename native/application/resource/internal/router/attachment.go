@@ -9,8 +9,7 @@ import (
 
 // registerAttachmentRoutes 注册附件管理路由
 func registerAttachmentRoutes(r *httpx.Router, ctx *RouterContext) {
-	// 初始化 controller
-	attachmentController := controller.NewAttachmentController(ctx.Container)
+	attachmentController := controller.NewAttachmentController(ctx.Attachments, ctx.Logger)
 
 	// 附件管理路由组（需要认证和权限）
 	attachments := r.Group("/api/v1/attachment")

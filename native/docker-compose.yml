@@ -84,6 +84,9 @@ services:
       <<: [*database-environment, *registry-environment]
       MS_K_SERVER_PORT: 9012
       MS_K_GRPC_PORT: 9112
+      MS_K_REDIS_ADDR: redis:6379
+      MS_K_REDIS_PASSWORD: "${MS_K_REDIS_PASSWORD:-123456}"
+      MS_K_REDIS_DB: "0"
       MS_K_STORAGE_ENDPOINT: rustfs:9000
       MS_K_STORAGE_ACCESS_KEY: "${MS_K_RUSTFS_ACCESS_KEY:-rustfsadmin}"
       MS_K_STORAGE_SECRET_KEY: "${MS_K_RUSTFS_SECRET_KEY:-rustfsadmin}"
@@ -92,6 +95,7 @@ services:
       MS_K_STORAGE_USE_SSL: "false"
     depends_on:
       postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
       rustfs: { condition: service_healthy }
       consul: { condition: service_healthy }
     healthcheck:
@@ -122,19 +126,6 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
-    restart: unless-stopped
-
-  scheduler:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args: { TARGET: scheduler }
-    environment:
-      <<: [*database-environment, *registry-environment]
-      MS_K_SERVICE_ID: ""
-    depends_on:
-      sys: { condition: service_healthy }
-      resource: { condition: service_healthy }
     restart: unless-stopped
 
   consul:

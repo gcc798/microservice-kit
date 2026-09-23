@@ -7,9 +7,9 @@ Native 使用 OpenTelemetry 生成和传播 Trace。应用未配置 OTLP 接收�
 - Gateway HTTP 入口与反向代理：自动创建并传播 HTTP Span。
 - IAM、SYS、Resource HTTP 入口：Echo 中间件自动提取 W3C `traceparent` 并创建 Server Span。
 - gRPC：`internal/transport` 为全部客户端和服务端自动创建、传播 Span。
-- PostgreSQL：`internal/container` 在 `database/sql` 驱动层创建查询 Span；业务查询必须继续使用 `db.WithContext(ctx)`。
-- Redis：`internal/container` 注册 go-redis tracing hook；业务调用必须传入当前 `ctx`。
-- Scheduler：调度器为每次任务执行创建 `scheduler.job` Root Span，并把 `ctx` 传入 Job。
+- PostgreSQL：各服务私有 `internal/bootstrap` 通过共享数据库连接工具创建带 OpenTelemetry 的数据库连接；业务查询必须继续使用 `db.WithContext(ctx)`。
+- Redis：各服务私有 `internal/bootstrap` 创建 Redis 客户端并注册 go-redis tracing hook；业务调用必须传入当前 `ctx`。
+- SYS、Resource Worker：定时任务使用所属服务 Context，并通过日志记录执行结果。
 - `/health/*` 和 `/metrics` 不创建 HTTP Span，避免健康检查噪声。
 
 业务 controller、domain 和 model 不需要为 HTTP、gRPC、PostgreSQL、Redis 重复创建 Span。不得使用 `context.Background()` 替换入口传下来的 `ctx`。
@@ -46,7 +46,7 @@ logging.WithContext(ctx, log).Info("login succeeded", zap.Int64("user_id", userI
 {"msg":"login succeeded","trace_id":"4bf92f3577b34da6a3ce929d0e0e4736","span_id":"00f067aa0ba902b7"}
 ```
 
-`trace_id` 标识完整的跨服务请求，`span_id` 标识其中一个具体操作。HTTP 访问日志、登录示例日志和 Scheduler Job 日志已接入该关联方式。
+`trace_id` 标识完整的跨服务请求，`span_id` 标识其中一个具体操作。HTTP 访问日志和登录示例日志已接入该关联方式。
 
 ## 可选 OTLP 导出
 

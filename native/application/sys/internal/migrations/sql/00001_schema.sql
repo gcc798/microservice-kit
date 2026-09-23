@@ -28,8 +28,7 @@ INSERT INTO s_config (id, name, code, data, remark, create_by, created_time, upd
 (1880159541355580001, '微信集成配置', 'integration.wechat', '{"enabled":false,"appId":"","secret":"","templateId":""}', '微信小程序登录与消息能力运行期配置', 0, NOW(), 0, NOW()),
 (1880159541355580002, '短信集成配置', 'integration.sms', '{"enabled":false,"accessKeyId":"","accessKeySecret":"","signName":"","templateCode":""}', '短信服务运行期配置', 0, NOW(), 0, NOW()),
 (1880159541355580003, '邮件集成配置', 'integration.email', '{"enabled":false,"host":"","port":0,"username":"","password":"","from":""}', '邮件服务运行期配置', 0, NOW(), 0, NOW()),
-(1880159541355580004, '验证码配置', 'auth.captcha', '{"image":{"enabled":false,"length":4,"width":120,"height":40,"expire":300},"sms":{"enabled":false,"length":6,"expire":300,"template":"SMS_CODE_TEMPLATE","provider":"aliyun"},"email":{"enabled":false,"length":6,"expire":300,"template":"验证码：%s"}}', '图形、短信和邮件验证码运行期配置', 0, NOW(), 0, NOW()),
-(1880159541355580005, '调度器配置', 'scheduler', '{"enabled":true,"refreshIntervalSeconds":5,"jobs":{"data-cleanup":{"enabled":true,"cron":"0 0 2 * * *"}}}', '仅允许调度代码注册的后台任务', 0, NOW(), 0, NOW());
+(1880159541355580004, '验证码配置', 'auth.captcha', '{"image":{"enabled":false,"length":4,"width":120,"height":40,"expire":300},"sms":{"enabled":false,"length":6,"expire":300,"template":"SMS_CODE_TEMPLATE","provider":"aliyun"},"email":{"enabled":false,"length":6,"expire":300,"template":"验证码：%s"}}', '图形、短信和邮件验证码运行期配置', 0, NOW(), 0, NOW());
 
 -- +goose Down
 DROP TABLE IF EXISTS s_oper_log, s_login_log, s_dict_data, s_config CASCADE;

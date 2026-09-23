@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gcc798/microservice-kit/internal/container"
 	"github.com/labstack/echo/v5"
+	goredis "github.com/redis/go-redis/v9"
+	"gorm.io/gorm"
 )
 
 var (
@@ -23,14 +24,13 @@ type Handler interface {
 }
 
 type handler struct {
-	container container.Container
+	db    *gorm.DB
+	redis *goredis.Client
 }
 
 // NewHandler 创建组件实例。
-func NewHandler(c container.Container) Handler {
-	return &handler{
-		container: c,
-	}
+func NewHandler(db *gorm.DB, redis *goredis.Client) Handler {
+	return &handler{db: db, redis: redis}
 }
 
 // HealthResponse 定义业务数据结构。
@@ -52,8 +52,8 @@ type HealthResponse struct {
 //	@Failure		503	{object}	HealthResponse	"服务异常"
 //	@Router			/health [get]
 func (h *handler) Health(c *echo.Context) {
-	db := h.container.GetDB()
-	redis := h.container.GetRedis()
+	db := h.db
+	redis := h.redis
 
 	services := make(map[string]string)
 	overallStatus := "healthy"
@@ -111,8 +111,8 @@ func (h *handler) Health(c *echo.Context) {
 //	@Failure		503	{object}	map[string]string	"服务未就绪"
 //	@Router			/health/ready [get]
 func (h *handler) Ready(c *echo.Context) {
-	db := h.container.GetDB()
-	redis := h.container.GetRedis()
+	db := h.db
+	redis := h.redis
 
 	if sqlDB, err := db.DB(); err == nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
@@ -187,7 +187,7 @@ func (h *handler) Startup(c *echo.Context) {
 		return
 	}
 
-	db := h.container.GetDB()
+	db := h.db
 	if sqlDB, err := db.DB(); err == nil {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 		defer cancel()

@@ -12,7 +12,6 @@ import (
 	"github.com/gcc798/microservice-kit/internal/runtimeconfig"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
-	"gorm.io/gorm"
 )
 
 type mapSource struct {
@@ -26,10 +25,9 @@ func (s *mapSource) Load(_ context.Context, code string) ([]byte, error) {
 	return append([]byte(nil), s.data[code]...), nil
 }
 
-type moduleTestContainer struct {
-	redis   *redis.Client
-	store   *runtimeconfig.Store
-	modules map[string]Module
+type moduleTestDeps struct {
+	redis *redis.Client
+	store *runtimeconfig.Store
 }
 
 type noopLogger struct{ value *zap.Logger }
@@ -45,11 +43,9 @@ func (l *noopLogger) With(fields ...zap.Field) logging.Logger {
 	return &noopLogger{value: l.value.With(fields...)}
 }
 
-func (*moduleTestContainer) GetDB() *gorm.DB                          { return nil }
-func (c *moduleTestContainer) GetRedis() *redis.Client                { return c.redis }
-func (*moduleTestContainer) GetLogger() logging.Logger                { return newNoopLogger() }
-func (c *moduleTestContainer) GetRuntimeConfig() *runtimeconfig.Store { return c.store }
-func (c *moduleTestContainer) GetModule(name string) Module           { return c.modules[name] }
+func moduleDeps(testDeps moduleTestDeps) Dependencies {
+	return Dependencies{Redis: testDeps.redis, RuntimeConfig: testDeps.store, Logger: newNoopLogger()}
+}
 
 func TestCaptchaModuleReadsChangedRedisConfiguration(t *testing.T) {
 	server := miniredis.RunT(t)
@@ -60,18 +56,18 @@ func TestCaptchaModuleReadsChangedRedisConfiguration(t *testing.T) {
 		runtimeconfig.CodeEmail:   []byte(`{"enabled":false,"host":"","port":0,"username":"","password":"","from":""}`),
 		runtimeconfig.CodeCaptcha: []byte(`{"image":{"enabled":false,"length":4,"width":120,"height":40,"expire":300},"sms":{"enabled":false,"length":6,"expire":300,"template":"SMS_CODE_TEMPLATE","provider":"aliyun"},"email":{"enabled":false,"length":6,"expire":300,"template":"验证码：%s"}}`),
 	}}
-	cont := &moduleTestContainer{redis: client, modules: make(map[string]Module)}
-	cont.store = runtimeconfig.NewStore(client, source, redislock.New(client))
-	smsModule, emailModule, captchaModule := NewSMSModule(), NewEmailModule(), NewCaptchaModule()
-	cont.modules[SMSName], cont.modules[EmailName], cont.modules[CaptchaName] = smsModule, emailModule, captchaModule
+	testDeps := moduleTestDeps{redis: client, store: runtimeconfig.NewStore(client, source, redislock.New(client))}
+	smsModule, emailModule := NewSMSModule(), NewEmailModule()
+	captchaModule := NewCaptchaModule(smsModule, emailModule)
+	deps := moduleDeps(testDeps)
 	ctx := context.Background()
-	if err := smsModule.Init(ctx, cont); err != nil {
+	if err := smsModule.Init(ctx, deps); err != nil {
 		t.Fatal(err)
 	}
-	if err := emailModule.Init(ctx, cont); err != nil {
+	if err := emailModule.Init(ctx, deps); err != nil {
 		t.Fatal(err)
 	}
-	if err := captchaModule.Init(ctx, cont); err != nil {
+	if err := captchaModule.Init(ctx, deps); err != nil {
 		t.Fatal(err)
 	}
 	types, err := captchaModule.GetEnabledTypes(ctx)

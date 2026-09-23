@@ -67,12 +67,19 @@ func main() {
 		os.Exit(2)
 	}
 
-	cfg, _, err := config.Load(opts.configDir, config.ServiceUserManager)
+	var cfg struct {
+		Database config.Database `mapstructure:"database"`
+	}
+	_, _, err = config.LoadInto(opts.configDir, config.ServiceUserManager, &cfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "加载配置失败: %v\n", err)
 		os.Exit(1)
 	}
 
+	if cfg.Database.DSN == "" {
+		fmt.Fprintln(os.Stderr, "加载配置失败: database.dsn is required")
+		os.Exit(1)
+	}
 	db, err := initDB(cfg.Database.DSN)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "连接数据库失败: %v\n", err)

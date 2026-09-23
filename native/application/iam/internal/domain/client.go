@@ -22,9 +22,9 @@ const (
 
 // ClientService 定义业务数据结构。
 type ClientService interface {
-	// AuthenticateClientID validates an active client and a login grant type.
+	// AuthenticateClientID 校验启用中的客户端及登录授权类型。
 	AuthenticateClientID(ctx context.Context, clientID, grantType string) (*model.AuthClient, error)
-	// GetActiveClient returns an active client for non-login operations such as token refresh.
+	// GetActiveClient 返回用于刷新令牌等非登录操作的启用客户端。
 	GetActiveClient(ctx context.Context, clientID string) (*model.AuthClient, error)
 }
 

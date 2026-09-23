@@ -394,107 +394,6 @@ func (x *RecordOperationsRequest) GetLogs() []*OperationLog {
 	return nil
 }
 
-// CleanLogsRequest 是日志清理请求。
-type CleanLogsRequest struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// days 表示保留最近多少天的日志，必须为正数。
-	Days          int32 `protobuf:"varint,1,opt,name=days,proto3" json:"days,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CleanLogsRequest) Reset() {
-	*x = CleanLogsRequest{}
-	mi := &file_api_sys_v1_sys_proto_msgTypes[4]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CleanLogsRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CleanLogsRequest) ProtoMessage() {}
-
-func (x *CleanLogsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_sys_v1_sys_proto_msgTypes[4]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CleanLogsRequest.ProtoReflect.Descriptor instead.
-func (*CleanLogsRequest) Descriptor() ([]byte, []int) {
-	return file_api_sys_v1_sys_proto_rawDescGZIP(), []int{4}
-}
-
-func (x *CleanLogsRequest) GetDays() int32 {
-	if x != nil {
-		return x.Days
-	}
-	return 0
-}
-
-// CleanLogsResponse 是日志清理结果。
-type CleanLogsResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// login_logs 是清理的登录日志数量。
-	LoginLogs int64 `protobuf:"varint,1,opt,name=login_logs,json=loginLogs,proto3" json:"login_logs,omitempty"`
-	// operation_logs 是清理的操作日志数量。
-	OperationLogs int64 `protobuf:"varint,2,opt,name=operation_logs,json=operationLogs,proto3" json:"operation_logs,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CleanLogsResponse) Reset() {
-	*x = CleanLogsResponse{}
-	mi := &file_api_sys_v1_sys_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CleanLogsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CleanLogsResponse) ProtoMessage() {}
-
-func (x *CleanLogsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_sys_v1_sys_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CleanLogsResponse.ProtoReflect.Descriptor instead.
-func (*CleanLogsResponse) Descriptor() ([]byte, []int) {
-	return file_api_sys_v1_sys_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *CleanLogsResponse) GetLoginLogs() int64 {
-	if x != nil {
-		return x.LoginLogs
-	}
-	return 0
-}
-
-func (x *CleanLogsResponse) GetOperationLogs() int64 {
-	if x != nil {
-		return x.OperationLogs
-	}
-	return 0
-}
-
 var File_api_sys_v1_sys_proto protoreflect.FileDescriptor
 
 const file_api_sys_v1_sys_proto_rawDesc = "" +
@@ -536,17 +435,10 @@ const file_api_sys_v1_sys_proto_rawDesc = "" +
 	"\n" +
 	"user_agent\x18\x0f \x01(\tR\tuserAgent\"T\n" +
 	"\x17RecordOperationsRequest\x129\n" +
-	"\x04logs\x18\x01 \x03(\v2%.microservice_kit.sys.v1.OperationLogR\x04logs\"&\n" +
-	"\x10CleanLogsRequest\x12\x12\n" +
-	"\x04days\x18\x01 \x01(\x05R\x04days\"Y\n" +
-	"\x11CleanLogsResponse\x12\x1d\n" +
-	"\n" +
-	"login_logs\x18\x01 \x01(\x03R\tloginLogs\x12%\n" +
-	"\x0eoperation_logs\x18\x02 \x01(\x03R\roperationLogs2\xb5\x02\n" +
+	"\x04logs\x18\x01 \x03(\v2%.microservice_kit.sys.v1.OperationLogR\x04logs2\xd1\x01\n" +
 	"\rSystemService\x12Z\n" +
 	"\vRecordLogin\x12+.microservice_kit.sys.v1.RecordLoginRequest\x1a\x1e.microservice_kit.sys.v1.Empty\x12d\n" +
-	"\x10RecordOperations\x120.microservice_kit.sys.v1.RecordOperationsRequest\x1a\x1e.microservice_kit.sys.v1.Empty\x12b\n" +
-	"\tCleanLogs\x12).microservice_kit.sys.v1.CleanLogsRequest\x1a*.microservice_kit.sys.v1.CleanLogsResponseB>Z<github.com/gcc798/microservice-kit/internal/api/sys/v1;sysv1b\x06proto3"
+	"\x10RecordOperations\x120.microservice_kit.sys.v1.RecordOperationsRequest\x1a\x1e.microservice_kit.sys.v1.EmptyB>Z<github.com/gcc798/microservice-kit/internal/api/sys/v1;sysv1b\x06proto3"
 
 var (
 	file_api_sys_v1_sys_proto_rawDescOnce sync.Once
@@ -560,25 +452,21 @@ func file_api_sys_v1_sys_proto_rawDescGZIP() []byte {
 	return file_api_sys_v1_sys_proto_rawDescData
 }
 
-var file_api_sys_v1_sys_proto_msgTypes = make([]protoimpl.MessageInfo, 6)
+var file_api_sys_v1_sys_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
 var file_api_sys_v1_sys_proto_goTypes = []any{
 	(*Empty)(nil),                   // 0: microservice_kit.sys.v1.Empty
 	(*RecordLoginRequest)(nil),      // 1: microservice_kit.sys.v1.RecordLoginRequest
 	(*OperationLog)(nil),            // 2: microservice_kit.sys.v1.OperationLog
 	(*RecordOperationsRequest)(nil), // 3: microservice_kit.sys.v1.RecordOperationsRequest
-	(*CleanLogsRequest)(nil),        // 4: microservice_kit.sys.v1.CleanLogsRequest
-	(*CleanLogsResponse)(nil),       // 5: microservice_kit.sys.v1.CleanLogsResponse
 }
 var file_api_sys_v1_sys_proto_depIdxs = []int32{
 	2, // 0: microservice_kit.sys.v1.RecordOperationsRequest.logs:type_name -> microservice_kit.sys.v1.OperationLog
 	1, // 1: microservice_kit.sys.v1.SystemService.RecordLogin:input_type -> microservice_kit.sys.v1.RecordLoginRequest
 	3, // 2: microservice_kit.sys.v1.SystemService.RecordOperations:input_type -> microservice_kit.sys.v1.RecordOperationsRequest
-	4, // 3: microservice_kit.sys.v1.SystemService.CleanLogs:input_type -> microservice_kit.sys.v1.CleanLogsRequest
-	0, // 4: microservice_kit.sys.v1.SystemService.RecordLogin:output_type -> microservice_kit.sys.v1.Empty
-	0, // 5: microservice_kit.sys.v1.SystemService.RecordOperations:output_type -> microservice_kit.sys.v1.Empty
-	5, // 6: microservice_kit.sys.v1.SystemService.CleanLogs:output_type -> microservice_kit.sys.v1.CleanLogsResponse
-	4, // [4:7] is the sub-list for method output_type
-	1, // [1:4] is the sub-list for method input_type
+	0, // 3: microservice_kit.sys.v1.SystemService.RecordLogin:output_type -> microservice_kit.sys.v1.Empty
+	0, // 4: microservice_kit.sys.v1.SystemService.RecordOperations:output_type -> microservice_kit.sys.v1.Empty
+	3, // [3:5] is the sub-list for method output_type
+	1, // [1:3] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
@@ -595,7 +483,7 @@ func file_api_sys_v1_sys_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_sys_v1_sys_proto_rawDesc), len(file_api_sys_v1_sys_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   6,
+			NumMessages:   4,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

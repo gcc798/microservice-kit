@@ -13,7 +13,7 @@ import (
 
 type SMSModule struct {
 	mu      sync.RWMutex
-	cont    Container
+	deps    Dependencies
 	digest  [sha256.Size]byte
 	enabled bool
 	manager *thirdpartysms.Manager
@@ -22,8 +22,8 @@ type SMSModule struct {
 func NewSMSModule() *SMSModule  { return &SMSModule{} }
 func (*SMSModule) Name() string { return SMSName }
 
-func (m *SMSModule) Init(ctx context.Context, cont Container) error {
-	m.cont = cont
+func (m *SMSModule) Init(ctx context.Context, deps Dependencies) error {
+	m.deps = deps
 	return m.reload(ctx)
 }
 
@@ -66,7 +66,7 @@ func (m *SMSModule) current(ctx context.Context) (*thirdpartysms.Manager, error)
 }
 
 func (m *SMSModule) reloadIfChanged(ctx context.Context) error {
-	raw, err := m.cont.GetRuntimeConfig().GetRaw(ctx, runtimeconfig.CodeSMS)
+	raw, err := m.deps.RuntimeConfig.GetRaw(ctx, runtimeconfig.CodeSMS)
 	if err != nil {
 		return err
 	}
@@ -81,7 +81,7 @@ func (m *SMSModule) reloadIfChanged(ctx context.Context) error {
 }
 
 func (m *SMSModule) reload(ctx context.Context) error {
-	raw, err := m.cont.GetRuntimeConfig().GetRaw(ctx, runtimeconfig.CodeSMS)
+	raw, err := m.deps.RuntimeConfig.GetRaw(ctx, runtimeconfig.CodeSMS)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func (m *SMSModule) apply(raw []byte, digest [sha256.Size]byte) error {
 		created, err := thirdpartysms.NewManager(thirdpartysms.Config{
 			AccessKeyId: cfg.AccessKeyID, AccessKeySecret: cfg.AccessKeySecret,
 			SignName: cfg.SignName, TemplateCode: cfg.TemplateCode,
-		}, m.cont.GetRedis(), m.cont.GetLogger())
+		}, m.deps.Redis, m.deps.Logger)
 		if err != nil {
 			return err
 		}

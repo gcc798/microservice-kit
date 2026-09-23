@@ -10,7 +10,6 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
-	sync "sync"
 	unsafe "unsafe"
 )
 
@@ -21,132 +20,17 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// CleanExpiredRequest 是过期资源清理请求；当前不需要请求参数。
-type CleanExpiredRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CleanExpiredRequest) Reset() {
-	*x = CleanExpiredRequest{}
-	mi := &file_api_resource_v1_resource_proto_msgTypes[0]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CleanExpiredRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CleanExpiredRequest) ProtoMessage() {}
-
-func (x *CleanExpiredRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_api_resource_v1_resource_proto_msgTypes[0]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CleanExpiredRequest.ProtoReflect.Descriptor instead.
-func (*CleanExpiredRequest) Descriptor() ([]byte, []int) {
-	return file_api_resource_v1_resource_proto_rawDescGZIP(), []int{0}
-}
-
-// CleanExpiredResponse 是过期资源清理结果。
-type CleanExpiredResponse struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// cleaned 是成功清理的资源数量。
-	Cleaned int64 `protobuf:"varint,1,opt,name=cleaned,proto3" json:"cleaned,omitempty"`
-	// failed 是清理失败的资源数量。
-	Failed        int64 `protobuf:"varint,2,opt,name=failed,proto3" json:"failed,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *CleanExpiredResponse) Reset() {
-	*x = CleanExpiredResponse{}
-	mi := &file_api_resource_v1_resource_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *CleanExpiredResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*CleanExpiredResponse) ProtoMessage() {}
-
-func (x *CleanExpiredResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_api_resource_v1_resource_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use CleanExpiredResponse.ProtoReflect.Descriptor instead.
-func (*CleanExpiredResponse) Descriptor() ([]byte, []int) {
-	return file_api_resource_v1_resource_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *CleanExpiredResponse) GetCleaned() int64 {
-	if x != nil {
-		return x.Cleaned
-	}
-	return 0
-}
-
-func (x *CleanExpiredResponse) GetFailed() int64 {
-	if x != nil {
-		return x.Failed
-	}
-	return 0
-}
-
 var File_api_resource_v1_resource_proto protoreflect.FileDescriptor
 
 const file_api_resource_v1_resource_proto_rawDesc = "" +
 	"\n" +
-	"\x1eapi/resource/v1/resource.proto\x12\x1cmicroservice_kit.resource.v1\"\x15\n" +
-	"\x13CleanExpiredRequest\"H\n" +
-	"\x14CleanExpiredResponse\x12\x18\n" +
-	"\acleaned\x18\x01 \x01(\x03R\acleaned\x12\x16\n" +
-	"\x06failed\x18\x02 \x01(\x03R\x06failed2\x88\x01\n" +
-	"\x0fResourceService\x12u\n" +
-	"\fCleanExpired\x121.microservice_kit.resource.v1.CleanExpiredRequest\x1a2.microservice_kit.resource.v1.CleanExpiredResponseBHZFgithub.com/gcc798/microservice-kit/internal/api/resource/v1;resourcev1b\x06proto3"
+	"\x1eapi/resource/v1/resource.proto\x12\x1cmicroservice_kit.resource.v12\x11\n" +
+	"\x0fResourceServiceBHZFgithub.com/gcc798/microservice-kit/internal/api/resource/v1;resourcev1b\x06proto3"
 
-var (
-	file_api_resource_v1_resource_proto_rawDescOnce sync.Once
-	file_api_resource_v1_resource_proto_rawDescData []byte
-)
-
-func file_api_resource_v1_resource_proto_rawDescGZIP() []byte {
-	file_api_resource_v1_resource_proto_rawDescOnce.Do(func() {
-		file_api_resource_v1_resource_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_api_resource_v1_resource_proto_rawDesc), len(file_api_resource_v1_resource_proto_rawDesc)))
-	})
-	return file_api_resource_v1_resource_proto_rawDescData
-}
-
-var file_api_resource_v1_resource_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
-var file_api_resource_v1_resource_proto_goTypes = []any{
-	(*CleanExpiredRequest)(nil),  // 0: microservice_kit.resource.v1.CleanExpiredRequest
-	(*CleanExpiredResponse)(nil), // 1: microservice_kit.resource.v1.CleanExpiredResponse
-}
+var file_api_resource_v1_resource_proto_goTypes = []any{}
 var file_api_resource_v1_resource_proto_depIdxs = []int32{
-	0, // 0: microservice_kit.resource.v1.ResourceService.CleanExpired:input_type -> microservice_kit.resource.v1.CleanExpiredRequest
-	1, // 1: microservice_kit.resource.v1.ResourceService.CleanExpired:output_type -> microservice_kit.resource.v1.CleanExpiredResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for method output_type
+	0, // [0:0] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name
 	0, // [0:0] is the sub-list for extension extendee
 	0, // [0:0] is the sub-list for field type_name
@@ -163,13 +47,12 @@ func file_api_resource_v1_resource_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_api_resource_v1_resource_proto_rawDesc), len(file_api_resource_v1_resource_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   0,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
 		GoTypes:           file_api_resource_v1_resource_proto_goTypes,
 		DependencyIndexes: file_api_resource_v1_resource_proto_depIdxs,
-		MessageInfos:      file_api_resource_v1_resource_proto_msgTypes,
 	}.Build()
 	File_api_resource_v1_resource_proto = out.File
 	file_api_resource_v1_resource_proto_goTypes = nil

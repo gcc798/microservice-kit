@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/gcc798/microservice-kit/internal/config"
 	"github.com/gcc798/microservice-kit/internal/httpresponse"
 	"github.com/gcc798/microservice-kit/internal/platform/jwt"
 	"github.com/labstack/echo/v5"
@@ -18,11 +17,15 @@ type AccessTokenValidator interface {
 // 1. 从配置的请求头读取 AccessToken，WebSocket 路径兼容 query Token
 // 2. 验证 AccessToken
 // 3. 设置用户信息到 context
-func Auth(tokenManager AccessTokenValidator, cfg *config.Config) echo.MiddlewareFunc {
+type AuthOptions struct {
+	TokenHeader string
+}
+
+func Auth(tokenManager AccessTokenValidator, opts AuthOptions) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {
 			// 从配置的请求头读取 Token，WebSocket 路径兼容小程序 query 握手。
-			tokenHeader := cfg.Auth.TokenHeader
+			tokenHeader := opts.TokenHeader
 			token := c.Request().Header.Get(tokenHeader)
 			if token == "" && isWebSocketPath(c.Path()) {
 				token = c.QueryParam(tokenHeader)

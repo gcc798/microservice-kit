@@ -7,12 +7,14 @@ import (
 	"github.com/gcc798/microservice-kit/application/iam/internal/domain/model"
 	"github.com/gcc798/microservice-kit/application/iam/internal/request"
 	"github.com/gcc798/microservice-kit/application/iam/internal/response"
-	"github.com/gcc798/microservice-kit/internal/container"
 	"github.com/gcc798/microservice-kit/internal/httputils"
+	"github.com/gcc798/microservice-kit/internal/logger"
+	"github.com/gcc798/microservice-kit/internal/platform/jwt"
 	_ "github.com/gcc798/microservice-kit/internal/utils/pagination"
 	"github.com/gcc798/microservice-kit/internal/validator"
 	"github.com/labstack/echo/v5"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // UserController 用户控制器接口
@@ -30,17 +32,16 @@ type UserController interface {
 }
 
 type userController struct {
-	ctr         container.Container
+	db          *gorm.DB
+	logger      logger.Logger
 	base        *BaseController
 	userService iam.UserService
 }
 
 // NewUserController 创建组件实例。
-func NewUserController(c container.Container) UserController {
+func NewUserController(db *gorm.DB, tokens *jwt.Jwt, tokenHeader string, log logger.Logger, service iam.UserService) UserController {
 	return &userController{
-		ctr:         c,
-		base:        NewBaseController(c),
-		userService: iam.NewUserService(c.GetDB(), c.GetLogger()),
+		db: db, logger: log, base: NewBaseController(tokens, tokenHeader), userService: service,
 	}
 }
 
@@ -75,7 +76,7 @@ func (h *userController) Create(c *echo.Context) {
 	}
 
 	if err := h.userService.Create(c.Request().Context(), &req); err != nil {
-		h.ctr.GetLogger().Error("创建用户失败", zap.Error(err))
+		h.logger.Error("创建用户失败", zap.Error(err))
 		response.Error(c, err)
 		return
 	}
@@ -114,7 +115,7 @@ func (h *userController) Update(c *echo.Context) {
 	req.UpdateBy = currentUserId
 
 	if err := h.userService.Update(c.Request().Context(), &req); err != nil {
-		h.ctr.GetLogger().Error("更新用户失败", zap.Error(err))
+		h.logger.Error("更新用户失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -142,7 +143,7 @@ func (h *userController) Delete(c *echo.Context) {
 	}
 
 	if err := h.userService.Delete(c.Request().Context(), userId); err != nil {
-		h.ctr.GetLogger().Error("删除用户失败", zap.Error(err))
+		h.logger.Error("删除用户失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -170,7 +171,7 @@ func (h *userController) BatchDelete(c *echo.Context) {
 	}
 
 	if err := h.userService.BatchDelete(c.Request().Context(), req.IDs); err != nil {
-		h.ctr.GetLogger().Error("批量删除用户失败", zap.Error(err))
+		h.logger.Error("批量删除用户失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -199,7 +200,7 @@ func (h *userController) GetById(c *echo.Context) {
 
 	user, err := h.userService.GetById(c.Request().Context(), userId)
 	if err != nil {
-		h.ctr.GetLogger().Error("查询用户失败", zap.Error(err))
+		h.logger.Error("查询用户失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -242,7 +243,7 @@ func (h *userController) BatchImport(c *echo.Context) {
 
 	successCount, failCount, errors, err := h.userService.BatchImport(c.Request().Context(), &req)
 	if err != nil {
-		h.ctr.GetLogger().Error("批量导入用户失败", zap.Error(err))
+		h.logger.Error("批量导入用户失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -281,7 +282,7 @@ func (h *userController) ResetPassword(c *echo.Context) {
 	}
 
 	if err := h.userService.ResetPassword(c.Request().Context(), userId, req.NewPassword); err != nil {
-		h.ctr.GetLogger().Error("重置密码失败", zap.Error(err))
+		h.logger.Error("重置密码失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -310,7 +311,7 @@ func (h *userController) PageUser(c *echo.Context) {
 
 	page, err := h.userService.Page(c.Request().Context(), req.PageNum, req.PageSize, req.UserName, req.Phonenumber, req.Status)
 	if err != nil {
-		h.ctr.GetLogger().Error("分页查询用户列表失败", zap.Error(err))
+		h.logger.Error("分页查询用户列表失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -340,7 +341,7 @@ func (h *userController) ChangePassword(c *echo.Context) {
 	currentUserId, _ := h.base.GetUserId(c)
 
 	if err := h.userService.ChangePassword(c.Request().Context(), currentUserId, req.OldPassword, req.NewPassword); err != nil {
-		h.ctr.GetLogger().Error("修改密码失败", zap.Error(err))
+		h.logger.Error("修改密码失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -358,7 +359,7 @@ func (h *userController) XcxGetInfo(c *echo.Context) {
 
 	user, err := h.userService.GetById(c.Request().Context(), currentUserId)
 	if err != nil {
-		h.ctr.GetLogger().Error("查询用户失败", zap.Error(err))
+		h.logger.Error("查询用户失败", zap.Error(err))
 		response.FailWithMsg(c, "没有权限访问用户数据!")
 		return
 	}
@@ -375,9 +376,9 @@ func (h *userController) XcxGetInfo(c *echo.Context) {
 		HeadPortrait: user.Avatar,
 	}
 
-	roles, err := (&model.Role{}).FindByUserId(h.ctr.GetDB(), user.ID)
+	roles, err := (&model.Role{}).FindByUserId(h.db, user.ID)
 	if err != nil {
-		h.ctr.GetLogger().Warn("查询用户角色失败", zap.Error(err))
+		h.logger.Warn("查询用户角色失败", zap.Error(err))
 	} else if len(roles) > 0 {
 		info.RoleKey = roles[0].RoleKey
 		info.RoleName = roles[0].RoleName

@@ -28,9 +28,8 @@ web-react ──统一 HTTP / WS──> Gateway ──动态路由──> IAM / 
 IAM 认证中心 ──Token / Session──> Redis
 SYS ──运行配置 / 缓存──> Redis
 Resource ──对象读写──> RustFS / S3
-Scheduler ──读取配置──> PostgreSQL
-Scheduler ──注册发现 + gRPC──> SYS / Resource
-SYS / Resource / Scheduler ──PublishToUsers gRPC──> Realtime
+SYS / Resource ──服务私有 Worker + Redis 抢占──> 领域数据清理
+SYS / Resource ──PublishToUsers gRPC──> Realtime
 ```
 
 - **Gateway**：唯一对外 HTTP / WS 入口，负责路由、反向代理和统一 OpenAPI，不拥有业务数据。
@@ -38,7 +37,7 @@ SYS / Resource / Scheduler ──PublishToUsers gRPC──> Realtime
 - **SYS**：组织、菜单、字典、系统配置与操作日志。
 - **Resource**：附件、资源元数据与对象存储。
 - **Realtime**：独立维护用户 WebSocket 连接、心跳和本地投递；通过 IAM gRPC 校验握手 Token，通过 Redis Pub/Sub 将消息广播到所有 Realtime 实例。
-- **Scheduler**：异步任务服务，不接收外部 HTTP 流量；直接读取 PostgreSQL 配置并使用注册中心，间接通过 SYS/Resource gRPC 操作日志、附件数据和对象存储。
+- **后台 Worker**：归属其数据所在的领域服务；SYS 清理系统日志，Resource 清理过期附件，多实例通过 Redis 抢占执行窗口。
 - **注册与路由**：注册中心支持 Consul、etcd、Nacos（三选一），承载 API 颗粒度服务实例注册；Gateway 根据注册元数据动态构建路由表。
 - **API 流量治理**：Gateway 根据实例 Label 路由流量，支持金丝雀、灰度和定向流量。
 - **共享运行能力**：gRPC、PostgreSQL、Redis、RustFS/S3、日志、Metrics 与 OpenTelemetry。
@@ -62,7 +61,7 @@ WebSocket 连接建立后由选中的 Realtime 实例持续持有，不需要粘
 #### 业务消息推送
 
 ```text
-SYS / Resource / Scheduler
+SYS / Resource
   -> Realtime gRPC: PublishToUsers(user_ids, type, data_json)
   -> 任一 Realtime 实例
   -> Redis Pub/Sub: microservice-kit:realtime:deliver:v1
@@ -107,7 +106,6 @@ go run ./application/sys
 go run ./application/resource
 go run ./application/realtime
 go run ./application/gateway
-go run ./application/scheduler
 ```
 
 或用 Docker Compose 启动完整栈：

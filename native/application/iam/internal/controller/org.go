@@ -4,7 +4,8 @@ import (
 	iam "github.com/gcc798/microservice-kit/application/iam/internal/domain"
 	"github.com/gcc798/microservice-kit/application/iam/internal/request"
 	"github.com/gcc798/microservice-kit/application/iam/internal/response"
-	"github.com/gcc798/microservice-kit/internal/container"
+	"github.com/gcc798/microservice-kit/internal/logger"
+	"github.com/gcc798/microservice-kit/internal/platform/jwt"
 	"github.com/gcc798/microservice-kit/internal/httputils"
 	_ "github.com/gcc798/microservice-kit/internal/utils/pagination"
 	"github.com/gcc798/microservice-kit/internal/validator"
@@ -24,17 +25,15 @@ type OrgController interface {
 }
 
 type orgController struct {
-	ctr        container.Container
+	logger     logger.Logger
 	base       *BaseController
 	orgService iam.OrgService
 }
 
 // NewOrgController 创建组件实例。
-func NewOrgController(c container.Container) OrgController {
+func NewOrgController(tokens *jwt.Jwt, tokenHeader string, log logger.Logger, service iam.OrgService) OrgController {
 	return &orgController{
-		ctr:        c,
-		base:       NewBaseController(c),
-		orgService: iam.NewOrgService(c.GetDB(), c.GetLogger()),
+		logger: log, base: NewBaseController(tokens, tokenHeader), orgService: service,
 	}
 }
 
@@ -66,7 +65,7 @@ func (h *orgController) Create(c *echo.Context) {
 
 	orgId, err := h.orgService.Create(c.Request().Context(), &req)
 	if err != nil {
-		h.ctr.GetLogger().Error("创建组织失败", zap.Error(err))
+		h.logger.Error("创建组织失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -109,7 +108,7 @@ func (h *orgController) Update(c *echo.Context) {
 	req.UpdateBy = currentUserId
 
 	if err := h.orgService.Update(c.Request().Context(), &req); err != nil {
-		h.ctr.GetLogger().Error("更新组织失败", zap.Error(err))
+		h.logger.Error("更新组织失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -141,7 +140,7 @@ func (h *orgController) Delete(c *echo.Context) {
 	}
 
 	if err := h.orgService.Delete(c.Request().Context(), orgId); err != nil {
-		h.ctr.GetLogger().Error("删除组织失败", zap.Error(err))
+		h.logger.Error("删除组织失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -172,7 +171,7 @@ func (h *orgController) BatchDelete(c *echo.Context) {
 	}
 
 	if err := h.orgService.BatchDelete(c.Request().Context(), req.IDs); err != nil {
-		h.ctr.GetLogger().Error("批量删除组织失败", zap.Error(err))
+		h.logger.Error("批量删除组织失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -205,7 +204,7 @@ func (h *orgController) GetById(c *echo.Context) {
 
 	org, err := h.orgService.GetById(c.Request().Context(), orgId)
 	if err != nil {
-		h.ctr.GetLogger().Error("查询组织失败", zap.Error(err))
+		h.logger.Error("查询组织失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -229,7 +228,7 @@ func (h *orgController) GetById(c *echo.Context) {
 func (h *orgController) GetTree(c *echo.Context) {
 	orgs, err := h.orgService.GetTree(c.Request().Context())
 	if err != nil {
-		h.ctr.GetLogger().Error("查询组织树失败", zap.Error(err))
+		h.logger.Error("查询组织树失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}
@@ -266,7 +265,7 @@ func (h *orgController) PageOrg(c *echo.Context) {
 
 	page, err := h.orgService.Page(c.Request().Context(), req.PageNum, req.PageSize, req.OrgName, req.OrgCode, req.Status, req.ParentId)
 	if err != nil {
-		h.ctr.GetLogger().Error("分页查询组织列表失败", zap.Error(err))
+		h.logger.Error("分页查询组织列表失败", zap.Error(err))
 		response.FailWithMsg(c, err.Error())
 		return
 	}

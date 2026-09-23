@@ -10,8 +10,6 @@ service SystemService {
   rpc RecordLogin(RecordLoginRequest) returns (Empty);
   // RecordOperations 批量写入操作日志。
   rpc RecordOperations(RecordOperationsRequest) returns (Empty);
-  // CleanLogs 清理指定天数以前的登录日志和操作日志。
-  rpc CleanLogs(CleanLogsRequest) returns (CleanLogsResponse);
 }
 
 // Empty 表示成功但没有业务返回值。
@@ -77,18 +75,4 @@ message OperationLog {
 message RecordOperationsRequest {
   // logs 是待写入的操作日志列表。
   repeated OperationLog logs = 1;
-}
-
-// CleanLogsRequest 是日志清理请求。
-message CleanLogsRequest {
-  // days 表示保留最近多少天的日志，必须为正数。
-  int32 days = 1;
-}
-
-// CleanLogsResponse 是日志清理结果。
-message CleanLogsResponse {
-  // login_logs 是清理的登录日志数量。
-  int64 login_logs = 1;
-  // operation_logs 是清理的操作日志数量。
-  int64 operation_logs = 2;
 }

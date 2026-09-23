@@ -1,4 +1,4 @@
-.PHONY: help init-config proto proto-check swagger swagger-check swagger-fmt run run-scheduler build test test-race vet docker-build verify ci clean
+.PHONY: help init-config proto proto-check swagger swagger-check swagger-fmt run build test test-race vet docker-build verify ci clean
 
 # 默认目标
 help:
@@ -8,7 +8,6 @@ help:
 	@echo "  make proto        - 生成 gRPC 契约代码"
 	@echo "  make swagger-fmt  - 格式化 Swagger 注释"
 	@echo "  make run          - 运行 IAM 服务（自动生成文档）"
-	@echo "  make run-scheduler - 运行独立 Scheduler 服务"
 	@echo "  make build        - 编译项目"
 	@echo "  make test         - 运行测试"
 	@echo "  make test-race    - 运行竞态检测"
@@ -21,7 +20,7 @@ help:
 
 # 创建本地运行配置
 init-config:
-	@for service in gateway iam sys resource realtime scheduler; do \
+	@for service in gateway iam sys resource realtime; do \
 		for kind in conf zaplogger; do \
 			for profile in dev prod; do \
 				target="application/$$service/$$kind.$$profile.yaml"; \
@@ -67,20 +66,15 @@ run: swagger
 	@echo "正在启动 IAM 服务..."
 	@go run ./application/iam
 
-run-scheduler:
-	@echo "正在启动 Scheduler 服务..."
-	@go run ./application/scheduler
-
 # 编译项目
 build: swagger
 	@echo "正在编译项目..."
-	@go build -o bin/microservice-kit-scheduler ./application/scheduler
 	@go build -o bin/microservice-kit-gateway ./application/gateway
 	@go build -o bin/microservice-kit-iam ./application/iam
 	@go build -o bin/microservice-kit-sys ./application/sys
 	@go build -o bin/microservice-kit-resource ./application/resource
 	@go build -o bin/microservice-kit-realtime ./application/realtime
-	@echo "✅ 网关、IAM、SYS、Resource、Realtime、Scheduler 编译完成"
+	@echo "✅ 网关、IAM、SYS、Resource、Realtime 编译完成"
 
 # 运行测试
 test:
@@ -94,7 +88,7 @@ vet:
 	@go vet ./...
 
 docker-build: init-config
-	@for target in gateway iam sys resource realtime scheduler; do docker build --build-arg TARGET=$$target -t microservice-kit-native-$$target:verify . || exit 1; done
+	@for target in gateway iam sys resource realtime; do docker build --build-arg TARGET=$$target -t microservice-kit-native-$$target:verify . || exit 1; done
 
 verify: test vet test-race proto-check swagger-check
 

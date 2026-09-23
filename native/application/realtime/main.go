@@ -2,46 +2,53 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/gcc798/microservice-kit/application/realtime/internal/server"
-	"github.com/gcc798/microservice-kit/internal/config"
+	"github.com/gcc798/microservice-kit/application/realtime/internal/bootstrap"
+	serviceconfig "github.com/gcc798/microservice-kit/application/realtime/internal/config"
+	sharedconfig "github.com/gcc798/microservice-kit/internal/config"
 	logging "github.com/gcc798/microservice-kit/internal/logger"
 	"github.com/gcc798/microservice-kit/internal/telemetry"
 )
 
 func main() {
+	if err := run(); err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func run() (err error) {
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
-	cfg, _, err := config.Load("application/realtime", config.ServiceRealtime)
+	cfg, _, err := serviceconfig.Load("application/realtime")
 	if err != nil {
-		fatal(err)
+		return err
 	}
-	log, err := logging.NewLogger(config.CurrentEnv(), cfg.AppDir)
+	log, err := logging.NewLogger(sharedconfig.CurrentEnv(), cfg.AppDir)
 	if err != nil {
-		fatal(err)
+		return err
 	}
-	shutdownTelemetry, err := telemetry.Init(ctx, string(config.ServiceRealtime), cfg.Service.ID, config.CurrentEnv())
+	shutdownTelemetry, err := telemetry.Init(ctx, string(sharedconfig.ServiceRealtime), cfg.Service.ID, sharedconfig.CurrentEnv())
 	if err != nil {
-		fatal(err)
+		return err
 	}
 	defer func() {
 		shutdown, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		_ = shutdownTelemetry(shutdown)
+		err = errors.Join(err, shutdownTelemetry(shutdown))
 	}()
 
-	if err := server.Run(ctx, cfg, log); err != nil && ctx.Err() == nil {
-		fatal(err)
+	app, err := bootstrap.New(cfg, log)
+	if err != nil {
+		return err
 	}
-}
-
-func fatal(err error) {
-	fmt.Fprintln(os.Stderr, err)
-	os.Exit(1)
+	defer func() { err = errors.Join(err, app.Close()) }()
+	return app.Run(ctx)
 }

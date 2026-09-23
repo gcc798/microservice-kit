@@ -55,7 +55,7 @@ type zapLogger struct {
 	logger *zap.Logger
 }
 
-// WithContext attaches the active OpenTelemetry identifiers to a log entry.
+// WithContext 将当前 OpenTelemetry 追踪标识附加到日志字段。
 func WithContext(ctx context.Context, log Logger) Logger {
 	span := trace.SpanContextFromContext(ctx)
 	if !span.IsValid() {

@@ -25,7 +25,7 @@ type CaptchaData struct {
 	ExpireAt time.Time   `json:"expireAt"` // 过期时间
 }
 
-// CaptchaProvider 验证码提供者接口
+// CaptchaProvider 定义验证码提供者能力。
 type CaptchaProvider interface {
 	// GetType 获取验证码类型
 	GetType() CaptchaType

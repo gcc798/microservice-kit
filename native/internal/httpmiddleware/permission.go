@@ -8,10 +8,11 @@ import (
 )
 
 type PermissionChecker interface {
+	// CheckPermission 检查用户是否拥有指定资源动作权限。
 	CheckPermission(context.Context, int64, string, string) (bool, error)
 }
 
-// Permission checks one API permission after authentication.
+// Permission 在身份认证后检查一个 API 权限。
 func Permission(permissionService PermissionChecker, resource, action string) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c *echo.Context) error {

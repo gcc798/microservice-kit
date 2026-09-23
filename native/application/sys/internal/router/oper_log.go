@@ -9,7 +9,7 @@ import (
 
 // registerOperLogRoutes 注册操作日志路由
 func registerOperLogRoutes(r *httpx.Router, ctx *RouterContext) {
-	operLogController := controller.NewOperLogController(ctx.Container)
+	operLogController := controller.NewOperLogController(ctx.DB, ctx.Logger)
 
 	// API v1 路由组
 	v1 := r.Group("/api/v1")

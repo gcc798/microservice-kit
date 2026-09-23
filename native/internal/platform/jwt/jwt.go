@@ -7,18 +7,18 @@ import (
 	"github.com/google/uuid"
 )
 
-// Jwt 定义业务数据结构。
+// Jwt 管理 JSON Web Token 的签发和校验。
 type Jwt struct {
 	secret        []byte
 	defaultExpire time.Duration
 }
 
-// Claims 定义业务数据结构。
+// Claims 保存令牌中的用户身份和标准声明。
 type Claims struct {
-	UserId     int64  `json:"userId"`
-	UserName   string `json:"userName"`
-	ClientId   string `json:"clientId"`
-	DeviceType string `json:"deviceType"`
+	UserId     int64  `json:"userId"`     // 用户 ID。
+	UserName   string `json:"userName"`   // 用户名。
+	ClientId   string `json:"clientId"`   // 客户端 ID。
+	DeviceType string `json:"deviceType"` // 设备类型。
 	jwt.RegisteredClaims
 }
 
@@ -31,6 +31,7 @@ func New(secret string, expireSeconds int64) *Jwt {
 	return &Jwt{secret: []byte(secret), defaultExpire: exp}
 }
 
+// GenerateToken 签发访问令牌并返回令牌有效期。
 func (s *Jwt) GenerateToken(userId int64, userName, clientId, deviceType string, expireSeconds ...int64) (string, int64, error) {
 	expire := s.defaultExpire
 	if len(expireSeconds) > 0 && expireSeconds[0] > 0 {
@@ -57,6 +58,7 @@ func (s *Jwt) GenerateToken(userId int64, userName, clientId, deviceType string,
 	return tokenStr, int64(expire.Seconds()), nil
 }
 
+// ValidateToken 校验令牌签名和标准声明。
 func (s *Jwt) ValidateToken(tokenString string) (*Claims, error) {
 	token, err := jwt.ParseWithClaims(
 		tokenString,
@@ -74,4 +76,5 @@ func (s *Jwt) ValidateToken(tokenString string) (*Claims, error) {
 	return nil, jwt.ErrTokenInvalidClaims
 }
 
+// DefaultExpireSeconds 返回默认令牌有效期，单位为秒。
 func (s *Jwt) DefaultExpireSeconds() int64 { return int64(s.defaultExpire.Seconds()) }

@@ -29,3 +29,10 @@ auth:
 
 cors:
   enabled: false
+
+workers:
+  logCleanup:
+    enabled: true
+    cron: "0 0 2 * * *"
+    retentionDays: 90
+    lockTTLMinutes: 60

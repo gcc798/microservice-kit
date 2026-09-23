@@ -1,4 +1,4 @@
-// Package redislock provides a small context-aware Redis distributed lock.
+// Package redislock 提供支持上下文取消的 Redis 分布式锁。
 package redislock
 
 import (
@@ -22,23 +22,23 @@ return 0
 
 var ErrNotOwner = errors.New("redis lock is no longer owned by this holder")
 
-// Locker creates independent locks backed by one Redis client.
+// Locker 基于一个 Redis 客户端创建相互独立的分布式锁。
 type Locker struct {
-	client   *redis.Client
-	ttl      time.Duration
-	retryMin time.Duration
-	retryMax time.Duration
+	client   *redis.Client // Redis 客户端。
+	ttl      time.Duration // 锁的过期时间。
+	retryMin time.Duration // 重试间隔下限。
+	retryMax time.Duration // 重试间隔上限。
 }
 
-// Option customizes a Locker.
+// Option 定制 Locker 的行为。
 type Option func(*Locker)
 
-// WithTTL sets the lock expiry.
+// WithTTL 设置锁的过期时间。
 func WithTTL(ttl time.Duration) Option {
 	return func(l *Locker) { l.ttl = ttl }
 }
 
-// WithRetryRange sets the randomized acquisition retry interval.
+// WithRetryRange 设置获取锁时的随机重试间隔范围。
 func WithRetryRange(minimum, maximum time.Duration) Option {
 	return func(l *Locker) {
 		l.retryMin = minimum
@@ -46,7 +46,7 @@ func WithRetryRange(minimum, maximum time.Duration) Option {
 	}
 }
 
-// New creates a Locker.
+// New 创建 Redis 分布式锁管理器。
 func New(client *redis.Client, options ...Option) *Locker {
 	l := &Locker{
 		client:   client,
@@ -63,14 +63,14 @@ func New(client *redis.Client, options ...Option) *Locker {
 	return l
 }
 
-// Lock is one acquired lock instance.
+// Lock 表示一次已经获取的锁。
 type Lock struct {
-	client *redis.Client
-	key    string
-	token  string
+	client *redis.Client // Redis 客户端。
+	key    string        // 锁键。
+	token  string        // 当前持有者令牌。
 }
 
-// Acquire waits until the lock is acquired or ctx is cancelled.
+// Acquire 持续尝试获取锁，直到成功或上下文被取消。
 func (l *Locker) Acquire(ctx context.Context, key string) (*Lock, error) {
 	if l == nil || l.client == nil {
 		return nil, errors.New("redis lock client is nil")
@@ -105,7 +105,30 @@ func (l *Locker) Acquire(ctx context.Context, key string) (*Lock, error) {
 	}
 }
 
-// Release removes the lock only if its random token is still the owner.
+// TryClaim 尝试一次性占用一个有时间边界的执行窗口。
+// 占用成功后不会提前释放，避免其他实例在任务完成后重复执行同一任务。
+func (l *Locker) TryClaim(ctx context.Context, key string) (bool, error) {
+	if l == nil || l.client == nil {
+		return false, errors.New("redis lock client is nil")
+	}
+	if key == "" {
+		return false, errors.New("redis lock key is empty")
+	}
+	if l.ttl <= 0 {
+		return false, errors.New("redis lock ttl must be positive")
+	}
+	token, err := newToken()
+	if err != nil {
+		return false, fmt.Errorf("create redis lock token: %w", err)
+	}
+	claimed, err := l.client.SetNX(ctx, key, token, l.ttl).Result()
+	if err != nil {
+		return false, fmt.Errorf("claim redis execution window %q: %w", key, err)
+	}
+	return claimed, nil
+}
+
+// Release 仅当随机令牌仍属于当前持有者时释放锁。
 func (l *Lock) Release(ctx context.Context) error {
 	if l == nil || l.client == nil {
 		return errors.New("redis lock is nil")
@@ -120,7 +143,7 @@ func (l *Lock) Release(ctx context.Context) error {
 	return nil
 }
 
-// WithLock acquires key, runs fn, and safely releases the lock.
+// WithLock 获取指定锁，执行函数后安全释放锁。
 func (l *Locker) WithLock(ctx context.Context, key string, fn func() error) (err error) {
 	lock, err := l.Acquire(ctx, key)
 	if err != nil {

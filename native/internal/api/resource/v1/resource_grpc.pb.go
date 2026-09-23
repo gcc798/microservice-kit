@@ -7,10 +7,7 @@
 package resourcev1
 
 import (
-	context "context"
 	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -18,18 +15,12 @@ import (
 // Requires gRPC-Go v1.64.0 or later.
 const _ = grpc.SupportPackageIsVersion9
 
-const (
-	ResourceService_CleanExpired_FullMethodName = "/microservice_kit.resource.v1.ResourceService/CleanExpired"
-)
-
 // ResourceServiceClient is the client API for ResourceService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 //
-// ResourceService 提供资源领域的内部 gRPC 能力。
+// ResourceService 暂无跨服务方法；资源清理在 Resource Worker 内执行。
 type ResourceServiceClient interface {
-	// CleanExpired 清理已过期的资源记录并返回处理统计。
-	CleanExpired(ctx context.Context, in *CleanExpiredRequest, opts ...grpc.CallOption) (*CleanExpiredResponse, error)
 }
 
 type resourceServiceClient struct {
@@ -40,24 +31,12 @@ func NewResourceServiceClient(cc grpc.ClientConnInterface) ResourceServiceClient
 	return &resourceServiceClient{cc}
 }
 
-func (c *resourceServiceClient) CleanExpired(ctx context.Context, in *CleanExpiredRequest, opts ...grpc.CallOption) (*CleanExpiredResponse, error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(CleanExpiredResponse)
-	err := c.cc.Invoke(ctx, ResourceService_CleanExpired_FullMethodName, in, out, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // ResourceServiceServer is the server API for ResourceService service.
 // All implementations must embed UnimplementedResourceServiceServer
 // for forward compatibility.
 //
-// ResourceService 提供资源领域的内部 gRPC 能力。
+// ResourceService 暂无跨服务方法；资源清理在 Resource Worker 内执行。
 type ResourceServiceServer interface {
-	// CleanExpired 清理已过期的资源记录并返回处理统计。
-	CleanExpired(context.Context, *CleanExpiredRequest) (*CleanExpiredResponse, error)
 	mustEmbedUnimplementedResourceServiceServer()
 }
 
@@ -68,9 +47,6 @@ type ResourceServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedResourceServiceServer struct{}
 
-func (UnimplementedResourceServiceServer) CleanExpired(context.Context, *CleanExpiredRequest) (*CleanExpiredResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "method CleanExpired not implemented")
-}
 func (UnimplementedResourceServiceServer) mustEmbedUnimplementedResourceServiceServer() {}
 func (UnimplementedResourceServiceServer) testEmbeddedByValue()                         {}
 
@@ -92,36 +68,13 @@ func RegisterResourceServiceServer(s grpc.ServiceRegistrar, srv ResourceServiceS
 	s.RegisterService(&ResourceService_ServiceDesc, srv)
 }
 
-func _ResourceService_CleanExpired_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CleanExpiredRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ResourceServiceServer).CleanExpired(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: ResourceService_CleanExpired_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ResourceServiceServer).CleanExpired(ctx, req.(*CleanExpiredRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // ResourceService_ServiceDesc is the grpc.ServiceDesc for ResourceService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var ResourceService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "microservice_kit.resource.v1.ResourceService",
 	HandlerType: (*ResourceServiceServer)(nil),
-	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "CleanExpired",
-			Handler:    _ResourceService_CleanExpired_Handler,
-		},
-	},
-	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/resource/v1/resource.proto",
+	Methods:     []grpc.MethodDesc{},
+	Streams:     []grpc.StreamDesc{},
+	Metadata:    "api/resource/v1/resource.proto",
 }

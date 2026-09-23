@@ -13,7 +13,7 @@ import (
 
 type WeChatModule struct {
 	mu      sync.RWMutex
-	cont    Container
+	deps    Dependencies
 	digest  [sha256.Size]byte
 	enabled bool
 	manager *wechat.Manager
@@ -22,8 +22,8 @@ type WeChatModule struct {
 func NewWeChatModule() *WeChatModule { return &WeChatModule{} }
 func (*WeChatModule) Name() string   { return WeChatName }
 
-func (m *WeChatModule) Init(ctx context.Context, cont Container) error {
-	m.cont = cont
+func (m *WeChatModule) Init(ctx context.Context, deps Dependencies) error {
+	m.deps = deps
 	return m.reload(ctx)
 }
 
@@ -51,7 +51,7 @@ func (m *WeChatModule) Code2Session(ctx context.Context, wxCode string) (*wechat
 }
 
 func (m *WeChatModule) reloadIfChanged(ctx context.Context) error {
-	raw, err := m.cont.GetRuntimeConfig().GetRaw(ctx, runtimeconfig.CodeWeChat)
+	raw, err := m.deps.RuntimeConfig.GetRaw(ctx, runtimeconfig.CodeWeChat)
 	if err != nil {
 		return err
 	}
@@ -66,7 +66,7 @@ func (m *WeChatModule) reloadIfChanged(ctx context.Context) error {
 }
 
 func (m *WeChatModule) reload(ctx context.Context) error {
-	raw, err := m.cont.GetRuntimeConfig().GetRaw(ctx, runtimeconfig.CodeWeChat)
+	raw, err := m.deps.RuntimeConfig.GetRaw(ctx, runtimeconfig.CodeWeChat)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (m *WeChatModule) apply(raw []byte, digest [sha256.Size]byte) error {
 	}
 	var manager *wechat.Manager
 	if cfg.Enabled {
-		manager = wechat.NewManager(wechat.Config{Enabled: true, AppID: cfg.AppID, Secret: cfg.Secret}, m.cont.GetLogger(), m.cont.GetRedis())
+		manager = wechat.NewManager(wechat.Config{Enabled: true, AppID: cfg.AppID, Secret: cfg.Secret}, m.deps.Logger, m.deps.Redis)
 	}
 	m.mu.Lock()
 	m.digest, m.enabled, m.manager = digest, cfg.Enabled, manager

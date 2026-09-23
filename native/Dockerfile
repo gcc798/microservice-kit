@@ -2,6 +2,7 @@ FROM golang:1.26.5-alpine AS builder
 
 ARG TARGET
 WORKDIR /src
+ENV GOPROXY=https://goproxy.cn,direct
 RUN apk add --no-cache ca-certificates git
 COPY go.mod go.sum ./
 RUN go mod download

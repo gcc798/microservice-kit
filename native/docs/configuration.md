@@ -67,6 +67,9 @@ IAM 提供认证授权 HTTP/gRPC 接口，拥有 IAM 数据、Redis 会话和 JW
 | `database.maxIdleConns` | `MS_K_DATABASE_MAX_IDLE_CONNS` | IAM 数据库最大空闲连接数。 |
 | `database.connMaxLifetimeMinutes` | `MS_K_DATABASE_CONN_MAX_LIFETIME_MINUTES` | 数据库连接最大存活分钟数。 |
 | `database.slowThreshold` | `MS_K_DATABASE_SLOW_THRESHOLD` | 慢 SQL 阈值，单位毫秒。 |
+| `redis.addr` | `MS_K_REDIS_ADDR` | Resource Worker 分布式抢占使用的 Redis 地址。 |
+| `redis.password` | `MS_K_REDIS_PASSWORD` | Redis 密码。 |
+| `redis.db` | `MS_K_REDIS_DB` | Redis DB。 |
 | `redis.addr` | `MS_K_REDIS_ADDR` | Redis 地址，例如 `redis:6379`。 |
 | `redis.password` | `MS_K_REDIS_PASSWORD` | Redis 密码；Redis 无密码时显式设为空字符串。 |
 | `redis.db` | `MS_K_REDIS_DB` | Redis DB 编号，不能为负数。 |
@@ -151,24 +154,6 @@ Resource 提供资源 HTTP/gRPC 接口，依赖 IAM 鉴权、PostgreSQL 和 S3 �
 | `auth.tokenHeader` | `MS_K_AUTH_TOKEN_HEADER` | 读取访问令牌的 HTTP Header 名。 |
 | `cors.enabled` | `MS_K_CORS_ENABLED` | 是否允许跨域；生产环境必须为 `false`。 |
 
-## Scheduler
-
-Scheduler 不监听 HTTP/gRPC，也不注册不可调用的虚拟实例。它从注册中心发现 SYS、Resource，并使用数据库读取调度配置。
-
-| YAML 键 | 环境变量 | 说明 |
-| --- | --- | --- |
-| `database.dsn` | `MS_K_DATABASE_DSN` | 调度配置所在的 PostgreSQL DSN。 |
-| `database.maxOpenConns` | `MS_K_DATABASE_MAX_OPEN_CONNS` | Scheduler 数据库最大打开连接数。 |
-| `database.maxIdleConns` | `MS_K_DATABASE_MAX_IDLE_CONNS` | Scheduler 数据库最大空闲连接数。 |
-| `database.connMaxLifetimeMinutes` | `MS_K_DATABASE_CONN_MAX_LIFETIME_MINUTES` | 数据库连接最大存活分钟数。 |
-| `database.slowThreshold` | `MS_K_DATABASE_SLOW_THRESHOLD` | 慢 SQL 阈值，单位毫秒。 |
-| `registry.driver` | `MS_K_REGISTRY_DRIVER` | 用于发现 SYS、Resource。 |
-| `registry.address` | `MS_K_REGISTRY_ADDRESS` | 注册中心地址。 |
-| `registry.prefix` | `MS_K_REGISTRY_PREFIX` | 注册中心 key 前缀。 |
-| `service.id` | `MS_K_SERVICE_ID` | Scheduler 的进程/遥测实例 ID；允许显式留空后自动生成。 |
-
-Scheduler 没有 `MS_K_SERVER_*`、`MS_K_GRPC_*` 或 `MS_K_SERVICE_ADVERTISE_HOST`，因为它不提供网络 endpoint。
-
 ## User Manager
 
 `cmd/usermgr` 是一次性管理工具，不是服务。默认读取 IAM 配置目录，但实际只使用数据库 DSN：
@@ -194,11 +179,11 @@ environment:
   MS_K_JWT_SECRET: "从 Secret 注入至少 32 个字符的随机值"
 ```
 
-环境变量只覆盖当前进程使用的配置。不要向 Gateway 注入数据库变量，也不要向 Scheduler 注入 HTTP/gRPC 端口；未归属该进程的变量不会形成有效的服务配置。
+环境变量只覆盖当前进程使用的配置。不要向 Gateway 注入数据库变量；未归属该进程的变量不会形成有效的服务配置。
 
 ## OpenTelemetry 标准变量
 
-Gateway、IAM、SYS、Resource、Realtime、Scheduler 均初始化 OpenTelemetry Trace。这部分使用 OpenTelemetry SDK 标准环境变量，不属于 `MS_K_*` YAML 配置：
+Gateway、IAM、SYS、Resource、Realtime 均初始化 OpenTelemetry Trace。这部分使用 OpenTelemetry SDK 标准环境变量，不属于 `MS_K_*` YAML 配置：
 
 | 环境变量 | 说明 |
 | --- | --- |

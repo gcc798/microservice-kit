@@ -5,18 +5,19 @@ import (
 	"strings"
 
 	"github.com/gcc798/microservice-kit/application/iam/internal/domain/model"
-	"github.com/gcc798/microservice-kit/internal/container"
+	"github.com/gcc798/microservice-kit/internal/platform/jwt"
 	"github.com/labstack/echo/v5"
 )
 
 // BaseController 定义业务数据结构。
 type BaseController struct {
-	ctr container.Container
+	tokens      *jwt.Jwt
+	tokenHeader string
 }
 
 // NewBaseController 创建组件实例。
-func NewBaseController(c container.Container) *BaseController {
-	return &BaseController{ctr: c}
+func NewBaseController(tokens *jwt.Jwt, tokenHeader string) *BaseController {
+	return &BaseController{tokens: tokens, tokenHeader: tokenHeader}
 }
 
 // GetUserId 获取当前用户ID
@@ -72,10 +73,9 @@ func (b *BaseController) CurrentUser(c *echo.Context) (*model.User, error) {
 	}
 
 	// 如果 context 中没有，从 token 中解析
-	tokenHeader := b.ctr.GetConfig().Auth.TokenHeader
-	token := c.Request().Header.Get(tokenHeader)
+	token := c.Request().Header.Get(b.tokenHeader)
 	token = strings.TrimPrefix(token, "Bearer ")
-	claims, err := b.ctr.GetJWT().ValidateToken(token)
+	claims, err := b.tokens.ValidateToken(token)
 	if err != nil {
 		return nil, err
 	}

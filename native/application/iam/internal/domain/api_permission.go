@@ -17,7 +17,7 @@ type ApiPermissionTree struct {
 	Children []*ApiPermissionTree `json:"children,omitempty"`
 }
 
-// RolePermissionGrants separates editable grants from menu-derived grants.
+// RolePermissionGrants 区分可编辑的手工授权和菜单派生授权。
 type RolePermissionGrants struct {
 	ManualIds  []int64 `json:"manualIds"`
 	DerivedIds []int64 `json:"derivedIds"`

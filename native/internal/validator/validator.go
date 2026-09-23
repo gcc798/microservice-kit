@@ -16,6 +16,7 @@ var (
 	engine     = playground.New()
 )
 
+// Register 注册项目使用的自定义校验规则。
 func Register() {
 	once.Do(func() {
 		engine.SetTagName("binding")
@@ -25,19 +26,21 @@ func Register() {
 	})
 }
 
-// EchoValidator bridges the existing binding tags to Echo validation.
+// EchoValidator 将现有 binding 标签接入 Echo 校验器。
 type EchoValidator struct{}
 
+// Validate 校验绑定后的请求结构体。
 func (EchoValidator) Validate(value any) error {
 	Register()
 	return engine.Struct(value)
 }
 
-// EchoBinder preserves Echo's bind-and-validate behavior on Echo.
+// EchoBinder 保留 Echo 的绑定并校验行为。
 type EchoBinder struct {
-	defaultBinder echo.DefaultBinder
+	defaultBinder echo.DefaultBinder // Echo 默认绑定器。
 }
 
+// Bind 将请求参数绑定到目标对象并执行校验。
 func (b *EchoBinder) Bind(c *echo.Context, target any) error {
 	if err := b.defaultBinder.Bind(c, target); err != nil {
 		return err

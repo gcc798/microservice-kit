@@ -26,7 +26,7 @@ const (
 	userSessionsKeyPrefix = "auth:user-sessions:"
 )
 
-// TokenManager owns the complete access-token, refresh-token and login-session lifecycle.
+// TokenManager 负责访问令牌、刷新令牌和登录会话的完整生命周期。
 type TokenManager interface {
 	GenerateTokenPair(ctx context.Context, user *model.User, client *model.AuthClient) (accessToken, refreshToken string, accessExpiresIn, refreshExpiresIn int64, err error)
 	ValidateAccessToken(ctx context.Context, token string) (*jwt.Claims, error)

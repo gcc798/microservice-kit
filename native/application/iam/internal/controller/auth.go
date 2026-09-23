@@ -6,11 +6,7 @@ import (
 	iam "github.com/gcc798/microservice-kit/application/iam/internal/domain"
 	"github.com/gcc798/microservice-kit/application/iam/internal/request"
 	"github.com/gcc798/microservice-kit/application/iam/internal/response"
-	sysv1 "github.com/gcc798/microservice-kit/internal/api/sys/v1"
-	"github.com/gcc798/microservice-kit/internal/config"
-	"github.com/gcc798/microservice-kit/internal/container"
 	logging "github.com/gcc798/microservice-kit/internal/logger"
-	"github.com/gcc798/microservice-kit/internal/modules"
 	"github.com/labstack/echo/v5"
 	"go.uber.org/zap"
 )
@@ -22,35 +18,13 @@ type AuthController interface {
 }
 
 type authController struct {
-	config  *config.Config
-	logger  logging.Logger
-	service iam.AuthService
+	tokenHeader string
+	logger      logging.Logger
+	service     iam.AuthService
 }
 
-func NewAuthController(c container.Container, logs sysv1.API) (AuthController, error) {
-	captchaModule, err := modules.GetCaptcha(c)
-	if err != nil {
-		return nil, err
-	}
-	wechatModule, err := modules.GetWeChat(c)
-	if err != nil {
-		return nil, err
-	}
-	clientService := iam.NewClientService(c.GetDB(), c.GetRedis(), c.GetLogger())
-	tokenManager := iam.NewTokenManager(c.GetJWT(), c.GetRedis(), c.GetLogger())
-	captchaService := iam.NewCaptchaService(captchaModule)
-	authService := iam.NewAuthService(
-		c.GetDB(),
-		c.GetRedis(),
-		c.GetConfig(),
-		c.GetLogger(),
-		clientService,
-		tokenManager,
-		captchaService,
-		wechatModule,
-		logs,
-	)
-	return &authController{config: c.GetConfig(), logger: c.GetLogger(), service: authService}, nil
+func NewAuthController(service iam.AuthService, tokenHeader string, logger logging.Logger) AuthController {
+	return &authController{service: service, tokenHeader: tokenHeader, logger: logger}
 }
 
 // Login godoc
@@ -89,7 +63,7 @@ func (h *authController) Login(c *echo.Context) {
 //	@Success	200	{object}	response.Response{data=string}
 //	@Router		/logout [post]
 func (h *authController) Logout(c *echo.Context) {
-	token := strings.TrimPrefix(c.Request().Header.Get(h.config.Auth.TokenHeader), "Bearer ")
+	token := strings.TrimPrefix(c.Request().Header.Get(h.tokenHeader), "Bearer ")
 	if err := h.service.Logout(c.Request().Context(), token); err != nil {
 		h.logger.Warn("logout failed", zap.Error(err))
 		response.InternalServerError(c, "登出失败")

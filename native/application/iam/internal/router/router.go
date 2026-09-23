@@ -1,11 +1,8 @@
 package router
 
 import (
-	"fmt"
-
-	iamv1 "github.com/gcc798/microservice-kit/internal/api/iam/v1"
-	sysv1 "github.com/gcc798/microservice-kit/internal/api/sys/v1"
-	"github.com/gcc798/microservice-kit/internal/container"
+	"github.com/gcc798/microservice-kit/application/iam/internal/controller"
+	"github.com/gcc798/microservice-kit/internal/health"
 	middleware "github.com/gcc798/microservice-kit/internal/httpmiddleware"
 	"github.com/gcc798/microservice-kit/internal/httpx"
 	"github.com/labstack/echo/v5"
@@ -13,27 +10,27 @@ import (
 )
 
 type RouterContext struct {
-	Container         container.Container
+	Health            health.Handler
 	PermissionService middleware.PermissionChecker
 	AuthMiddleware    echo.MiddlewareFunc
-	SystemAPI         sysv1.API
+	Auth              controller.AuthController
+	Captcha           *controller.CaptchaController
+	User              controller.UserController
+	Role              controller.RoleController
+	APIPermission     controller.ApiPermissionController
+	Org               controller.OrgController
+	Menu              controller.MenuController
 }
 
-func Setup(r *httpx.Router, c container.Container, security iamv1.API, systemAPI sysv1.API) error {
-	ctx := &RouterContext{Container: c, PermissionService: security, AuthMiddleware: middleware.Auth(security, c.GetConfig()), SystemAPI: systemAPI}
+func Setup(r *httpx.Router, ctx RouterContext) {
 	r.Use(middleware.PrometheusMiddleware())
 	r.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
-	registerCommonRoutes(r, ctx)
-	if err := registerAuthRoutes(r, ctx); err != nil {
-		return fmt.Errorf("auth routes: %w", err)
-	}
-	if err := registerCaptchaRoutes(r, ctx); err != nil {
-		return fmt.Errorf("captcha routes: %w", err)
-	}
-	registerUserRoutes(r, ctx)
-	registerRoleRoutes(r, ctx)
-	registerApiPermissionRoutes(r, ctx)
-	registerOrgRoutes(r, ctx)
-	registerMenuRoutes(r, ctx)
-	return nil
+	registerCommonRoutes(r, &ctx)
+	registerAuthRoutes(r, &ctx)
+	registerCaptchaRoutes(r, &ctx)
+	registerUserRoutes(r, &ctx)
+	registerRoleRoutes(r, &ctx)
+	registerApiPermissionRoutes(r, &ctx)
+	registerOrgRoutes(r, &ctx)
+	registerMenuRoutes(r, &ctx)
 }
