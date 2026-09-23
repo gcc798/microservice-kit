@@ -24,6 +24,8 @@
 7. 本仓库是全新的试验工程，任何改动默认不考虑旧代码、旧配置、旧接口或旧数据的向后兼容；只有开发者明确提出兼容要求时，才实现兼容逻辑。
 8. `native/` 只保留微服务部署形态。`application/` 下一级目录必须对应真实进程；每个领域服务在自己的 `internal/` 中拥有业务代码和数据模型，根 `internal/` 只放跨进程通用技术设施。不得重新引入共享 API 应用或单体装配入口。
 9. 渐进拆分沿事务、数据所有权和独立部署边界进行，不按 controller 数量拆分，也不为假设中的未来需求预建服务、共享业务层或分布式事务。
+10. Native 使用轻量 DDD：限界上下文、事务不变量、领域服务和跨进程契约必须明确；简单 CRUD 不强制套用聚合、仓储接口或命令对象。
+11. 每个进程的 `main.go` 和 `application/<service>/internal/bootstrap/` 是组合根，负责完整依赖装配和生命周期；领域代码不得读取环境变量或自行创建数据库、Redis、HTTP 客户端和注册中心连接。
 
 ## 根目录结构
 
@@ -47,7 +49,9 @@ microservice-kit/
 常见入口与边界：
 
 - `native/application/gateway/`：唯一对外 HTTP/WS 入口，负责服务发现和反向代理，不拥有业务数据。
-- `native/application/{iam,sys,resource}/internal/`：各领域服务私有的 controller、router、DTO、domain、model 和 Goose 迁移。
+- `native/application/{iam,sys,resource,realtime}/internal/`：各领域服务私有的 controller、router、DTO、domain、model 和服务适配。
+- `native/application/<service>/internal/bootstrap/`：服务私有组合根，装配配置、基础设施、领域服务、HTTP/gRPC 和 Worker。
+- `native/application/<service>/internal/config/`：服务私有完整配置；共享 `internal/config` 只提供加载器和原子配置类型。
 - `native/application/{sys,resource}/internal/workers/`：服务私有后台任务，由所属服务管理生命周期并通过 Redis 防止多实例重复执行。
 - `native/cmd/usermgr/`：管理员维护工具，不是 `application/` 部署单元。
 - `native/api/<service>/v1/`：Proto 源文件。
@@ -58,6 +62,8 @@ microservice-kit/
 - `native/internal/openapi/`：Gateway 提供的统一 Swagger 生成文件。
 - `native/internal/database/`：共享数据库连接与 GORM 插件，不负责执行迁移。
 - `native/internal/`：多个进程共享、但通过 Go `internal` 规则禁止仓库外导入的技术能力；不得放领域业务实现。
+
+架构决策、DDD 使用范围、组合根职责、调用链和横向扩展规则见 [`native/docs/architecture.md`](native/docs/architecture.md)。配置、OpenTelemetry 和 Proto 约定分别见 `native/docs/configuration.md`、`native/docs/opentelemetry.md` 和 `native/docs/protobuf.md`。
 
 每个进程在自己的目录版本化 `conf.example.yaml` 和 `zaplogger.example.yaml`；开发者通过 `make init-config` 基于模板创建被 Git 忽略的 `*.dev.yaml` 和 `*.prod.yaml`。程序只按 `MS_K_APP_ENV=dev|prod` 读取对应运行配置，不直接读取 example 文件；部署环境变量可覆盖其中的地址和敏感值。
 每个服务的 YAML 模板只声明自身实际依赖，不得为了复用配置结构加入未使用字段。
@@ -156,7 +162,8 @@ pnpm build
 - 若改动会影响前端接口，优先确认是否破坏了 `native` 契约；不要让 `web-react` 为不同后端实现做特殊兼容。
 - 每个 Go 子工程单独运行测试：`native`、`kratos`、`gozero` 各自都有自己的 `go.mod`。
 - 不要把 `native`、`kratos`、`gozero` 当成互相引用的包；它们是同一业务的不同实现。
-- 新需求默认归入 IAM、SYS 或 Resource；只有确认独立数据所有权和部署需求后，才新增 `application/<service>`。
+- 新需求默认归入 IAM、SYS、Resource 或 Realtime；只有确认独立数据所有权和部署需求后，才新增 `application/<service>`。
+- 后台任务归属于数据所有者服务；SYS 和 Resource 使用私有 Worker 与 Redis 抢占执行窗口，不新增 Scheduler 聚合进程。
 - 不要手工修改 `native/internal/openapi/`，应通过 `make swagger` 重新生成。
 - 不要在根 `native/internal/` 创建 IAM、SYS 或 Resource 的业务包，也不要创建聚合业务 HTTP 代码的 `application/api`。
 - 每个 `native/application/<service>/main.go` 显式加载配置、初始化日志并构建自身依赖；不要增加 `app.Base` 一类只转发启动步骤的包装层。无测试复用需求时，启动流程直接写在 `main` 中，不额外封装 `run`。
