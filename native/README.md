@@ -36,13 +36,13 @@ go run ./application/gateway
 
 IAM、SYS、Resource、Realtime 会把实际注册的业务 HTTP method/path 随实例写入注册中心。Gateway 启动时加载路由并每 5 秒刷新；RESTful 参数路由按 Echo 的 `:param`/`*` 语义匹配，新增或删除接口无需再修改 Gateway。`/health/*` 与 `/metrics` 不作为前端路由发布；Prometheus 应通过 Consul、Kubernetes 等服务发现直接抓取每个实例的 `/metrics`。
 
-`MS_K_APP_ENV` 必须显式设置为 `dev` 或 `prod`，用于在具体服务目录中选择 `conf.dev.yaml` 或 `conf.prod.yaml`。程序不会读取 `*.example.yaml`。配置没有代码默认值；每个服务使用的键必须在 YAML 或对应的 `MS_K_*` 环境变量中显式出现，环境变量优先于 YAML。
+`MS_K_APP_ENV` 必须显式设置为 `dev` 或 `prod`，用于在具体服务目录中选择 `conf.dev.yaml` 或 `conf.prod.yaml`。程序不会读取 `*.example.yaml`。除服务实例标识和通告地址外，配置没有代码默认值；每个服务使用的键必须在 YAML 或对应的 `MS_K_*` 环境变量中显式出现，环境变量优先于 YAML。
 
 各服务支持的环境变量、对应 YAML 键和约束见 [`docs/configuration.md`](docs/configuration.md)。日志配置只从 `zaplogger.<env>.yaml` 读取，不支持字段级环境变量覆盖。
 
 Git 只管理每个服务的 `conf.example.yaml` 和 `zaplogger.example.yaml`。`make init-config` 会在文件不存在时把模板分别复制为 `*.dev.yaml` 和 `*.prod.yaml`，不会覆盖已有配置；这些实际运行配置已被 Git 忽略。模板只声明该进程实际使用的配置段，例如 Gateway 只配置接入与注册中心，Resource 配置数据库、Redis 和对象存储。创建后应按环境修改地址和凭据；生产敏感值也可以通过对应的 `MS_K_*` 环境变量注入。
 
-Gateway、IAM、SYS、Resource、Realtime 的 `service.id` 是注册中心中的实例唯一标识；留空时程序按“服务名 + 主机名”自动生成，只有需要固定实例 ID 时才填写。`service.advertiseHost` 是写入注册中心、供其他进程访问该实例的地址；本机开发使用 `127.0.0.1`，容器部署使用实例自身可达的地址。它不是监听地址，HTTP/gRPC 仍由 `server.port` 和 `grpc.port` 监听。
+Gateway、IAM、SYS、Resource、Realtime 的 `service.id` 是注册中心中的实例唯一标识；留空时程序按“服务名 + 主机名”自动生成，只有需要固定实例 ID 时才填写。`service.advertiseHost` 是写入注册中心、供其他进程访问该实例的地址；留空或省略时程序自动选择启用的非回环 IPv4 地址，也可通过 `MS_K_SERVICE_ADVERTISE_HOST` 显式覆盖。它不是监听地址，HTTP/gRPC 仍由 `server.port` 和 `grpc.port` 监听。
 
 生产环境默认关闭 CORS，前后端通过 Nginx 同源代理；开发环境可在 `conf.dev.yaml` 中开启。
 
@@ -69,6 +69,7 @@ go run ./cmd/usermgr --operation=reset --username=admin
 ```
 
 密码不支持命令行参数，工具也不会回显密码。
+工具不读取 IAM 或其他服务配置；数据库默认连接本机 `microservice_kit`，需要覆盖时传入 `--database-dsn`。
 
 ## 认证
 
@@ -110,7 +111,7 @@ export MS_K_JWT_SECRET='replace-with-at-least-32-random-characters'
 ./scripts/microservices.sh destroy  # 删除容器、网络和数据卷
 ```
 
-Consul 服务列表访问 `http://localhost:8501/ui/dc1/services`。容器入口会在未显式设置 `MS_K_SERVICE_ADVERTISE_HOST` 时注入当前容器 IP，使每个扩容副本注册自己的真实 HTTP/gRPC 地址。PostgreSQL、Redis 和 RustFS 只在 Compose 网络内提供给服务使用，不占用宿主机端口。
+Consul 服务列表访问 `http://localhost:8501/ui/dc1/services`。容器入口会在未显式设置 `MS_K_SERVICE_ADVERTISE_HOST` 时注入当前容器 IP，使每个扩容副本注册自己的真实 HTTP/gRPC 地址；非容器运行也会由程序自动探测。PostgreSQL、Redis 和 RustFS 只在 Compose 网络内提供给服务使用，不占用宿主机端口。
 
 PostgreSQL、Redis 和 RustFS 带有本地默认值；需要覆盖时使用 `MS_K_POSTGRES_PASSWORD`、`MS_K_REDIS_PASSWORD` 和 `MS_K_RUSTFS_*`。RustFS 提供 S3 兼容对象存储；resource 启动时会检查并按需创建 `microservice-kit` Bucket。
 

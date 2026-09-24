@@ -1,6 +1,7 @@
 package config
 
 import (
+	"net"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -149,6 +150,21 @@ func TestAtomicConfigValidation(t *testing.T) {
 	}
 	if err := (JWT{Secret: "short", Expire: 7200}).Validate(); err == nil {
 		t.Fatal("short JWT secret was accepted")
+	}
+}
+
+func TestResolveAdvertiseHost(t *testing.T) {
+	t.Parallel()
+
+	if got, err := resolveAdvertiseHost(" service.internal "); err != nil || got != "service.internal" {
+		t.Fatalf("resolveAdvertiseHost(explicit) = %q, %v", got, err)
+	}
+	got, err := resolveAdvertiseHost("")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if net.ParseIP(got) == nil {
+		t.Fatalf("resolveAdvertiseHost(auto) = %q, want IP address", got)
 	}
 }
 

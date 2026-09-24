@@ -24,7 +24,7 @@
 | `server.port` | `MS_K_SERVER_PORT` | HTTP 监听端口，范围 1-65535。 |
 | `grpc.port` | `MS_K_GRPC_PORT` | IAM、SYS、Resource、Realtime 的 gRPC 监听端口。 |
 | `service.id` | `MS_K_SERVICE_ID` | 注册中心实例 ID；留空时按服务名和主机名生成。 |
-| `service.advertiseHost` | `MS_K_SERVICE_ADVERTISE_HOST` | 写入注册中心、供其他实例访问的地址，不是监听地址。 |
+| `service.advertiseHost` | `MS_K_SERVICE_ADVERTISE_HOST` | 可选；写入注册中心、供其他实例访问的地址。未配置时自动选择启用的非回环 IPv4；它不是监听地址。 |
 | `database.dsn` | `MS_K_DATABASE_DSN` | PostgreSQL 连接串。 |
 | `database.maxOpenConns` | `MS_K_DATABASE_MAX_OPEN_CONNS` | 最大打开连接数，必须大于 0。 |
 | `database.maxIdleConns` | `MS_K_DATABASE_MAX_IDLE_CONNS` | 最大空闲连接数，不能超过最大打开连接数。 |
@@ -104,13 +104,13 @@ Realtime 还使用共享的 `server`、`grpc`、`registry`、`service`、`redis`
 
 ## User Manager
 
-`cmd/usermgr` 是一次性管理员维护工具，不是部署服务。它读取 IAM 配置目录，但实际只使用数据库连接和命令行操作参数。
+`cmd/usermgr` 是一次性管理员维护工具，不是部署服务，也不读取任何服务配置。数据库连接通过可选的 `--database-dsn` 参数指定；未指定时使用工具内置的本地 PostgreSQL 默认连接。
 
 ```bash
-export MS_K_APP_ENV=dev
 export MS_K_USERMGR_PASSWORD='至少 8 个字符的强密码'
 go run ./cmd/usermgr --operation=create --username=admin --nickname=管理员 --role=super_admin
 go run ./cmd/usermgr --operation=reset --username=admin
+# 覆盖数据库连接：--database-dsn='host=... user=... password=... dbname=... port=5432 sslmode=disable'
 ```
 
 ## OpenTelemetry 环境变量

@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -18,12 +19,11 @@ const AppEnvVar = "MS_K_APP_ENV"
 type Service string
 
 const (
-	ServiceGateway     Service = "gateway"
-	ServiceIAM         Service = "iam"
-	ServiceSystem      Service = "sys"
-	ServiceResource    Service = "resource"
-	ServiceRealtime    Service = "realtime"
-	ServiceUserManager Service = "usermgr"
+	ServiceGateway  Service = "gateway"
+	ServiceIAM      Service = "iam"
+	ServiceSystem   Service = "sys"
+	ServiceResource Service = "resource"
+	ServiceRealtime Service = "realtime"
 )
 
 // Server 描述 HTTP 或 gRPC 服务的监听配置。
@@ -104,7 +104,7 @@ func LoadInto(configDir string, service Service, target any) (*viper.Viper, stri
 	if profile != "dev" && profile != "prod" {
 		return nil, "", fmt.Errorf("%s must be dev or prod", AppEnvVar)
 	}
-	if service != ServiceGateway && service != ServiceIAM && service != ServiceSystem && service != ServiceResource && service != ServiceRealtime && service != ServiceUserManager {
+	if service != ServiceGateway && service != ServiceIAM && service != ServiceSystem && service != ServiceResource && service != ServiceRealtime {
 		return nil, "", fmt.Errorf("unknown config service %q", service)
 	}
 	v := viper.New()
@@ -127,6 +127,11 @@ func LoadInto(configDir string, service Service, target any) (*viper.Viper, stri
 	if err := requireExplicitConfiguration(v, service); err != nil {
 		return nil, "", err
 	}
+	advertiseHost, err := resolveAdvertiseHost(v.GetString("service.advertiseHost"))
+	if err != nil {
+		return nil, "", err
+	}
+	v.Set("service.advertiseHost", advertiseHost)
 	if err := v.Unmarshal(target); err != nil {
 		return nil, "", fmt.Errorf("decode config: %w", err)
 	}
@@ -143,7 +148,7 @@ func requireExplicitConfiguration(v *viper.Viper, service Service) error {
 		registry = append(registry, "registry.address", "registry.prefix")
 	}
 	server := []string{"server.port"}
-	grpc := []string{"grpc.port", "service.id", "service.advertiseHost"}
+	grpc := []string{"grpc.port", "service.id"}
 	auth := []string{"auth.tokenHeader", "cors.enabled"}
 
 	var keys []string
@@ -151,7 +156,7 @@ func requireExplicitConfiguration(v *viper.Viper, service Service) error {
 	case ServiceGateway:
 		keys = append(server, "server.tlsCertFile", "server.tlsKeyFile", "gateway.rateLimitPerMinute", "cors.enabled")
 		keys = append(keys, registry...)
-		keys = append(keys, "service.id", "service.advertiseHost")
+		keys = append(keys, "service.id")
 	case ServiceIAM:
 		keys = append(keys, server...)
 		keys = append(keys, grpc...)
@@ -182,8 +187,6 @@ func requireExplicitConfiguration(v *viper.Viper, service Service) error {
 		keys = append(keys, "redis.addr", "redis.password", "redis.db")
 		keys = append(keys, "storage.endpoint", "storage.accessKey", "storage.secretKey", "storage.region", "storage.bucket", "storage.useSSL")
 		keys = append(keys, auth...)
-	case ServiceUserManager:
-		keys = []string{"database.dsn"}
 	}
 	for _, key := range keys {
 		_, environmentSet := os.LookupEnv(environmentName(key))
@@ -192,6 +195,35 @@ func requireExplicitConfiguration(v *viper.Viper, service Service) error {
 		}
 	}
 	return nil
+}
+
+func resolveAdvertiseHost(configured string) (string, error) {
+	if configured = strings.TrimSpace(configured); configured != "" {
+		return configured, nil
+	}
+	interfaces, err := net.Interfaces()
+	if err != nil {
+		return "", fmt.Errorf("list network interfaces for service.advertiseHost: %w", err)
+	}
+	for _, networkInterface := range interfaces {
+		if networkInterface.Flags&net.FlagUp == 0 || networkInterface.Flags&net.FlagLoopback != 0 {
+			continue
+		}
+		addresses, err := networkInterface.Addrs()
+		if err != nil {
+			continue
+		}
+		for _, address := range addresses {
+			ip, _, err := net.ParseCIDR(address.String())
+			if err != nil || !ip.IsGlobalUnicast() {
+				continue
+			}
+			if ipv4 := ip.To4(); ipv4 != nil {
+				return ipv4.String(), nil
+			}
+		}
+	}
+	return "", errors.New("service.advertiseHost is empty and no usable IPv4 address was detected")
 }
 
 func bindEnvironment(v *viper.Viper) error {

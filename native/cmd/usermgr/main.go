@@ -11,7 +11,6 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gcc798/microservice-kit/internal/config"
 	"github.com/gcc798/microservice-kit/internal/database"
 	"github.com/gcc798/microservice-kit/internal/utils"
 	"gorm.io/driver/postgres"
@@ -44,14 +43,17 @@ type userRole struct {
 
 func (userRole) TableName() string { return "m_user_role" }
 
-const passwordEnv = "MS_K_USERMGR_PASSWORD"
+const (
+	passwordEnv        = "MS_K_USERMGR_PASSWORD"
+	defaultDatabaseDSN = "host=127.0.0.1 user=postgres password=post123 dbname=microservice_kit port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+)
 
 type options struct {
-	operation string
-	username  string
-	nickname  string
-	role      string
-	configDir string
+	operation   string
+	username    string
+	nickname    string
+	role        string
+	databaseDSN string
 }
 
 func main() {
@@ -67,20 +69,7 @@ func main() {
 		os.Exit(2)
 	}
 
-	var cfg struct {
-		Database config.Database `mapstructure:"database"`
-	}
-	_, _, err = config.LoadInto(opts.configDir, config.ServiceUserManager, &cfg)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "加载配置失败: %v\n", err)
-		os.Exit(1)
-	}
-
-	if cfg.Database.DSN == "" {
-		fmt.Fprintln(os.Stderr, "加载配置失败: database.dsn is required")
-		os.Exit(1)
-	}
-	db, err := initDB(cfg.Database.DSN)
+	db, err := initDB(opts.databaseDSN)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "连接数据库失败: %v\n", err)
 		os.Exit(1)
@@ -108,7 +97,7 @@ func parseOptions(args []string) (options, error) {
 	set.StringVar(&opts.username, "username", "", "用户名")
 	set.StringVar(&opts.nickname, "nickname", "管理员", "创建用户时的昵称")
 	set.StringVar(&opts.role, "role", "super_admin", "创建用户时分配的角色标识")
-	set.StringVar(&opts.configDir, "config-dir", "application/iam", "IAM 配置文件目录")
+	set.StringVar(&opts.databaseDSN, "database-dsn", defaultDatabaseDSN, "PostgreSQL 连接串")
 	if err := set.Parse(args); err != nil {
 		return options{}, err
 	}
@@ -124,6 +113,9 @@ func validateInput(opts options, password string) error {
 	}
 	if len(password) < 8 {
 		return fmt.Errorf("%s 必须至少包含 8 个字符", passwordEnv)
+	}
+	if strings.TrimSpace(opts.databaseDSN) == "" {
+		return errors.New("--database-dsn 不能为空")
 	}
 	if opts.operation == "create" {
 		if strings.TrimSpace(opts.nickname) == "" {
