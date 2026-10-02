@@ -1,0 +1,10 @@
+syntax = "v1"
+
+info (
+	title:  "microservice-kit resource-api"
+	desc:   "go-zero contracts for native/web compatibility"
+	author: "gcc798"
+)
+
+import "api/health.api"
+import "api/attachment.api"

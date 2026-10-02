@@ -1,0 +1,16 @@
+syntax = "v1"
+
+info (
+	title:  "microservice-kit iam-api"
+	desc:   "go-zero contracts for native/web compatibility"
+	author: "gcc798"
+)
+
+import "api/health.api"
+import "api/auth.api"
+import "api/captcha.api"
+import "api/user.api"
+import "api/role.api"
+import "api/api_permission.api"
+import "api/org.api"
+import "api/menu.api"

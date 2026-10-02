@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
 
@@ -72,11 +74,13 @@ func (l *DictUpdateLogic) DictUpdate(in *pb.DictUpdateReq) (*pb.Ack, error) {
 	if dictLabel == "" {
 		dictLabel = oldRow.DictLabel.String
 	}
-	if _, err := l.svcCtx.DB.ExecCtx(l.ctx, `
-		update public.s_dict_data
-		set parent_id = $2, dict_type = $3, dict_label = $4, dict_value = $5, sort = $6, is_default = $7, status = $8, remark = $9, update_by = nullif($10, 0), updated_time = now()
-		where id = $1
-	`, in.Id, in.ParentId, dictType, dictLabel, dictValue, in.Sort, in.IsDefault, in.Status, sql.NullString{String: in.Remark, Valid: in.Remark != ""}, in.UpdateBy); err != nil {
+	updates := map[string]any{
+		"parent_id": in.ParentId, "dict_type": dictType, "dict_label": dictLabel, "dict_value": dictValue,
+		"sort": in.Sort, "is_default": in.IsDefault, "status": in.Status,
+		"remark":    sql.NullString{String: in.Remark, Valid: in.Remark != ""},
+		"update_by": sql.NullInt64{Int64: in.UpdateBy, Valid: in.UpdateBy != 0}, "updated_time": time.Now(),
+	}
+	if err := l.svcCtx.DB.WithContext(l.ctx).Model(&model.SDictData{}).Where("id = ?", in.Id).Updates(updates).Error; err != nil {
 		return nil, err
 	}
 	return &pb.Ack{Msg: "ok"}, nil

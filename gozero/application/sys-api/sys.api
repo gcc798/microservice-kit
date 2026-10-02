@@ -7,16 +7,7 @@ info (
 )
 
 import "api/health.api"
-import "api/auth.api"
-import "api/captcha.api"
-import "api/user.api"
-import "api/role.api"
-import "api/api_permission.api"
-import "api/org.api"
-import "api/menu.api"
 import "api/dict.api"
 import "api/config.api"
 import "api/loginlog.api"
 import "api/operlog.api"
-import "api/attachment.api"
-import "api/storageenv.api"

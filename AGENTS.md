@@ -49,7 +49,7 @@ microservice-kit/
 常见入口与边界：
 
 - `native/application/gateway/`：唯一对外 HTTP/WS 入口，负责服务发现和反向代理，不拥有业务数据。
-- `native/application/{iam,sys,resource,realtime}/internal/`：各领域服务私有的 controller、router、DTO、domain、model 和服务适配。
+- `native/application/{iam,sys,resource,realtime}/internal/`：各领域服务私有的 controller、router、DTO、domain、model 和服务适配。IAM 同时拥有组织与菜单，因为它们参与用户、角色和授权事务。
 - `native/application/<service>/internal/bootstrap/`：服务私有组合根，装配配置、基础设施、领域服务、HTTP/gRPC 和 Worker。
 - `native/application/<service>/internal/config/`：服务私有完整配置；共享 `internal/config` 只提供加载器和原子配置类型。
 - `native/application/{sys,resource}/internal/workers/`：服务私有后台任务，由所属服务管理生命周期并通过 Redis 防止多实例重复执行。
@@ -115,20 +115,23 @@ go test ./...
 
 ### gozero
 
-`gozero/` 是基于 go-zero 的微服务实现，保留 `sys-api` / `sys-rpc` 分层。
+`gozero/` 是基于 go-zero 的微服务实现，按 IAM、SYS、Resource 保留 API/RPC 分层，并提供独立 Gateway 与 Realtime。
 
 常见入口：
 
-- `gozero/application/sys-api/`：对外 API 服务。
-- `gozero/application/sys-rpc/`：内部 RPC 服务。
-- `gozero/application/sys-api/sys.api`：API 描述文件。
-- `gozero/Makefile`：构建入口。
+- `gozero/application/gateway/`：唯一外部 HTTP/WS 入口。
+- `gozero/application/{iam,sys,resource}-api/`：领域 HTTP 服务，只通过 RPC 访问业务与数据。
+- `gozero/application/{iam,sys,resource}-rpc/`：领域 RPC、GORM model 和私有 Goose migration。
+- `gozero/application/realtime/`：WebSocket 与实时发布 RPC。
+- `gozero/goctl-template/model/`：GORM model 自定义 goctl 模板。
+- `gozero/Makefile`：代码生成、验证、构建和运行入口。
 
 常用命令：
 
 ```bash
 cd gozero
-go test ./...
+make verify
+make build-all
 ```
 
 ## 前端工程
@@ -157,7 +160,7 @@ pnpm build
 
 ## 开发建议
 
-- 做业务改动前，先确定 IAM、SYS 或 Resource 的所有权，再在对应的 `application/<service>/internal/` 中修改 controller/domain/model/request/response。
+- 做业务改动前，先确定 IAM、SYS 或 Resource 的所有权，再在对应的 `application/<service>/internal/` 中修改 controller/domain/model/request/response。组织与菜单归 IAM，字典、配置和日志归 SYS。
 - 若目标是 `kratos` 或 `gozero`，实现时保持与 `native` 的 HTTP 契约和接口语义一致。
 - 若改动会影响前端接口，优先确认是否破坏了 `native` 契约；不要让 `web-react` 为不同后端实现做特殊兼容。
 - 每个 Go 子工程单独运行测试：`native`、`kratos`、`gozero` 各自都有自己的 `go.mod`。

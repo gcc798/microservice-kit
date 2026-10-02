@@ -1,0 +1,21 @@
+syntax = "v1"
+
+import "common.api"
+
+@server (
+	group: health
+)
+service iam-api {
+	@handler Health
+	get /health returns (CommonResp)
+
+	@handler HealthReady
+	get /health/ready returns (CommonResp)
+
+	@handler HealthLive
+	get /health/live returns (CommonResp)
+
+	@handler HealthStartup
+	get /health/startup returns (CommonResp)
+}
+

@@ -1,16 +1,11 @@
 Name: sys-api
 Host: 0.0.0.0
-Port: 9009
+Port: 9012
 Mode: dev
 
 SysRpc:
   Target: 127.0.0.1:9002
   NonBlock: true
-
-Redis:
-  Addr: "127.0.0.1:6379"
-  Password: "123456"
-  Db: 0
 
 Jwt:
   Secret: "your-256-bit-secret"

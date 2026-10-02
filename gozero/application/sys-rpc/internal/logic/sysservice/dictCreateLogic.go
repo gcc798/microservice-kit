@@ -4,9 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
+	"gorm.io/gorm"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -45,10 +48,15 @@ func (l *DictCreateLogic) DictCreate(in *pb.DictCreateReq) (*pb.Ack, error) {
 			return nil, errors.New("父字典类型不匹配")
 		}
 	}
-	if _, err := l.svcCtx.DB.ExecCtx(l.ctx, `
-		insert into public.s_dict_data (parent_id, dict_type, dict_label, dict_value, sort, is_default, status, remark, create_by, update_by, created_time, updated_time)
-		values ($1, $2, $3, $4, $5, $6, $7, $8, nullif($9, 0), nullif($10, 0), now(), now())
-	`, in.ParentId, in.DictType, in.DictLabel, in.DictValue, in.Sort, in.IsDefault, in.Status, sql.NullString{String: in.Remark, Valid: in.Remark != ""}, in.CreateBy, in.UpdateBy); err != nil {
+	now := time.Now()
+	row := model.SDictData{
+		ParentId: in.ParentId, DictType: sql.NullString{String: in.DictType, Valid: true},
+		DictLabel: sql.NullString{String: in.DictLabel, Valid: true}, DictValue: sql.NullString{String: in.DictValue, Valid: true},
+		Sort: in.Sort, IsDefault: in.IsDefault, Status: int64(in.Status), Remark: sql.NullString{String: in.Remark, Valid: in.Remark != ""},
+		CreateBy: sql.NullInt64{Int64: in.CreateBy, Valid: in.CreateBy != 0}, UpdateBy: sql.NullInt64{Int64: in.UpdateBy, Valid: in.UpdateBy != 0},
+		CreatedTime: sql.NullTime{Time: now, Valid: true}, UpdatedTime: sql.NullTime{Time: now, Valid: true},
+	}
+	if err := gorm.G[model.SDictData](l.svcCtx.DB).Create(l.ctx, &row); err != nil {
 		return nil, err
 	}
 	return &pb.Ack{Msg: "ok"}, nil

@@ -21,8 +21,8 @@
   "components": [
     { "id": "frontend", "type": "frontend", "label": "web-react", "sublabel": "React 管理端", "tag": "统一 HTTP 契约", "pos": [40, 310], "size": [150, 70], "sources": [{ "path": "web-react/src/main.tsx", "label": "前端入口" }] },
     { "id": "gateway", "type": "backend", "label": "Gateway", "sublabel": "统一入口与动态路由", "tag": "API 路由表 · 流量治理", "pos": [270, 320], "size": [170, 70], "sources": [{ "path": "native/application/gateway/internal/proxy/proxy.go", "line": 89, "label": "动态路由" }] },
-    { "id": "iam", "type": "security", "label": "IAM 认证中心", "sublabel": "身份、认证、授权", "tag": "用户 · 角色 · Token", "pos": [520, 200], "size": [180, 78], "sources": [{ "path": "native/application/iam/internal/domain/token_manager.go", "line": 30, "label": "Token 生命周期" }] },
-    { "id": "sys", "type": "backend", "label": "SYS 服务", "sublabel": "组织与系统管理", "tag": "菜单 · 字典 · 配置 · 日志", "pos": [760, 200], "size": [180, 78], "sources": [{ "path": "native/application/sys/internal/migrations/migrations.go", "label": "SYS 领域" }] },
+    { "id": "iam", "type": "security", "label": "IAM 认证中心", "sublabel": "身份、认证、授权", "tag": "用户 · 角色 · 组织 · 菜单", "pos": [520, 200], "size": [180, 78], "sources": [{ "path": "native/application/iam/internal/domain/token_manager.go", "line": 30, "label": "Token 生命周期" }] },
+    { "id": "sys", "type": "backend", "label": "SYS 服务", "sublabel": "系统配置与审计", "tag": "字典 · 配置 · 登录日志 · 操作日志", "pos": [760, 200], "size": [180, 78], "sources": [{ "path": "native/application/sys/internal/migrations/migrations.go", "label": "SYS 领域" }] },
     { "id": "resource", "type": "backend", "label": "Resource 服务", "sublabel": "资源与文件能力", "tag": "附件 · 对象存储", "pos": [520, 440], "size": [180, 78], "sources": [{ "path": "native/application/resource/internal/migrations/migrations.go", "label": "Resource 领域" }] },
     { "id": "realtime", "type": "backend", "label": "Realtime 服务", "sublabel": "用户长连接与实时投递", "tag": "WebSocket · Pub/Sub · 多实例", "pos": [1000, 560], "size": [190, 78] },
     { "id": "postgres", "type": "database", "label": "PostgreSQL", "sublabel": "领域数据存储", "tag": "IAM / SYS / Resource 独立迁移", "pos": [1030, 250], "size": [180, 78], "sources": [{ "path": "native/application/iam/internal/migrations/migrations.go", "label": "IAM 迁移" }, { "path": "native/application/sys/internal/migrations/sql/00001_schema.sql", "label": "SYS 迁移" }, { "path": "native/application/resource/internal/migrations/sql/00001_schema.sql", "label": "Resource 迁移" }] },
@@ -58,7 +58,7 @@
     { "id": "resource-realtime", "from": "resource", "to": "realtime", "label": "gRPC PublishToUsers", "variant": "dashed", "fromSide": "right", "toSide": "left" }
   ],
   "cards": [
-    { "dot": "cyan", "title": "业务能力", "items": ["IAM：认证、授权与 Redis Session", "SYS：组织、菜单、字典、配置与操作日志", "Resource：附件、对象存储；Realtime：WebSocket、心跳与跨实例投递"] },
+    { "dot": "cyan", "title": "业务能力", "items": ["IAM：认证、授权与 Redis Session", "SYS：字典、配置、登录日志与操作日志", "Resource：附件、对象存储；Realtime：WebSocket、心跳与跨实例投递"] },
     { "dot": "emerald", "title": "注册与路由", "items": ["注册中心支持 Consul / etcd / Nacos（三选一）", "领域服务注册实例与 HTTP API 路由，Gateway 动态构建路由表；实例 Label 支持金丝雀、灰度与定向路由"] },
     { "dot": "rose", "title": "运行边界", "items": ["Gateway 是唯一对外入口，不拥有业务数据", "每个领域服务独立拥有模型与 Goose 迁移", "Realtime 只维护连接；SYS / Resource 各自管理私有 Worker"] }
   ]

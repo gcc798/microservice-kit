@@ -4,21 +4,6 @@ Mode: dev
 
 Postgres:
   Dsn: "host=127.0.0.1 user=postgres password=post123 dbname=microservice_kit port=5433 sslmode=disable TimeZone=Asia/Shanghai"
-
-CacheRedis:
-  Addr: "127.0.0.1:6379"
-  Password: "123456"
-  Db: 0
-
-Captcha:
-  Image:
-    Enabled: false
-  Sms:
-    Enabled: true
-  Email:
-    Enabled: true
-
-Wechat:
-  Enabled: false
-  AppId: ""
-  Secret: ""
+  MaxIdleConns: 10
+  MaxOpenConns: 100
+  ConnMaxLifetimeMinutes: 60

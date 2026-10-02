@@ -1,0 +1,15 @@
+Name: resource-api
+Host: 0.0.0.0
+Port: 9013
+Mode: dev
+
+ResourceRpc:
+  Target: 127.0.0.1:9003
+  NonBlock: true
+
+Jwt:
+  Secret: "your-256-bit-secret"
+  Expire: 7200
+
+Auth:
+  TokenHeader: "Authorization"

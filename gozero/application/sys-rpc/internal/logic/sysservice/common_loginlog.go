@@ -2,49 +2,26 @@ package sysservicelogic
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
-	"strings"
 
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
-	gzsqlx "github.com/zeromicro/go-zero/core/stores/sqlx"
+	"gorm.io/gorm"
 )
 
-type loginLogRow struct {
-	Id            int64          `db:"id"`
-	UserName      sql.NullString `db:"user_name"`
-	Ipaddr        sql.NullString `db:"ipaddr"`
-	LoginLocation sql.NullString `db:"login_location"`
-	Browser       sql.NullString `db:"browser"`
-	Os            sql.NullString `db:"os"`
-	Status        int64          `db:"status"`
-	Msg           sql.NullString `db:"msg"`
-	LoginTime     sql.NullTime   `db:"login_time"`
-	ClientId      sql.NullString `db:"client_id"`
-}
+type loginLogRow = model.SLoginLog
 
 func getLoginLogByID(ctx context.Context, svcCtx *svc.ServiceContext, id int64) (*loginLogRow, error) {
-	var row loginLogRow
-	err := svcCtx.DB.QueryRowCtx(ctx, &row, `select id, user_name, ipaddr, login_location, browser, os, status, msg, login_time, client_id from public.s_login_log where id = $1 limit 1`, id)
+	row, err := gorm.G[model.SLoginLog](svcCtx.DB).Where("id = ?", id).First(ctx)
 	if err != nil {
-		if errors.Is(err, gzsqlx.ErrNotFound) {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("登录日志不存在")
 		}
 		return nil, err
 	}
 	return &row, nil
-}
-
-func loginLogIn(ids []int64, start int) (string, []interface{}) {
-	parts := make([]string, 0, len(ids))
-	args := make([]interface{}, 0, len(ids))
-	for i, id := range ids {
-		parts = append(parts, fmt.Sprintf("$%d", start+i))
-		args = append(args, id)
-	}
-	return strings.Join(parts, ", "), args
 }
 
 func toLoginLogPB(row loginLogRow) *pb.LoginLog {

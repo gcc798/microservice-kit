@@ -27,14 +27,14 @@ func (l *DictDeleteLogic) DictDelete(in *pb.IdReq) (*pb.Ack, error) {
 	if _, err := getDictByID(l.ctx, l.svcCtx, in.Id); err != nil {
 		return nil, err
 	}
-	_, err := l.svcCtx.DB.ExecCtx(l.ctx, `
+	err := l.svcCtx.DB.WithContext(l.ctx).Exec(`
 		with recursive dict_tree as (
-			select id from public.s_dict_data where id = $1
+			select id from public.s_dict_data where id = ?
 			union all
 			select d.id from public.s_dict_data d inner join dict_tree dt on d.parent_id = dt.id
 		)
 		delete from public.s_dict_data where id in (select id from dict_tree)
-	`, in.Id)
+	`, in.Id).Error
 	if err != nil {
 		return nil, err
 	}

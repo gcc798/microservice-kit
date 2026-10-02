@@ -1,0 +1,28 @@
+syntax = "v1"
+
+type CommonResp {
+	code int         `json:"code"`
+	msg  string      `json:"msg"`
+	data interface{} `json:"data"`
+}
+
+type IdPathReq {
+	id int64 `path:"id"`
+}
+
+type StringIdPathReq {
+	id string `path:"id"`
+}
+
+type RoleIdPathReq {
+	roleId int64 `path:"roleId"`
+}
+
+type AttachmentIdPathReq {
+	attachmentId int64 `path:"attachmentId"`
+}
+
+type BatchIdsReq {
+	ids []int64 `json:"ids"`
+}
+

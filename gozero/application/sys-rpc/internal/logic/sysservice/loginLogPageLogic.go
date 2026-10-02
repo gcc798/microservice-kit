@@ -2,9 +2,8 @@ package sysservicelogic
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
 
@@ -27,37 +26,28 @@ func NewLoginLogPageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Logi
 
 func (l *LoginLogPageLogic) LoginLogPage(in *pb.LoginLogPageReq) (*pb.LoginLogPageResp, error) {
 	pageNum, pageSize := normalizePage(in.PageNum, in.PageSize)
-	where := []string{"1=1"}
-	args := make([]interface{}, 0)
+	query := l.svcCtx.DB.WithContext(l.ctx).Model(&model.SLoginLog{})
 	if in.UserName != "" {
-		args = append(args, "%"+in.UserName+"%")
-		where = append(where, fmt.Sprintf("user_name like $%d", len(args)))
+		query = query.Where("user_name LIKE ?", "%"+in.UserName+"%")
 	}
 	if in.Ipaddr != "" {
-		args = append(args, "%"+in.Ipaddr+"%")
-		where = append(where, fmt.Sprintf("ipaddr like $%d", len(args)))
+		query = query.Where("ipaddr LIKE ?", "%"+in.Ipaddr+"%")
 	}
 	if in.Status == 0 || in.Status == 1 {
-		args = append(args, in.Status)
-		where = append(where, fmt.Sprintf("status = $%d", len(args)))
+		query = query.Where("status = ?", in.Status)
 	}
 	if in.StartTime != "" {
-		args = append(args, in.StartTime)
-		where = append(where, fmt.Sprintf("login_time >= $%d", len(args)))
+		query = query.Where("login_time >= ?", in.StartTime)
 	}
 	if in.EndTime != "" {
-		args = append(args, in.EndTime)
-		where = append(where, fmt.Sprintf("login_time <= $%d", len(args)))
+		query = query.Where("login_time <= ?", in.EndTime)
 	}
-	whereSQL := strings.Join(where, " and ")
 	var total int64
-	if err := l.svcCtx.DB.QueryRowCtx(l.ctx, &total, "select count(1) from public.s_login_log where "+whereSQL, args...); err != nil {
+	if err := query.Count(&total).Error; err != nil {
 		return nil, err
 	}
-	queryArgs := append(append([]interface{}{}, args...), pageSize, (pageNum-1)*pageSize)
-	var rows []loginLogRow
-	query := `select id, user_name, ipaddr, login_location, browser, os, status, msg, login_time, client_id from public.s_login_log where ` + whereSQL + ` order by login_time desc nulls last, id desc limit $` + fmt.Sprint(len(args)+1) + ` offset $` + fmt.Sprint(len(args)+2)
-	if err := l.svcCtx.DB.QueryRowsCtx(l.ctx, &rows, query, queryArgs...); err != nil {
+	var rows []model.SLoginLog
+	if err := query.Order("login_time DESC NULLS LAST, id DESC").Limit(int(pageSize)).Offset(int((pageNum - 1) * pageSize)).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 	return &pb.LoginLogPageResp{Records: toLoginLogList(rows), Page: toPageInfo(total, pageNum, pageSize)}, nil

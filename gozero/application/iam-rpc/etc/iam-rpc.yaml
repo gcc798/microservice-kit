@@ -1,0 +1,34 @@
+Name: iam-rpc
+ListenOn: 0.0.0.0:9001
+Mode: dev
+
+SysRpc:
+  Target: 127.0.0.1:9002
+  NonBlock: true
+
+Postgres:
+  Dsn: "host=127.0.0.1 user=postgres password=post123 dbname=microservice_kit port=5433 sslmode=disable TimeZone=Asia/Shanghai"
+  MaxIdleConns: 10
+  MaxOpenConns: 100
+  ConnMaxLifetimeMinutes: 60
+
+CacheRedis:
+  Addr: "127.0.0.1:6379"
+  Password: "123456"
+  Db: 0
+
+Jwt:
+  Secret: "your-256-bit-secret"
+
+Captcha:
+  Image:
+    Enabled: false
+  Sms:
+    Enabled: true
+  Email:
+    Enabled: true
+
+Wechat:
+  Enabled: false
+  AppId: ""
+  Secret: ""

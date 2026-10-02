@@ -5,8 +5,10 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
+	"gorm.io/gorm"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -26,17 +28,13 @@ func NewLoginLogCreateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Lo
 }
 
 func (l *LoginLogCreateLogic) LoginLogCreate(in *pb.LoginLogReq) (*pb.Ack, error) {
-	if _, err := l.svcCtx.DB.ExecCtx(l.ctx, `insert into public.s_login_log (user_name, ipaddr, login_location, browser, os, status, msg, login_time, client_id) values ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-		sql.NullString{String: in.UserName, Valid: in.UserName != ""},
-		sql.NullString{String: in.Ipaddr, Valid: in.Ipaddr != ""},
-		sql.NullString{String: in.LoginLocation, Valid: in.LoginLocation != ""},
-		sql.NullString{String: in.Browser, Valid: in.Browser != ""},
-		sql.NullString{String: in.Os, Valid: in.Os != ""},
-		in.Status,
-		sql.NullString{String: in.Msg, Valid: in.Msg != ""},
-		time.Now(),
-		sql.NullString{String: in.ClientId, Valid: in.ClientId != ""},
-	); err != nil {
+	row := model.SLoginLog{
+		UserName: sql.NullString{String: in.UserName, Valid: in.UserName != ""}, Ipaddr: sql.NullString{String: in.Ipaddr, Valid: in.Ipaddr != ""},
+		LoginLocation: sql.NullString{String: in.LoginLocation, Valid: in.LoginLocation != ""}, Browser: sql.NullString{String: in.Browser, Valid: in.Browser != ""},
+		Os: sql.NullString{String: in.Os, Valid: in.Os != ""}, Status: int64(in.Status), Msg: sql.NullString{String: in.Msg, Valid: in.Msg != ""},
+		LoginTime: sql.NullTime{Time: time.Now(), Valid: true}, ClientId: sql.NullString{String: in.ClientId, Valid: in.ClientId != ""},
+	}
+	if err := gorm.G[model.SLoginLog](l.svcCtx.DB).Create(l.ctx, &row); err != nil {
 		return nil, err
 	}
 	return &pb.Ack{Msg: "ok"}, nil

@@ -1,0 +1,20 @@
+Name: iam-api
+Host: 0.0.0.0
+Port: 9011
+Mode: dev
+
+IamRpc:
+  Target: 127.0.0.1:9001
+  NonBlock: true
+
+Redis:
+  Addr: "127.0.0.1:6379"
+  Password: "123456"
+  Db: 0
+
+Jwt:
+  Secret: "your-256-bit-secret"
+  Expire: 7200
+
+Auth:
+  TokenHeader: "Authorization"

@@ -1,0 +1,1 @@
+`gorm:"column:{{.field}}{{if eq .field .data.PrimaryKey.Name.Source}};primaryKey;autoIncrement:false{{end}}"{{if and (eq .field .data.PrimaryKey.Name.Source) (eq .data.PrimaryKey.DataType "int64")}} autogen:"int64"{{end}} json:"{{.field}}"`

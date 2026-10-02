@@ -4,9 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
+	"gorm.io/gorm"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -36,8 +39,15 @@ func (l *ConfigCreateLogic) ConfigCreate(in *pb.ConfigCreateReq) (*pb.Ack, error
 	if exists {
 		return nil, errors.New("配置名称已存在")
 	}
-	if _, err := l.svcCtx.DB.ExecCtx(l.ctx, `insert into public.s_config (name, code, data, remark, create_by, update_by, created_time, updated_time) values ($1, $2, $3, $4, nullif($5, 0), nullif($6, 0), now(), now())`,
-		in.Name, in.Code, sql.NullString{String: in.DataJson, Valid: in.DataJson != ""}, sql.NullString{String: in.Remark, Valid: in.Remark != ""}, in.CreateBy, in.UpdateBy); err != nil {
+	now := time.Now()
+	row := model.SConfig{
+		Name: in.Name, Code: in.Code, Data: in.DataJson,
+		Remark:      sql.NullString{String: in.Remark, Valid: in.Remark != ""},
+		CreateBy:    sql.NullInt64{Int64: in.CreateBy, Valid: in.CreateBy != 0},
+		UpdateBy:    sql.NullInt64{Int64: in.UpdateBy, Valid: in.UpdateBy != 0},
+		CreatedTime: sql.NullTime{Time: now, Valid: true}, UpdatedTime: sql.NullTime{Time: now, Valid: true},
+	}
+	if err := gorm.G[model.SConfig](l.svcCtx.DB).Create(l.ctx, &row); err != nil {
 		return nil, err
 	}
 	return &pb.Ack{Msg: "ok"}, nil

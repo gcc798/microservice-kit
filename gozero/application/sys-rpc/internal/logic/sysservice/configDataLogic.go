@@ -2,10 +2,11 @@ package sysservicelogic
 
 import (
 	"context"
-	"database/sql"
 
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
+	"gorm.io/gorm"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -25,11 +26,9 @@ func NewConfigDataLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Config
 }
 
 func (l *ConfigDataLogic) ConfigData(in *pb.ConfigCodeQueryReq) (*pb.ConfigDataResp, error) {
-	var row struct {
-		Data sql.NullString `db:"data"`
-	}
-	if err := l.svcCtx.DB.QueryRowCtx(l.ctx, &row, `select data from public.s_config where code = $1 order by id desc limit 1`, in.Code); err != nil {
+	row, err := gorm.G[model.SConfig](l.svcCtx.DB).Select("data").Where("code = ?", in.Code).Order("id DESC").First(l.ctx)
+	if err != nil {
 		return nil, err
 	}
-	return &pb.ConfigDataResp{Code: in.Code, DataJson: nullString(row.Data)}, nil
+	return &pb.ConfigDataResp{Code: in.Code, DataJson: row.Data}, nil
 }

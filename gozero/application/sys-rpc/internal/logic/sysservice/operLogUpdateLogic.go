@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
 
@@ -25,24 +26,17 @@ func NewOperLogUpdateLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Ope
 }
 
 func (l *OperLogUpdateLogic) OperLogUpdate(in *pb.OperLogUpdateReq) (*pb.Ack, error) {
-	if _, err := l.svcCtx.DB.ExecCtx(l.ctx, `update public.s_oper_log set title = $2, business_type = $3, method = $4, request_method = $5, device_type = $6, oper_name = $7, oper_url = $8, oper_ip = $9, oper_location = $10, oper_param = $11, json_result = $12, status = $13, error_msg = $14, cost_time = $15, user_agent = $16 where id = $1`,
-		in.Id,
-		sql.NullString{String: in.Title, Valid: in.Title != ""},
-		sql.NullString{String: in.BusinessType, Valid: in.BusinessType != ""},
-		sql.NullString{String: in.Method, Valid: in.Method != ""},
-		sql.NullString{String: in.RequestMethod, Valid: in.RequestMethod != ""},
-		sql.NullString{String: in.DeviceType, Valid: in.DeviceType != ""},
-		sql.NullString{String: in.OperName, Valid: in.OperName != ""},
-		sql.NullString{String: in.OperUrl, Valid: in.OperUrl != ""},
-		sql.NullString{String: in.OperIp, Valid: in.OperIp != ""},
-		sql.NullString{String: in.OperLocation, Valid: in.OperLocation != ""},
-		sql.NullString{String: in.OperParam, Valid: in.OperParam != ""},
-		sql.NullString{String: in.JsonResult, Valid: in.JsonResult != ""},
-		sql.NullString{String: in.Status, Valid: in.Status != ""},
-		sql.NullString{String: in.ErrorMsg, Valid: in.ErrorMsg != ""},
-		sql.NullInt64{Int64: in.CostTime, Valid: in.CostTime > 0},
-		sql.NullString{String: in.UserAgent, Valid: in.UserAgent != ""},
-	); err != nil {
+	updates := map[string]any{
+		"title": sql.NullString{String: in.Title, Valid: in.Title != ""}, "business_type": sql.NullString{String: in.BusinessType, Valid: in.BusinessType != ""},
+		"method": sql.NullString{String: in.Method, Valid: in.Method != ""}, "request_method": sql.NullString{String: in.RequestMethod, Valid: in.RequestMethod != ""},
+		"device_type": sql.NullString{String: in.DeviceType, Valid: in.DeviceType != ""}, "oper_name": sql.NullString{String: in.OperName, Valid: in.OperName != ""},
+		"oper_url": sql.NullString{String: in.OperUrl, Valid: in.OperUrl != ""}, "oper_ip": sql.NullString{String: in.OperIp, Valid: in.OperIp != ""},
+		"oper_location": sql.NullString{String: in.OperLocation, Valid: in.OperLocation != ""}, "oper_param": sql.NullString{String: in.OperParam, Valid: in.OperParam != ""},
+		"json_result": sql.NullString{String: in.JsonResult, Valid: in.JsonResult != ""}, "status": sql.NullString{String: in.Status, Valid: in.Status != ""},
+		"error_msg": sql.NullString{String: in.ErrorMsg, Valid: in.ErrorMsg != ""}, "cost_time": sql.NullInt64{Int64: in.CostTime, Valid: in.CostTime > 0},
+		"user_agent": sql.NullString{String: in.UserAgent, Valid: in.UserAgent != ""},
+	}
+	if err := l.svcCtx.DB.WithContext(l.ctx).Model(&model.SOperLog{}).Where("id = ?", in.Id).Updates(updates).Error; err != nil {
 		return nil, err
 	}
 	return &pb.Ack{Msg: "ok"}, nil

@@ -1,0 +1,19 @@
+Name: realtime-rpc
+ListenOn: 0.0.0.0:9004
+Mode: dev
+
+HTTP:
+  Host: 0.0.0.0
+  Port: 9014
+
+RelayRedis:
+  Addr: "127.0.0.1:6379"
+  Password: "123456"
+  DB: 0
+
+Security:
+  TokenHeader: "Authorization"
+
+IamRpc:
+  Target: 127.0.0.1:9001
+  NonBlock: true

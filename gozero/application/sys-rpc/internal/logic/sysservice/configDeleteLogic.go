@@ -3,8 +3,10 @@ package sysservicelogic
 import (
 	"context"
 
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
+	"gorm.io/gorm"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -24,7 +26,7 @@ func NewConfigDeleteLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Conf
 }
 
 func (l *ConfigDeleteLogic) ConfigDelete(in *pb.IdReq) (*pb.Ack, error) {
-	if _, err := l.svcCtx.DB.ExecCtx(l.ctx, `delete from public.s_config where id = $1`, in.Id); err != nil {
+	if _, err := gorm.G[model.SConfig](l.svcCtx.DB).Where("id = ?", in.Id).Delete(l.ctx); err != nil {
 		return nil, err
 	}
 	return &pb.Ack{Msg: "ok"}, nil

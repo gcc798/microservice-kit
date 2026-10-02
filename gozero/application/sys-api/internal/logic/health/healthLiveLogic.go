@@ -27,5 +27,9 @@ func NewHealthLiveLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Health
 }
 
 func (l *HealthLiveLogic) HealthLive() (resp *types.CommonResp, err error) {
-	return NewHealthLogic(l.ctx, l.svcCtx).Health()
+	return &types.CommonResp{
+		Code: 200,
+		Msg:  "success",
+		Data: map[string]any{"status": "alive"},
+	}, nil
 }

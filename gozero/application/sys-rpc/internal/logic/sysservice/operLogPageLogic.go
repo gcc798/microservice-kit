@@ -2,9 +2,8 @@ package sysservicelogic
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
 
@@ -27,41 +26,31 @@ func NewOperLogPageLogic(ctx context.Context, svcCtx *svc.ServiceContext) *OperL
 
 func (l *OperLogPageLogic) OperLogPage(in *pb.OperLogPageReq) (*pb.OperLogPageResp, error) {
 	pageNum, pageSize := normalizePage(in.PageNum, in.PageSize)
-	where := []string{"1=1"}
-	args := make([]interface{}, 0)
+	query := l.svcCtx.DB.WithContext(l.ctx).Model(&model.SOperLog{})
 	if in.Title != "" {
-		args = append(args, "%"+in.Title+"%")
-		where = append(where, fmt.Sprintf("title like $%d", len(args)))
+		query = query.Where("title LIKE ?", "%"+in.Title+"%")
 	}
 	if in.OperName != "" {
-		args = append(args, "%"+in.OperName+"%")
-		where = append(where, fmt.Sprintf("oper_name like $%d", len(args)))
+		query = query.Where("oper_name LIKE ?", "%"+in.OperName+"%")
 	}
 	if in.BusinessType != "" {
-		args = append(args, in.BusinessType)
-		where = append(where, fmt.Sprintf("business_type = $%d", len(args)))
+		query = query.Where("business_type = ?", in.BusinessType)
 	}
 	if in.Status != "" {
-		args = append(args, in.Status)
-		where = append(where, fmt.Sprintf("status = $%d", len(args)))
+		query = query.Where("status = ?", in.Status)
 	}
 	if in.StartTime != "" {
-		args = append(args, in.StartTime)
-		where = append(where, fmt.Sprintf("oper_time >= $%d", len(args)))
+		query = query.Where("oper_time >= ?", in.StartTime)
 	}
 	if in.EndTime != "" {
-		args = append(args, in.EndTime)
-		where = append(where, fmt.Sprintf("oper_time <= $%d", len(args)))
+		query = query.Where("oper_time <= ?", in.EndTime)
 	}
-	whereSQL := strings.Join(where, " and ")
 	var total int64
-	if err := l.svcCtx.DB.QueryRowCtx(l.ctx, &total, "select count(1) from public.s_oper_log where "+whereSQL, args...); err != nil {
+	if err := query.Count(&total).Error; err != nil {
 		return nil, err
 	}
-	queryArgs := append(append([]interface{}{}, args...), pageSize, (pageNum-1)*pageSize)
-	var rows []operLogRow
-	query := `select id, title, business_type, method, request_method, device_type, oper_name, oper_url, oper_ip, oper_location, oper_param, json_result, status, error_msg, oper_time, cost_time, user_agent from public.s_oper_log where ` + whereSQL + ` order by oper_time desc nulls last, id desc limit $` + fmt.Sprint(len(args)+1) + ` offset $` + fmt.Sprint(len(args)+2)
-	if err := l.svcCtx.DB.QueryRowsCtx(l.ctx, &rows, query, queryArgs...); err != nil {
+	var rows []model.SOperLog
+	if err := query.Order("oper_time DESC NULLS LAST, id DESC").Limit(int(pageSize)).Offset(int((pageNum - 1) * pageSize)).Find(&rows).Error; err != nil {
 		return nil, err
 	}
 	return &pb.OperLogPageResp{Records: toOperLogList(rows), Page: toPageInfo(total, pageNum, pageSize)}, nil

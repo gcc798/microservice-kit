@@ -1,0 +1,81 @@
+syntax = "proto3";
+
+package resource;
+
+option go_package = "github.com/gcc798/microservice-kit/application/resource-rpc/pb";
+
+message Ack { string msg = 1; }
+message PingReq {}
+message PingResp { string message = 1; }
+message IdReq { int64 id = 1; }
+
+message PageInfo {
+  int64 total = 1;
+  int64 size = 2;
+  int64 current = 3;
+  int64 pages = 4;
+}
+
+message Attachment {
+  int64 attachment_id = 1;
+  string file_name = 2;
+  string file_key = 3;
+  int64 file_size = 4;
+  string file_type = 5;
+  string file_ext = 6;
+  string business_type = 7;
+  string business_id = 8;
+  string business_field = 9;
+  bool is_public = 10;
+  string access_url = 11;
+  string metadata_json = 12;
+  int32 status = 13;
+  string expire_time = 14;
+  int64 create_by = 15;
+  string create_time = 16;
+  string update_time = 17;
+}
+
+message AttachmentPageReq {
+  int64 page_num = 1;
+  int64 page_size = 2;
+  string file_name = 3;
+  string file_type = 4;
+  string business_type = 5;
+}
+
+message AttachmentUploadReq {
+  string file_name = 1;
+  string content_type = 2;
+  bytes content = 3;
+}
+
+message AttachmentBindReq {
+  int64 attachment_id = 1;
+  string business_type = 2;
+  string business_id = 3;
+  string business_field = 4;
+  bool is_public = 5;
+  string metadata_json = 6;
+  string expire_time = 7;
+}
+
+message AttachmentBusinessQueryReq { string business_type = 1; string business_id = 2; }
+message AttachmentUrlQueryReq { int64 attachment_id = 1; int64 expires = 2; }
+message AttachmentUrlResp { int64 attachment_id = 1; string url = 2; int64 expires = 3; }
+message AttachmentDownloadReq { int64 attachment_id = 1; }
+message AttachmentDownloadResp { string file_name = 1; string content_type = 2; bytes content = 3; }
+message AttachmentPageResp { repeated Attachment records = 1; PageInfo page = 2; }
+message AttachmentListResp { repeated Attachment records = 1; }
+
+service ResourceService {
+  rpc Ping(PingReq) returns (PingResp);
+  rpc AttachmentUploadFile(AttachmentUploadReq) returns (Attachment);
+  rpc AttachmentBind(AttachmentBindReq) returns (Ack);
+  rpc AttachmentDetail(IdReq) returns (Attachment);
+  rpc AttachmentBusiness(AttachmentBusinessQueryReq) returns (AttachmentListResp);
+  rpc AttachmentPage(AttachmentPageReq) returns (AttachmentPageResp);
+  rpc AttachmentDownload(AttachmentDownloadReq) returns (AttachmentDownloadResp);
+  rpc AttachmentUrl(AttachmentUrlQueryReq) returns (AttachmentUrlResp);
+  rpc AttachmentDelete(IdReq) returns (Ack);
+}

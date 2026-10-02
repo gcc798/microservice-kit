@@ -1,0 +1,17 @@
+Name: resource-rpc
+ListenOn: 0.0.0.0:9003
+Mode: dev
+
+Postgres:
+  Dsn: "host=127.0.0.1 user=postgres password=post123 dbname=microservice_kit port=5433 sslmode=disable TimeZone=Asia/Shanghai"
+  MaxIdleConns: 10
+  MaxOpenConns: 100
+  ConnMaxLifetimeMinutes: 60
+
+Storage:
+  Endpoint: "127.0.0.1:9000"
+  AccessKey: "rustfsadmin"
+  SecretKey: "rustfsadmin"
+  Bucket: "microservice-kit"
+  Region: "us-east-1"
+  UseSSL: false

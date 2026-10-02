@@ -1,29 +1,11 @@
 package model
 
-import "github.com/zeromicro/go-zero/core/stores/sqlx"
+import "gorm.io/gorm"
 
-var _ SLoginLogModel = (*customSLoginLogModel)(nil)
-
-type (
-	// SLoginLogModel is an interface to be customized, add more methods here,
-	// and implement the added methods in customSLoginLogModel.
-	SLoginLogModel interface {
-		sLoginLogModel
-		withSession(session sqlx.Session) SLoginLogModel
-	}
-
-	customSLoginLogModel struct {
-		*defaultSLoginLogModel
-	}
-)
-
-// NewSLoginLogModel returns a model for the database table.
-func NewSLoginLogModel(conn sqlx.SqlConn) SLoginLogModel {
-	return &customSLoginLogModel{
-		defaultSLoginLogModel: newSLoginLogModel(conn),
-	}
+type SLoginLogModel struct {
+	db *gorm.DB
 }
 
-func (m *customSLoginLogModel) withSession(session sqlx.Session) SLoginLogModel {
-	return NewSLoginLogModel(sqlx.NewSqlConnFromSession(session))
+func NewSLoginLogModel(db *gorm.DB) *SLoginLogModel {
+	return &SLoginLogModel{db: db}
 }

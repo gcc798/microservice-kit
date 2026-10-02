@@ -2,10 +2,11 @@ package sysservicelogic
 
 import (
 	"context"
-	"database/sql"
 
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
+	"gorm.io/gorm"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -25,11 +26,11 @@ func NewDictLabelLogic(ctx context.Context, svcCtx *svc.ServiceContext) *DictLab
 }
 
 func (l *DictLabelLogic) DictLabel(in *pb.DictLabelQueryReq) (*pb.DictLabelResp, error) {
-	var row struct {
-		Label sql.NullString `db:"dict_label"`
-	}
-	if err := l.svcCtx.DB.QueryRowCtx(l.ctx, &row, `select dict_label from public.s_dict_data where dict_type = $1 and dict_value = $2 and status = 0 order by sort asc, id asc limit 1`, in.DictType, in.DictValue); err != nil {
+	row, err := gorm.G[model.SDictData](l.svcCtx.DB).Select("dict_label").
+		Where("dict_type = ? AND dict_value = ? AND status = ?", in.DictType, in.DictValue, 0).
+		Order("sort ASC, id ASC").First(l.ctx)
+	if err != nil {
 		return nil, err
 	}
-	return &pb.DictLabelResp{Label: row.Label.String}, nil
+	return &pb.DictLabelResp{Label: row.DictLabel.String}, nil
 }

@@ -1,0 +1,16 @@
+Name: gateway
+Host: 0.0.0.0
+Port: 9009
+
+Auth:
+  TokenHeader: "Authorization"
+
+IamRpc:
+  Target: 127.0.0.1:9001
+  NonBlock: true
+
+Backends:
+  IAM: "http://127.0.0.1:9011"
+  SYS: "http://127.0.0.1:9012"
+  Resource: "http://127.0.0.1:9013"
+  Realtime: "http://127.0.0.1:9014"

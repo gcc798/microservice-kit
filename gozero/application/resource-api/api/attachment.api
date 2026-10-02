@@ -1,0 +1,60 @@
+syntax = "v1"
+
+import "common.api"
+
+type AttachmentPageReq {
+	pageNum      int64  `json:"pageNum"`
+	pageSize     int64  `json:"pageSize"`
+	fileName     string `json:"fileName,optional"`
+	fileType     string `json:"fileType,optional"`
+	businessType string `json:"businessType,optional"`
+}
+
+type AttachmentBindReq {
+	attachmentId  int64                  `path:"attachmentId"`
+	businessType  string                 `json:"businessType"`
+	businessId    string                 `json:"businessId"`
+	businessField string                 `json:"businessField,optional"`
+	isPublic      bool                   `json:"isPublic,optional"`
+	metadata      map[string]interface{} `json:"metadata,optional"`
+	expireTime    string                 `json:"expireTime,optional"`
+}
+
+type AttachmentBusinessQueryReq {
+	businessType string `form:"businessType"`
+	businessId   string `form:"businessId"`
+}
+
+type AttachmentUrlQueryReq {
+	attachmentId int64 `path:"attachmentId"`
+	expires      int   `form:"expires,optional"`
+}
+
+@server (
+	group: attachment
+)
+service resource-api {
+	@handler AttachmentUploadFile
+	post /api/v1/attachment/upload-file returns (CommonResp)
+
+	@handler AttachmentBind
+	post /api/v1/attachment/:attachmentId/bind (AttachmentBindReq) returns (CommonResp)
+
+	@handler AttachmentDetail
+	get /api/v1/attachment/:attachmentId (AttachmentIdPathReq) returns (CommonResp)
+
+	@handler AttachmentBusiness
+	get /api/v1/attachment/business (AttachmentBusinessQueryReq) returns (CommonResp)
+
+	@handler AttachmentPage
+	post /api/v1/attachment/page (AttachmentPageReq) returns (CommonResp)
+
+	@handler AttachmentDownload
+	get /api/v1/attachment/:attachmentId/download (AttachmentIdPathReq)
+
+	@handler AttachmentUrl
+	get /api/v1/attachment/:attachmentId/url (AttachmentUrlQueryReq) returns (CommonResp)
+
+	@handler AttachmentDelete
+	delete /api/v1/attachment/:attachmentId (AttachmentIdPathReq) returns (CommonResp)
+}

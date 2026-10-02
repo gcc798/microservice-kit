@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package realtime;
+
+option go_package = "github.com/gcc798/microservice-kit/application/realtime/pb";
+
+message PublishToUsersReq {
+  repeated int64 user_ids = 1;
+  string type = 2;
+  bytes data_json = 3;
+}
+
+message PublishToUsersResp {}
+
+service RealtimeService {
+  rpc PublishToUsers(PublishToUsersReq) returns (PublishToUsersResp);
+}

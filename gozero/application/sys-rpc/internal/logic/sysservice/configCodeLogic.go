@@ -3,8 +3,10 @@ package sysservicelogic
 import (
 	"context"
 
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
+	"gorm.io/gorm"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -24,8 +26,8 @@ func NewConfigCodeLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Config
 }
 
 func (l *ConfigCodeLogic) ConfigCode(in *pb.ConfigCodeQueryReq) (*pb.ConfigListResp, error) {
-	var rows []configRow
-	if err := l.svcCtx.DB.QueryRowsCtx(l.ctx, &rows, `select id, name, code, data, remark, create_by, created_time, update_by, updated_time from public.s_config where code = $1 order by id asc`, in.Code); err != nil {
+	rows, err := gorm.G[model.SConfig](l.svcCtx.DB).Where("code = ?", in.Code).Order("id ASC").Find(l.ctx)
+	if err != nil {
 		return nil, err
 	}
 	return &pb.ConfigListResp{Records: toConfigList(rows)}, nil

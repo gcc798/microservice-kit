@@ -30,16 +30,13 @@ func NewHealthLogic(ctx context.Context, svcCtx *svc.ServiceContext) *HealthLogi
 func (l *HealthLogic) Health() (resp *types.CommonResp, err error) {
 	pingResp, pingErr := l.svcCtx.SysRpcClient.Ping(l.ctx, &sysservice.PingReq{})
 	if pingErr != nil {
-		return &types.CommonResp{
-			Code: 500,
-			Msg:  pingErr.Error(),
-		}, nil
+		return nil, pingErr
 	}
 
 	return &types.CommonResp{
 		Code: 200,
 		Msg:  "success",
-		Data: map[string]interface{}{
+		Data: map[string]any{
 			"status": "ok",
 			"rpc":    pingResp.Message,
 		},

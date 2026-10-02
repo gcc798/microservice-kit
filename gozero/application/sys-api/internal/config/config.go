@@ -8,12 +8,6 @@ import (
 	"github.com/zeromicro/go-zero/zrpc"
 )
 
-type RedisConf struct {
-	Addr     string
-	Password string
-	Db       int
-}
-
 type JwtConf struct {
 	Secret string
 	Expire int64
@@ -26,7 +20,6 @@ type AuthConf struct {
 type Config struct {
 	rest.RestConf
 	SysRpc zrpc.RpcClientConf
-	Redis  RedisConf
 	Jwt    JwtConf
 	Auth   AuthConf
 }

@@ -1,0 +1,36 @@
+syntax = "v1"
+
+import "common.api"
+
+type LoginReq {
+	clientId    string `json:"clientId"`
+	grantType   string `json:"grantType"`
+	username    string `json:"username,optional"`
+	password    string `json:"password,optional"`
+	code        string `json:"code,optional"`
+	smsCode     string `json:"smsCode,optional"`
+	phonenumber string `json:"phonenumber,optional"`
+	email       string `json:"email,optional"`
+	wxCode      string `json:"wxCode,optional"`
+	appid       string `json:"appid,optional"`
+	uuid        string `json:"uuid,optional"`
+}
+
+type RefreshTokenReq {
+	refreshToken string `json:"refreshToken"`
+	clientId     string `json:"clientId"`
+}
+
+@server (
+	group: auth
+)
+service iam-api {
+	@handler Login
+	post /login (LoginReq) returns (CommonResp)
+
+	@handler Logout
+	post /logout returns (CommonResp)
+
+	@handler RefreshToken
+	post /auth/refresh (RefreshTokenReq) returns (CommonResp)
+}

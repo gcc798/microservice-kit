@@ -9,8 +9,8 @@
 | 进程 | 主要职责 | 数据所有权 | 可否水平扩展 |
 | --- | --- | --- | --- |
 | Gateway | HTTP/WS 唯一入口、鉴权前置、动态路由、反向代理 | 无业务数据 | 可以 |
-| IAM | 用户、角色、API 权限、Token、Session | IAM 表和 Redis 会话 | 可以 |
-| SYS | 组织、菜单、字典、配置、登录日志、操作日志 | SYS 表 | 可以 |
+| IAM | 用户、角色、API 权限、组织、菜单、Token、Session | IAM 表和 Redis 会话 | 可以 |
+| SYS | 字典、配置、登录日志、操作日志 | SYS 表 | 可以 |
 | Resource | 附件元数据和对象存储 | Resource 表和对象存储 | 可以 |
 | Realtime | WebSocket 连接、心跳、实时消息广播 | 连接状态，不拥有领域表 | 可以 |
 

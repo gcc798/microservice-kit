@@ -6,7 +6,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"net/http"
 
 	"github.com/gcc798/microservice-kit/application/sys-api/internal/config"
 	"github.com/gcc798/microservice-kit/application/sys-api/internal/handler"
@@ -25,9 +24,7 @@ func main() {
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
 
-	server := rest.MustNewServer(c.RestConf, rest.WithCustomCors(func(header http.Header) {
-		middleware.SetCORSHeaders(header, middleware.CORSConfig{})
-	}, nil, "*"))
+	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()
 
 	server.Use(middleware.PanicRecoveryMiddleware)
@@ -35,13 +32,6 @@ func main() {
 		Secret:      c.Jwt.Secret,
 		TokenHeader: c.Auth.TokenHeader,
 		WhiteList: []string{
-			"/login",
-			"/logout",
-			"/auth/login",
-			"/auth/logout",
-			"/auth/refresh",
-			"/captcha/*",
-			"/resource/sms/code",
 			"/health",
 			"/health/ready",
 			"/health/live",

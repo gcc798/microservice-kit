@@ -35,8 +35,8 @@ SYS / Resource ──PublishToUsers gRPC──> Realtime
 ```
 
 - **Gateway**：唯一对外 HTTP / WS 入口，负责路由、反向代理和统一 OpenAPI，不拥有业务数据。
-- **IAM**：认证中心，负责身份、用户、角色、API 权限及 Token 生命周期；Token 与 Session 存储在 Redis。
-- **SYS**：组织、菜单、字典、系统配置与操作日志。
+- **IAM**：认证中心，负责身份、用户、角色、组织、菜单、API 权限及 Token 生命周期；Token 与 Session 存储在 Redis。
+- **SYS**：字典、系统配置、登录日志与操作日志。
 - **Resource**：附件、资源元数据与对象存储。
 - **Realtime**：独立维护用户 WebSocket 连接、心跳和本地投递；通过 IAM gRPC 校验握手 Token，通过 Redis Pub/Sub 将消息广播到所有 Realtime 实例。
 - **后台 Worker**：归属其数据所在的领域服务；SYS 清理系统日志，Resource 清理过期附件，多实例通过 Redis 抢占执行窗口。
@@ -90,7 +90,7 @@ microservice-kit/
 └── README.md
 ```
 
-详细的 native 启动、配置、认证、迁移和部署说明见 [native/README.md](native/README.md)。前端说明见 [web-react/README.md](web-react/README.md)。
+详细的 native 启动、配置、认证、迁移和部署说明见 [native/README.md](native/README.md)。go-zero 的实现说明见 [gozero/README.md](gozero/README.md)，前端说明见 [web-react/README.md](web-react/README.md)。
 
 ## 快速启动 native
 
@@ -127,7 +127,7 @@ docker compose up --build
 ```bash
 (cd native && make ci)
 (cd kratos && make proto-all && make ent && make wire && make test && make build-all)
-(cd gozero && go test ./... && make build-all)
+(cd gozero && make verify && make build-all)
 (cd web-react && pnpm install && pnpm build)
 ```
 

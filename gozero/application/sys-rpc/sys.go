@@ -10,6 +10,7 @@ import (
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
 
 	"github.com/zeromicro/go-zero/core/conf"
+	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/core/service"
 	"github.com/zeromicro/go-zero/zrpc"
 	"google.golang.org/grpc"
@@ -23,7 +24,13 @@ func main() {
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
-	ctx := svc.NewServiceContext(c)
+	ctx, err := svc.NewServiceContext(c)
+	logx.Must(err)
+	defer func() {
+		if err := ctx.Close(); err != nil {
+			logx.Error(err)
+		}
+	}()
 
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {
 		pb.RegisterSysServiceServer(grpcServer, sysserviceServer.NewSysServiceServer(ctx))

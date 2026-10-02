@@ -1,29 +1,11 @@
 package model
 
-import "github.com/zeromicro/go-zero/core/stores/sqlx"
+import "gorm.io/gorm"
 
-var _ SConfigModel = (*customSConfigModel)(nil)
-
-type (
-	// SConfigModel is an interface to be customized, add more methods here,
-	// and implement the added methods in customSConfigModel.
-	SConfigModel interface {
-		sConfigModel
-		withSession(session sqlx.Session) SConfigModel
-	}
-
-	customSConfigModel struct {
-		*defaultSConfigModel
-	}
-)
-
-// NewSConfigModel returns a model for the database table.
-func NewSConfigModel(conn sqlx.SqlConn) SConfigModel {
-	return &customSConfigModel{
-		defaultSConfigModel: newSConfigModel(conn),
-	}
+type SConfigModel struct {
+	db *gorm.DB
 }
 
-func (m *customSConfigModel) withSession(session sqlx.Session) SConfigModel {
-	return NewSConfigModel(sqlx.NewSqlConnFromSession(session))
+func NewSConfigModel(db *gorm.DB) *SConfigModel {
+	return &SConfigModel{db: db}
 }

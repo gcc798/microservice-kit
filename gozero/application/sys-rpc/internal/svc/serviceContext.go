@@ -2,58 +2,38 @@ package svc
 
 import (
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/config"
-	"github.com/redis/go-redis/v9"
-	"github.com/zeromicro/go-zero/core/logx"
-	"github.com/zeromicro/go-zero/core/stores/sqlx"
-
-	_ "github.com/lib/pq"
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/migrations"
+	"github.com/gcc798/microservice-kit/internal/database"
+	"gorm.io/gorm"
 )
 
-type SMSProvider interface {
-	SendSMS(phone, code string) error
-}
-
-type EmailProvider interface {
-	SendEmail(email, code string) error
-}
-
-type consoleSMSProvider struct{}
-
-func (p *consoleSMSProvider) SendSMS(phone, code string) error {
-	logx.Infof("[验证码] 短信验证码发送至 %s: %s", phone, code)
-	return nil
-}
-
-type consoleEmailProvider struct{}
-
-func (p *consoleEmailProvider) SendEmail(email, code string) error {
-	logx.Infof("[验证码] 邮箱验证码发送至 %s: %s", email, code)
-	return nil
-}
-
 type ServiceContext struct {
-	Config         config.Config
-	DB             sqlx.SqlConn
-	Redis          *redis.Client
-	SMSProvider    SMSProvider
-	EmailProvider  EmailProvider
-	StorageManager *StorageManager
+	Config config.Config
+	DB     *gorm.DB
 }
 
-func NewServiceContext(c config.Config) *ServiceContext {
-	db := sqlx.NewSqlConn("postgres", c.Postgres.Dsn)
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     c.CacheRedis.Addr,
-		Password: c.CacheRedis.Password,
-		DB:       c.CacheRedis.Db,
+func NewServiceContext(c config.Config) (*ServiceContext, error) {
+	db, err := database.Open(database.Config{
+		DSN:                    c.Postgres.Dsn,
+		MaxIdleConns:           c.Postgres.MaxIdleConns,
+		MaxOpenConns:           c.Postgres.MaxOpenConns,
+		ConnMaxLifetimeMinutes: c.Postgres.ConnMaxLifetimeMinutes,
 	})
-
-	return &ServiceContext{
-		Config:         c,
-		DB:             db,
-		Redis:          rdb,
-		SMSProvider:    &consoleSMSProvider{},
-		EmailProvider:  &consoleEmailProvider{},
-		StorageManager: NewStorageManager(db),
+	if err != nil {
+		return nil, err
 	}
+	pool, err := db.DB()
+	if err != nil {
+		_ = database.Close(db)
+		return nil, err
+	}
+	if err := migrations.Up(pool); err != nil {
+		_ = database.Close(db)
+		return nil, err
+	}
+	return &ServiceContext{Config: c, DB: db}, nil
+}
+
+func (s *ServiceContext) Close() error {
+	return database.Close(s.DB)
 }

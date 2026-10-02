@@ -1,0 +1,441 @@
+syntax = "proto3";
+
+package iam;
+
+option go_package = "github.com/gcc798/microservice-kit/application/iam-rpc/pb";
+
+
+
+
+message Empty {}
+message PingReq {}
+message PingResp { string message = 1; }
+message Ack { string msg = 1; }
+message IdReq { int64 id = 1; }
+message StringIdReq { string id = 1; }
+message BatchIdsReq { repeated int64 ids = 1; }
+
+message PageInfo {
+  int64 total = 1;
+  int64 size = 2;
+  int64 current = 3;
+  int64 pages = 4;
+}
+
+
+
+
+message UserInfo {
+  int64 user_id = 1;
+  string username = 2;
+  string nickname = 3;
+  string phonenumber = 4;
+  string email = 5;
+  string avatar = 6;
+  int32 user_type = 7;
+  int64 org_id = 8;
+}
+
+message AuthLoginReq {
+  string client_key = 1;
+  string client_secret = 2;
+  string grant_type = 3;
+  string username = 4;
+  string password = 5;
+  string code = 6;
+  string phonenumber = 7;
+  string email = 8;
+  string wx_code = 9;
+  string uuid = 10;
+}
+
+message AuthLoginResp {
+  string client_id = 1;
+  string client_key = 2;
+  string device_type = 3;
+  int64 timeout = 4;
+  int64 active_timeout = 5;
+  UserInfo user_info = 6;
+}
+
+message UserAuthContextReq { int64 user_id = 1; }
+
+message UserAuthContextResp {
+  int64 org_id = 1;
+  repeated string roles = 2;
+  repeated string permissions = 3;
+}
+
+message ValidateAccessTokenReq { string token = 1; }
+message ValidateAccessTokenResp {
+  int64 user_id = 1;
+  string user_name = 2;
+  string client_id = 3;
+  string device_type = 4;
+  int64 org_id = 5;
+  repeated string roles = 6;
+  repeated string permissions = 7;
+}
+message CheckPermissionReq {
+  int64 user_id = 1;
+  string resource = 2;
+  string action = 3;
+}
+message CheckPermissionResp { bool allowed = 1; }
+
+
+
+
+
+message User {
+  int64 user_id = 1;
+  string user_name = 2;
+  string nick_name = 3;
+  int32 user_type = 4;
+  string email = 5;
+  string phonenumber = 6;
+  int32 sex = 7;
+  string avatar = 8;
+  int32 status = 9;
+  int64 sort = 10;
+  string login_ip = 11;
+  int64 login_date = 12;
+  string open_id = 13;
+  string union_id = 14;
+  string remark = 15;
+  int64 create_by = 16;
+  int64 update_by = 17;
+  string created_at = 18;
+  string updated_at = 19;
+  int64 org_id = 20;
+}
+
+message UserPageReq {
+  int64 page_num = 1;
+  int64 page_size = 2;
+  string username = 3;
+  string phonenumber = 4;
+  int32 status = 5;
+}
+
+message UserCreateReq {
+  string user_name = 1;
+  string nick_name = 2;
+  string password = 3;
+  int32 user_type = 4;
+  string email = 5;
+  string phonenumber = 6;
+  int32 sex = 7;
+  string avatar = 8;
+  int32 status = 9;
+  string remark = 10;
+  int64 create_by = 11;
+  int64 update_by = 12;
+}
+
+message UserUpdateReq {
+  int64 id = 1;
+  string user_name = 2;
+  string nick_name = 3;
+  int32 user_type = 4;
+  string email = 5;
+  string phonenumber = 6;
+  int32 sex = 7;
+  string avatar = 8;
+  int32 status = 9;
+  string remark = 10;
+  int64 update_by = 11;
+}
+
+message UserImportReq { repeated UserCreateReq users = 1; }
+message UserPasswordReq { int64 id = 1; string new_password = 2; }
+message UserChangePasswordReq { int64 user_id = 1; string old_password = 2; string new_password = 3; }
+message UserPageResp { repeated User records = 1; PageInfo page = 2; }
+message UserListResp { repeated User records = 1; }
+
+
+
+
+
+message Role {
+  int64 role_id = 1;
+  string role_key = 2;
+  string role_name = 3;
+  int64 sort = 4;
+  int32 status = 5;
+  int32 data_scope = 6;
+  bool is_system = 7;
+  string remark = 8;
+  int64 create_by = 9;
+  string create_time = 10;
+}
+
+message RolePageReq {
+  int64 page_num = 1;
+  int64 page_size = 2;
+  string role_name = 3;
+  int32 status = 4;
+}
+
+message RoleCreateReq {
+  string role_key = 1;
+  string role_name = 2;
+  int64 sort = 3;
+  int32 status = 4;
+  int32 data_scope = 5;
+  string remark = 6;
+}
+
+message RoleUpdateReq {
+  int64 role_id = 1;
+  string role_name = 2;
+  int64 sort = 3;
+  int32 status = 4;
+  int32 data_scope = 5;
+  string remark = 6;
+}
+
+message AssignRoleReq { int64 user_id = 1; int64 role_id = 2; }
+message RemoveRoleReq { int64 user_id = 1; int64 role_id = 2; }
+message UserRoleQueryReq { int64 user_id = 1; }
+message RoleMenusReq { int64 role_id = 1; }
+message RoleMenusAssignReq { int64 role_id = 1; repeated int64 menu_ids = 2; }
+message MenuIdsResp { repeated int64 menu_ids = 1; }
+message RoleUsersReq { int64 role_id = 1; repeated int64 user_ids = 2; int64 operator_id = 3; }
+message RolePageResp { repeated Role records = 1; PageInfo page = 2; }
+message RoleListResp { repeated Role records = 1; }
+
+message ApiPermission {
+  int64 id = 1;
+  int64 parent_id = 2;
+  string module = 3;
+  string code = 4;
+  string name = 5;
+  int32 node_type = 6;
+  string action = 7;
+  string method = 8;
+  string path = 9;
+  int64 sort = 10;
+  int32 status = 11;
+  string remark = 12;
+  int64 create_by = 13;
+  int64 update_by = 14;
+  string created_time = 15;
+  string updated_time = 16;
+  repeated ApiPermission children = 17;
+}
+
+message ApiPermissionSaveReq {
+  int64 id = 1;
+  int64 parent_id = 2;
+  string module = 3;
+  string code = 4;
+  string name = 5;
+  int32 node_type = 6;
+  string action = 7;
+  string method = 8;
+  string path = 9;
+  int64 sort = 10;
+  int32 status = 11;
+  string remark = 12;
+  int64 user_id = 13;
+}
+
+message ApiPermissionIdsReq { repeated int64 permission_ids = 1; }
+message RoleApiPermissionsReq { int64 role_id = 1; repeated int64 permission_ids = 2; int64 operator_id = 3; }
+message UserApiPermissionsReq { int64 user_id = 1; repeated int64 permission_ids = 2; int64 operator_id = 3; }
+message ApiPermissionListResp { repeated ApiPermission records = 1; }
+message ApiPermissionIdsResp { repeated int64 permission_ids = 1; }
+
+
+
+
+
+message Org {
+  int64 id = 1;
+  int64 org_id = 2;
+  int64 parent_id = 3;
+  string org_name = 4;
+  string org_code = 5;
+  string org_type = 6;
+  string leader = 7;
+  string phone = 8;
+  string email = 9;
+  int32 status = 10;
+  int64 sort = 11;
+  string remark = 12;
+  string created_time = 13;
+  string updated_time = 14;
+  repeated Org children = 15;
+}
+
+message OrgPageReq {
+  int64 page_num = 1;
+  int64 page_size = 2;
+  string org_name = 3;
+  string org_code = 4;
+  int32 status = 5;
+  int64 parent_id = 6;
+}
+
+message OrgCreateReq {
+  int64 parent_id = 1;
+  string org_name = 2;
+  string org_code = 3;
+  string org_type = 4;
+  string leader = 5;
+  string phone = 6;
+  string email = 7;
+  int32 status = 8;
+  int64 sort = 9;
+  string remark = 10;
+}
+
+message OrgUpdateReq {
+  int64 id = 1;
+  int64 parent_id = 2;
+  string org_name = 3;
+  string org_code = 4;
+  string org_type = 5;
+  string leader = 6;
+  string phone = 7;
+  string email = 8;
+  int32 status = 9;
+  int64 sort = 10;
+  string remark = 11;
+}
+
+message OrgPageResp { repeated Org records = 1; PageInfo page = 2; }
+message OrgTreeResp { repeated Org records = 1; }
+
+
+
+
+message Menu {
+  int64 id = 1;
+  string menu_name = 2;
+  int64 parent_id = 3;
+  int64 sort = 4;
+  string path = 5;
+  string component = 6;
+  string query = 7;
+  int64 is_frame = 8;
+  int64 is_cache = 9;
+  int64 menu_type = 10;
+  int64 visible = 11;
+  int64 status = 12;
+  string perms = 13;
+  string icon = 14;
+  string remark = 15;
+  int64 create_by = 16;
+  string created_time = 17;
+  string updated_time = 18;
+  repeated Menu children = 19;
+  int64 update_by = 20;
+}
+
+message MenuReq {
+  int64 id = 1;
+  string menu_name = 2;
+  int64 parent_id = 3;
+  int64 sort = 4;
+  string path = 5;
+  string component = 6;
+  string query = 7;
+  int64 is_frame = 8;
+  int64 is_cache = 9;
+  int64 menu_type = 10;
+  int64 visible = 11;
+  int64 status = 12;
+  string perms = 13;
+  string icon = 14;
+  string remark = 15;
+  int64 create_by = 16;
+  int64 update_by = 17;
+}
+
+message MenuListResp { repeated Menu records = 1; }
+
+
+
+
+message CaptchaReq {}
+message CaptchaPhoneReq { string phonenumber = 1; }
+message CaptchaEmailReq { string email = 1; }
+message CaptchaDataResp {
+  string id = 1;
+  string type = 2;
+  string data_json = 3;
+  string expire_at = 4;
+}
+message CaptchaTypesResp { repeated string types = 1; }
+
+
+
+
+
+
+service IamService {
+  rpc Ping(PingReq) returns (PingResp);
+  rpc ValidateAccessToken(ValidateAccessTokenReq) returns (ValidateAccessTokenResp);
+  rpc CheckPermission(CheckPermissionReq) returns (CheckPermissionResp);
+
+  rpc AuthLogin(AuthLoginReq) returns (AuthLoginResp);
+  rpc UserProfile(IdReq) returns (User);
+  rpc UserAuthContext(UserAuthContextReq) returns (UserAuthContextResp);
+
+  rpc UserCreate(UserCreateReq) returns (Ack);
+  rpc UserImport(UserImportReq) returns (Ack);
+  rpc UserPage(UserPageReq) returns (UserPageResp);
+  rpc UserBatchDelete(BatchIdsReq) returns (Ack);
+  rpc UserChangePassword(UserChangePasswordReq) returns (Ack);
+  rpc UserUpdate(UserUpdateReq) returns (Ack);
+  rpc UserResetPassword(UserPasswordReq) returns (Ack);
+  rpc UserDetail(IdReq) returns (User);
+  rpc UserDelete(IdReq) returns (Ack);
+
+  rpc RoleCreate(RoleCreateReq) returns (Ack);
+  rpc RolePage(RolePageReq) returns (RolePageResp);
+  rpc RoleAssign(AssignRoleReq) returns (Ack);
+  rpc RoleRemove(RemoveRoleReq) returns (Ack);
+  rpc RoleUser(UserRoleQueryReq) returns (RoleListResp);
+  rpc RoleUsers(RoleUsersReq) returns (UserListResp);
+  rpc RoleAssignUsers(RoleUsersReq) returns (Ack);
+  rpc RoleRemoveUsers(RoleUsersReq) returns (Ack);
+  rpc RoleMenus(RoleMenusReq) returns (MenuIdsResp);
+  rpc RoleAssignMenus(RoleMenusAssignReq) returns (Ack);
+  rpc RoleUpdate(RoleUpdateReq) returns (Ack);
+  rpc RoleDetail(IdReq) returns (Role);
+  rpc RoleDelete(IdReq) returns (Ack);
+
+  rpc ApiPermissionTree(Empty) returns (ApiPermissionListResp);
+  rpc ApiPermissionList(Empty) returns (ApiPermissionListResp);
+  rpc ApiPermissionCreate(ApiPermissionSaveReq) returns (ApiPermission);
+  rpc ApiPermissionUpdate(ApiPermissionSaveReq) returns (Ack);
+  rpc ApiPermissionDelete(IdReq) returns (Ack);
+  rpc RoleApiPermissions(IdReq) returns (ApiPermissionIdsResp);
+  rpc RoleApiPermissionsAssign(RoleApiPermissionsReq) returns (Ack);
+  rpc UserApiPermissions(IdReq) returns (ApiPermissionIdsResp);
+  rpc UserApiPermissionsAssign(UserApiPermissionsReq) returns (Ack);
+
+  rpc OrgCreate(OrgCreateReq) returns (Ack);
+  rpc OrgPage(OrgPageReq) returns (OrgPageResp);
+  rpc OrgTree(Empty) returns (OrgTreeResp);
+  rpc OrgBatchDelete(BatchIdsReq) returns (Ack);
+  rpc OrgUpdate(OrgUpdateReq) returns (Ack);
+  rpc OrgDetail(IdReq) returns (Org);
+  rpc OrgDelete(IdReq) returns (Ack);
+
+  rpc MenuUserTree(IdReq) returns (MenuListResp);
+  rpc MenuTree(Empty) returns (MenuListResp);
+  rpc MenuList(Empty) returns (MenuListResp);
+  rpc MenuDetail(IdReq) returns (Menu);
+  rpc MenuCreate(MenuReq) returns (Ack);
+  rpc MenuUpdate(MenuReq) returns (Ack);
+  rpc MenuDelete(IdReq) returns (Ack);
+
+  rpc CaptchaEnabledTypes(CaptchaReq) returns (CaptchaTypesResp);
+  rpc CaptchaImage(CaptchaReq) returns (CaptchaDataResp);
+  rpc CaptchaSms(CaptchaPhoneReq) returns (CaptchaDataResp);
+  rpc CaptchaEmail(CaptchaEmailReq) returns (CaptchaDataResp);
+}

@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"time"
 
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
 
@@ -45,8 +47,13 @@ func (l *ConfigUpdateLogic) ConfigUpdate(in *pb.ConfigUpdateReq) (*pb.Ack, error
 	if code == "" {
 		code = oldRow.Code
 	}
-	if _, err := l.svcCtx.DB.ExecCtx(l.ctx, `update public.s_config set name = $2, code = $3, data = $4, remark = $5, update_by = nullif($6, 0), updated_time = now() where id = $1`,
-		in.Id, name, code, sql.NullString{String: in.DataJson, Valid: in.DataJson != ""}, sql.NullString{String: in.Remark, Valid: in.Remark != ""}, in.UpdateBy); err != nil {
+	updates := map[string]any{
+		"name": name, "code": code, "data": in.DataJson,
+		"remark":       sql.NullString{String: in.Remark, Valid: in.Remark != ""},
+		"update_by":    sql.NullInt64{Int64: in.UpdateBy, Valid: in.UpdateBy != 0},
+		"updated_time": time.Now(),
+	}
+	if err := l.svcCtx.DB.WithContext(l.ctx).Model(&model.SConfig{}).Where("id = ?", in.Id).Updates(updates).Error; err != nil {
 		return nil, err
 	}
 	return &pb.Ack{Msg: "ok"}, nil
