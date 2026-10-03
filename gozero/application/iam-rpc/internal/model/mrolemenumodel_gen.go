@@ -10,19 +10,13 @@ import (
 )
 
 type MRoleMenu struct {
-	Id int64 `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
-
-	RoleId int64 `gorm:"column:role_id" json:"role_id"`
-
-	MenuId int64 `gorm:"column:menu_id" json:"menu_id"`
-
-	CreateBy sql.NullInt64 `gorm:"column:create_by" json:"create_by"`
-
-	UpdateBy sql.NullInt64 `gorm:"column:update_by" json:"update_by"`
-
-	CreatedTime sql.NullTime `gorm:"column:created_time" json:"created_time"`
-
-	UpdatedTime sql.NullTime `gorm:"column:updated_time" json:"updated_time"`
+	Id          int64         `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
+	RoleId      int64         `gorm:"column:role_id" json:"role_id"`
+	MenuId      int64         `gorm:"column:menu_id" json:"menu_id"`
+	CreateBy    sql.NullInt64 `gorm:"column:create_by" json:"create_by"`
+	UpdateBy    sql.NullInt64 `gorm:"column:update_by" json:"update_by"`
+	CreatedTime sql.NullTime  `gorm:"column:created_time" json:"created_time"`
+	UpdatedTime sql.NullTime  `gorm:"column:updated_time" json:"updated_time"`
 }
 
 func (m *MRoleMenuModel) Delete(ctx context.Context, id int64) error {

@@ -2,6 +2,8 @@
 
 `gozero` 使用 go-zero 提供 HTTP/RPC 传输和代码生成，业务语义以 `../native` 为基线。
 
+运行时统一使用 etcd：RPC 通过 go-zero 原生注册发现，HTTP 服务同时注册实际路由与实例 endpoint，Gateway 动态订阅后转发，不使用直连地址或静态路由映射。示例配置默认连接 `127.0.0.1:2379`。
+
 ## 服务拓扑
 
 - `application/gateway`：唯一外部 HTTP/WS 入口，完成 IAM Token 与 API 权限前置校验并代理到各领域 API 和 Realtime。
@@ -9,6 +11,14 @@
 - `application/sys-api` / `sys-rpc`：字典、配置、登录日志和操作日志。SYS RPC 独立持有数据库、GORM model 与 Goose migration。
 - `application/resource-api` / `resource-rpc`：附件元数据和对象存储。Resource RPC 独立持有数据库、GORM model 与 Goose migration。
 - `application/realtime`：同一进程提供 `PublishToUsers` RPC 和 `/realtime/websocket`，维护连接心跳，并通过 Redis Pub/Sub 向持有目标用户连接的实例投递消息。
+
+Gateway 提供 `/swagger/index.html` 和 `/swagger/doc.json`。统一文档由三份 `.api` 契约生成：
+
+```bash
+make swagger
+```
+
+登录会话存储在 Redis；默认 `Auth.AllowConcurrent: false`，同一用户和客户端重新登录会立即撤销旧 AccessToken 与 RefreshToken。验证码、短信、邮件和微信能力读取 SYS 的运行时配置（`auth.captcha`、`integration.sms`、`integration.email`、`integration.wechat`），不在 IAM YAML 中重复维护业务开关和密钥。
 
 完整边界、调用链和端口见 [`docs/architecture.md`](docs/architecture.md)。长期开发约束见 [`AGENTS.md`](AGENTS.md)。
 
@@ -58,7 +68,9 @@ make build-all
 
 示例配置使用 Gateway `9009`；RPC `9001` 至 `9004`；IAM、SYS、Resource、Realtime 的内部 HTTP 端口为 `9011` 至 `9014`。前端只连接 Gateway。
 
-本地启动顺序：
+各进程通过独立 DevServer 端口暴露 `/metrics`（Gateway/RPC/Realtime 为 `6060` 至 `6064`，领域 API 为 `6071` 至 `6073`）。设置 `OTEL_EXPORTER_OTLP_ENDPOINT` 或 `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` 后导出 OpenTelemetry；设置 `OTEL_TRACES_EXPORTER=none` 可关闭追踪。HTTP、gRPC、GORM 和 Redis 调用均接入链路。
+
+先启动 etcd，再按以下顺序启动服务：
 
 ```bash
 make run-sys-rpc

@@ -10,29 +10,18 @@ import (
 )
 
 type SRole struct {
-	Id int64 `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
-
-	RoleKey string `gorm:"column:role_key" json:"role_key"`
-
-	RoleName string `gorm:"column:role_name" json:"role_name"`
-
-	Sort int64 `gorm:"column:sort" json:"sort"`
-
-	Status int64 `gorm:"column:status" json:"status"`
-
-	DataScope int64 `gorm:"column:data_scope" json:"data_scope"`
-
-	IsSystem bool `gorm:"column:is_system" json:"is_system"`
-
-	Remark sql.NullString `gorm:"column:remark" json:"remark"`
-
-	CreateBy sql.NullInt64 `gorm:"column:create_by" json:"create_by"`
-
-	UpdateBy sql.NullInt64 `gorm:"column:update_by" json:"update_by"`
-
-	CreatedTime sql.NullTime `gorm:"column:created_time" json:"created_time"`
-
-	UpdatedTime sql.NullTime `gorm:"column:updated_time" json:"updated_time"`
+	Id          int64          `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
+	RoleKey     string         `gorm:"column:role_key" json:"role_key"`
+	RoleName    string         `gorm:"column:role_name" json:"role_name"`
+	Sort        int64          `gorm:"column:sort" json:"sort"`
+	Status      int64          `gorm:"column:status" json:"status"`
+	DataScope   int64          `gorm:"column:data_scope" json:"data_scope"`
+	IsSystem    bool           `gorm:"column:is_system" json:"is_system"`
+	Remark      sql.NullString `gorm:"column:remark" json:"remark"`
+	CreateBy    sql.NullInt64  `gorm:"column:create_by" json:"create_by"`
+	UpdateBy    sql.NullInt64  `gorm:"column:update_by" json:"update_by"`
+	CreatedTime sql.NullTime   `gorm:"column:created_time" json:"created_time"`
+	UpdatedTime sql.NullTime   `gorm:"column:updated_time" json:"updated_time"`
 }
 
 func (m *SRoleModel) Delete(ctx context.Context, id int64) error {

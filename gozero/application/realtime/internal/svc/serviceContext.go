@@ -5,6 +5,7 @@ import (
 	"github.com/gcc798/microservice-kit/application/realtime/internal/config"
 	"github.com/gcc798/microservice-kit/application/realtime/internal/hub"
 	"github.com/gcc798/microservice-kit/application/realtime/internal/relay"
+	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
 	"github.com/zeromicro/go-zero/zrpc"
 )
@@ -17,8 +18,12 @@ type ServiceContext struct {
 	IamRpc iamservice.IamService
 }
 
-func NewServiceContext(c config.Config) *ServiceContext {
+func NewServiceContext(c config.Config) (*ServiceContext, error) {
 	client := redis.NewClient(&redis.Options{Addr: c.RelayRedis.Addr, Password: c.RelayRedis.Password, DB: c.RelayRedis.DB})
+	if err := redisotel.InstrumentTracing(client); err != nil {
+		_ = client.Close()
+		return nil, err
+	}
 	connections := hub.New()
 	return &ServiceContext{
 		Config: c,
@@ -26,5 +31,5 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		Hub:    connections,
 		Relay:  relay.New(client, connections),
 		IamRpc: iamservice.NewIamService(zrpc.MustNewClient(c.IamRpc)),
-	}
+	}, nil
 }

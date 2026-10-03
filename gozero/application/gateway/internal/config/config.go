@@ -1,23 +1,22 @@
 package config
 
-import "github.com/zeromicro/go-zero/zrpc"
+import (
+	registry "github.com/gcc798/microservice-kit/internal/registry"
+	"github.com/zeromicro/go-zero/core/service"
+	"github.com/zeromicro/go-zero/zrpc"
+)
 
 type Auth struct {
 	TokenHeader string
 }
 
-type Backends struct {
-	IAM      string
-	SYS      string
-	Resource string
-	Realtime string
-}
-
 type Config struct {
-	Name     string
-	Host     string
-	Port     int
-	Auth     Auth
-	Backends Backends
-	IamRpc   zrpc.RpcClientConf
+	service.ServiceConf
+	Host            string
+	Port            int
+	Auth            Auth
+	HTTPRegistry    registry.HTTPConfig
+	ServiceRegistry registry.HTTPConfig
+	IamRpc          zrpc.RpcClientConf
+	SysRpc          zrpc.RpcClientConf
 }

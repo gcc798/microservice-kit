@@ -8,6 +8,7 @@ import (
 	iamserviceServer "github.com/gcc798/microservice-kit/application/iam-rpc/internal/server/iamservice"
 	"github.com/gcc798/microservice-kit/application/iam-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/iam-rpc/pb"
+	"github.com/gcc798/microservice-kit/internal/observability"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/service"
@@ -23,6 +24,7 @@ func main() {
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
+	observability.Configure(&c.ServiceConf)
 	ctx, err := svc.NewServiceContext(c)
 	if err != nil {
 		panic(err)

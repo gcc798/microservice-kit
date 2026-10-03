@@ -1,10 +1,14 @@
 package svc
 
 import (
+	"errors"
+
 	"github.com/gcc798/microservice-kit/application/resource-rpc/internal/config"
 	"github.com/gcc798/microservice-kit/application/resource-rpc/internal/migrations"
 	"github.com/gcc798/microservice-kit/application/resource-rpc/internal/storage"
 	"github.com/gcc798/microservice-kit/internal/database"
+	"github.com/redis/go-redis/extra/redisotel/v9"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -12,6 +16,7 @@ type ServiceContext struct {
 	Config  config.Config
 	DB      *gorm.DB
 	Storage *storage.Storage
+	Redis   *redis.Client
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
@@ -36,7 +41,13 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		_ = database.Close(db)
 		return nil, err
 	}
-	return &ServiceContext{Config: c, DB: db, Storage: store}, nil
+	rdb := redis.NewClient(&redis.Options{Addr: c.Redis.Addr, Password: c.Redis.Password, DB: c.Redis.Db})
+	if err := redisotel.InstrumentTracing(rdb); err != nil {
+		_ = rdb.Close()
+		_ = database.Close(db)
+		return nil, err
+	}
+	return &ServiceContext{Config: c, DB: db, Storage: store, Redis: rdb}, nil
 }
 
-func (s *ServiceContext) Close() error { return database.Close(s.DB) }
+func (s *ServiceContext) Close() error { return errors.Join(s.Redis.Close(), database.Close(s.DB)) }

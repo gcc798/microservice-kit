@@ -41,6 +41,7 @@ type (
 	LoginLogReq        = pb.LoginLogReq
 	LoginLogUpdateReq  = pb.LoginLogUpdateReq
 	OperLog            = pb.OperLog
+	OperLogBatchReq    = pb.OperLogBatchReq
 	OperLogPageReq     = pb.OperLogPageReq
 	OperLogPageResp    = pb.OperLogPageResp
 	OperLogReq         = pb.OperLogReq
@@ -75,6 +76,7 @@ type (
 		LoginLogDetail(ctx context.Context, in *IdReq, opts ...grpc.CallOption) (*LoginLog, error)
 		LoginLogDelete(ctx context.Context, in *IdReq, opts ...grpc.CallOption) (*Ack, error)
 		OperLogCreate(ctx context.Context, in *OperLogReq, opts ...grpc.CallOption) (*Ack, error)
+		OperLogBatchCreate(ctx context.Context, in *OperLogBatchReq, opts ...grpc.CallOption) (*Ack, error)
 		OperLogPage(ctx context.Context, in *OperLogPageReq, opts ...grpc.CallOption) (*OperLogPageResp, error)
 		OperLogBatchDelete(ctx context.Context, in *BatchIdsReq, opts ...grpc.CallOption) (*Ack, error)
 		OperLogClean(ctx context.Context, in *LogCleanReq, opts ...grpc.CallOption) (*Ack, error)
@@ -217,6 +219,11 @@ func (m *defaultSysService) LoginLogDelete(ctx context.Context, in *IdReq, opts 
 func (m *defaultSysService) OperLogCreate(ctx context.Context, in *OperLogReq, opts ...grpc.CallOption) (*Ack, error) {
 	client := pb.NewSysServiceClient(m.cli.Conn())
 	return client.OperLogCreate(ctx, in, opts...)
+}
+
+func (m *defaultSysService) OperLogBatchCreate(ctx context.Context, in *OperLogBatchReq, opts ...grpc.CallOption) (*Ack, error) {
+	client := pb.NewSysServiceClient(m.cli.Conn())
+	return client.OperLogBatchCreate(ctx, in, opts...)
 }
 
 func (m *defaultSysService) OperLogPage(ctx context.Context, in *OperLogPageReq, opts ...grpc.CallOption) (*OperLogPageResp, error) {

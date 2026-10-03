@@ -4,6 +4,7 @@
 package config
 
 import (
+	registry "github.com/gcc798/microservice-kit/internal/registry"
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
 )
@@ -19,7 +20,8 @@ type AuthConf struct {
 
 type Config struct {
 	rest.RestConf
-	SysRpc zrpc.RpcClientConf
-	Jwt    JwtConf
-	Auth   AuthConf
+	HTTPRegistry registry.HTTPConfig
+	SysRpc       zrpc.RpcClientConf
+	Jwt          JwtConf
+	Auth         AuthConf
 }

@@ -3,25 +3,19 @@ package auth
 import (
 	"context"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/gcc798/microservice-kit/application/iam-api/internal/svc"
 	"github.com/gcc798/microservice-kit/application/iam-api/internal/types"
 	"github.com/gcc798/microservice-kit/application/iam-rpc/client/iamservice"
 	commonauth "github.com/gcc798/microservice-kit/common/auth"
+	"github.com/gcc798/microservice-kit/common/requestmeta"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/redis/go-redis/v9"
-)
-
-const (
-	refreshTokenKeyPrefix   = "refresh_token:"
-	refreshTokenIndexPrefix = "refresh_token_index:"
 )
 
 type authClient struct {
@@ -30,6 +24,18 @@ type authClient struct {
 	DeviceType    string
 	Timeout       int64
 	ActiveTimeout int64
+}
+
+type tokenSession struct {
+	UserID        int64  `json:"userId"`
+	UserName      string `json:"userName"`
+	OrgID         int64  `json:"orgId"`
+	ClientID      string `json:"clientId"`
+	ClientKey     string `json:"clientKey"`
+	DeviceType    string `json:"deviceType"`
+	Timeout       int64  `json:"timeout"`
+	ActiveTimeout int64  `json:"activeTimeout"`
+	AccessHash    string `json:"accessHash"`
 }
 
 type loginUser struct {
@@ -43,9 +49,12 @@ type loginUser struct {
 	OrgID       int64
 	Roles       []string
 	Permissions []string
+	OpenID      string
+	UnionID     string
 }
 
 func loginWithRPC(ctx context.Context, svcCtx *svc.ServiceContext, req *types.LoginReq) (*loginUser, *authClient, error) {
+	loginIP, userAgent := requestmeta.ClientInfo(ctx)
 	code := req.Code
 	if code == "" && req.SmsCode != "" {
 		code = req.SmsCode
@@ -60,6 +69,8 @@ func loginWithRPC(ctx context.Context, svcCtx *svc.ServiceContext, req *types.Lo
 		Email:       req.Email,
 		WxCode:      req.WxCode,
 		Uuid:        req.Uuid,
+		LoginIp:     loginIP,
+		UserAgent:   userAgent,
 	})
 	if err != nil {
 		return nil, nil, err
@@ -76,6 +87,8 @@ func loginWithRPC(ctx context.Context, svcCtx *svc.ServiceContext, req *types.Lo
 		Avatar:      resp.UserInfo.Avatar,
 		UserType:    int64(resp.UserInfo.UserType),
 		OrgID:       resp.UserInfo.OrgId,
+		OpenID:      resp.UserInfo.OpenId,
+		UnionID:     resp.UserInfo.UnionId,
 	}
 	if err := enrichLoginUserAuthContext(ctx, svcCtx, user); err != nil {
 		return nil, nil, err
@@ -98,7 +111,7 @@ func buildLoginResponse(ctx context.Context, svcCtx *svc.ServiceContext, user *l
 	if err != nil {
 		return nil, fmt.Errorf("生成Token失败")
 	}
-	if err := storeRefreshToken(ctx, svcCtx, user, client, refreshToken); err != nil {
+	if err := storeTokenSession(ctx, svcCtx, user, client, accessToken, refreshToken, !svcCtx.Config.Auth.AllowConcurrent); err != nil {
 		return nil, fmt.Errorf("生成Token失败")
 	}
 	return &types.CommonResp{Code: 200, Msg: "操作成功", Data: map[string]interface{}{
@@ -106,6 +119,8 @@ func buildLoginResponse(ctx context.Context, svcCtx *svc.ServiceContext, user *l
 		"refresh_token":      refreshToken,
 		"expires_in":         accessExpiresIn,
 		"refresh_expires_in": client.Timeout,
+		"client_id":          client.ClientId,
+		"open_id":            user.OpenID,
 		"user_info": map[string]interface{}{
 			"userId":      user.Id,
 			"username":    user.UserName,
@@ -117,6 +132,8 @@ func buildLoginResponse(ctx context.Context, svcCtx *svc.ServiceContext, user *l
 			"orgId":       user.OrgID,
 			"roles":       user.Roles,
 			"permissions": user.Permissions,
+			"openId":      user.OpenID,
+			"unionId":     user.UnionID,
 		},
 	}}, nil
 }
@@ -125,32 +142,30 @@ func refreshLoginToken(ctx context.Context, svcCtx *svc.ServiceContext, refreshT
 	if refreshToken == "" {
 		return nil, fmt.Errorf("RefreshToken 无效或已过期")
 	}
-	indexKey := refreshTokenIndexPrefix + hashToken(refreshToken)
-	refreshKey, err := svcCtx.Redis.Get(ctx, indexKey).Result()
+	refreshKey := commonauth.RefreshTokenKey(refreshToken)
+	encoded, err := svcCtx.Redis.GetDel(ctx, refreshKey).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
 			return nil, fmt.Errorf("RefreshToken 无效或已过期")
 		}
 		return nil, fmt.Errorf("RefreshToken 无效或已过期")
 	}
-	refreshData, err := svcCtx.Redis.HGetAll(ctx, refreshKey).Result()
-	if err != nil || len(refreshData) == 0 {
-		return nil, fmt.Errorf("RefreshToken 无效或已过期")
-	}
-	if refreshData["token"] != refreshToken {
-		return nil, fmt.Errorf("RefreshToken 无效")
+	var session tokenSession
+	if json.Unmarshal([]byte(encoded), &session) != nil {
+		return nil, fmt.Errorf("RefreshToken 会话数据无效")
 	}
 	// refresh flow uses cached client metadata; clientId must match the stored token owner
-	if refreshData["clientKey"] != "" && refreshData["clientKey"] != clientId {
+	if session.ClientKey != "" && session.ClientKey != clientId {
 		return nil, fmt.Errorf("客户端不匹配")
 	}
-	userId, _ := strconv.ParseInt(refreshData["userId"], 10, 64)
-	userResp, err := svcCtx.IamRpcClient.UserProfile(ctx, &iamservice.IdReq{Id: userId})
+	_ = svcCtx.Redis.Del(ctx, commonauth.AccessTokenHashKey(session.AccessHash)).Err()
+	_ = svcCtx.Redis.SRem(ctx, commonauth.UserSessionsKey(session.UserID, session.ClientID), refreshKey).Err()
+	userResp, err := svcCtx.IamRpcClient.UserProfile(ctx, &iamservice.IdReq{Id: session.UserID})
 	if err != nil {
 		return nil, fmt.Errorf("用户不存在")
 	}
-	client := &authClient{ClientId: refreshData["clientId"], ClientKey: clientId, DeviceType: refreshData["deviceType"], Timeout: parseInt64(refreshData["timeout"]), ActiveTimeout: parseInt64(refreshData["activeTimeout"])}
-	user := &loginUser{Id: userResp.UserId, UserName: userResp.UserName, NickName: userResp.NickName, Email: userResp.Email, Phonenumber: userResp.Phonenumber, Avatar: userResp.Avatar, UserType: int64(userResp.UserType), OrgID: userResp.OrgId}
+	client := &authClient{ClientId: session.ClientID, ClientKey: clientId, DeviceType: session.DeviceType, Timeout: session.Timeout, ActiveTimeout: session.ActiveTimeout}
+	user := &loginUser{Id: userResp.UserId, UserName: userResp.UserName, NickName: userResp.NickName, Email: userResp.Email, Phonenumber: userResp.Phonenumber, Avatar: userResp.Avatar, UserType: int64(userResp.UserType), OrgID: userResp.OrgId, OpenID: userResp.OpenId, UnionID: userResp.UnionId}
 	if err := enrichLoginUserAuthContext(ctx, svcCtx, user); err != nil {
 		return nil, fmt.Errorf("用户权限上下文获取失败")
 	}
@@ -162,11 +177,9 @@ func refreshLoginToken(ctx context.Context, svcCtx *svc.ServiceContext, refreshT
 	if err != nil {
 		return nil, fmt.Errorf("生成新Token失败")
 	}
-	if err := storeRefreshData(ctx, svcCtx, refreshKey, user, client, newRefreshToken); err != nil {
+	if err := storeTokenSession(ctx, svcCtx, user, client, accessToken, newRefreshToken, false); err != nil {
 		return nil, fmt.Errorf("更新RefreshToken失败")
 	}
-	_ = svcCtx.Redis.Del(ctx, indexKey).Err()
-	_ = svcCtx.Redis.Set(ctx, refreshTokenIndexPrefix+hashToken(newRefreshToken), refreshKey, time.Duration(client.Timeout)*time.Second).Err()
 	return &types.CommonResp{Code: 200, Msg: "操作成功", Data: map[string]interface{}{"access_token": accessToken, "refresh_token": newRefreshToken, "expires_in": accessExpiresIn, "refresh_expires_in": client.Timeout}}, nil
 }
 
@@ -174,16 +187,18 @@ func invalidateByToken(ctx context.Context, svcCtx *svc.ServiceContext, token st
 	if token == "" {
 		return
 	}
-	claims, err := parseAccessToken(token, svcCtx.Config.Jwt.Secret)
+	accessKey := commonauth.AccessTokenKey(token)
+	refreshKey, err := svcCtx.Redis.Get(ctx, accessKey).Result()
 	if err != nil {
 		return
 	}
-	refreshKey := buildRefreshKey(claims.UserID, claims.ClientID)
-	refreshData, err := svcCtx.Redis.HGetAll(ctx, refreshKey).Result()
-	if err == nil && len(refreshData) > 0 && refreshData["token"] != "" {
-		_ = svcCtx.Redis.Del(ctx, refreshTokenIndexPrefix+hashToken(refreshData["token"])).Err()
-	}
-	_ = svcCtx.Redis.Del(ctx, refreshKey).Err()
+	encoded, _ := svcCtx.Redis.Get(ctx, refreshKey).Result()
+	var session tokenSession
+	_ = json.Unmarshal([]byte(encoded), &session)
+	pipe := svcCtx.Redis.TxPipeline()
+	pipe.Del(ctx, accessKey, refreshKey)
+	pipe.SRem(ctx, commonauth.UserSessionsKey(session.UserID, session.ClientID), refreshKey)
+	_, _ = pipe.Exec(ctx)
 }
 
 func generateAccessToken(user *loginUser, client *authClient, secret string) (string, int64, error) {
@@ -214,10 +229,6 @@ func generateAccessToken(user *loginUser, client *authClient, secret string) (st
 	return tokenString, expireSeconds, nil
 }
 
-func parseAccessToken(tokenString, secret string) (*commonauth.AccessClaims, error) {
-	return commonauth.ParseAccessToken(tokenString, secret)
-}
-
 func generateRefreshToken() (string, error) {
 	buf := make([]byte, 32)
 	if _, err := rand.Read(buf); err != nil {
@@ -226,20 +237,55 @@ func generateRefreshToken() (string, error) {
 	return base64.RawURLEncoding.EncodeToString(buf), nil
 }
 
-func storeRefreshToken(ctx context.Context, svcCtx *svc.ServiceContext, user *loginUser, client *authClient, refreshToken string) error {
-	refreshKey := buildRefreshKey(user.Id, client.ClientId)
-	if err := storeRefreshData(ctx, svcCtx, refreshKey, user, client, refreshToken); err != nil {
+func storeTokenSession(ctx context.Context, svcCtx *svc.ServiceContext, user *loginUser, client *authClient, accessToken, refreshToken string, revokeExisting bool) error {
+	if revokeExisting {
+		if err := revokeUserSessions(ctx, svcCtx, user.Id, client.ClientId); err != nil {
+			return err
+		}
+	}
+	accessTTL := client.ActiveTimeout
+	if accessTTL <= 0 {
+		accessTTL = 1800
+	}
+	if client.Timeout <= 0 {
+		return fmt.Errorf("RefreshToken 过期时间必须大于0")
+	}
+	session := tokenSession{UserID: user.Id, UserName: user.UserName, OrgID: user.OrgID, ClientID: client.ClientId, ClientKey: client.ClientKey, DeviceType: client.DeviceType, Timeout: client.Timeout, ActiveTimeout: client.ActiveTimeout, AccessHash: commonauth.TokenHash(accessToken)}
+	encoded, err := json.Marshal(session)
+	if err != nil {
 		return err
 	}
-	return svcCtx.Redis.Set(ctx, refreshTokenIndexPrefix+hashToken(refreshToken), refreshKey, time.Duration(client.Timeout)*time.Second).Err()
+	refreshKey := commonauth.RefreshTokenKey(refreshToken)
+	setKey := commonauth.UserSessionsKey(user.Id, client.ClientId)
+	pipe := svcCtx.Redis.TxPipeline()
+	pipe.Set(ctx, commonauth.AccessTokenKey(accessToken), refreshKey, time.Duration(accessTTL)*time.Second)
+	pipe.Set(ctx, refreshKey, encoded, time.Duration(client.Timeout)*time.Second)
+	pipe.SAdd(ctx, setKey, refreshKey)
+	pipe.Expire(ctx, setKey, time.Duration(client.Timeout)*time.Second)
+	_, err = pipe.Exec(ctx)
+	return err
 }
 
-func storeRefreshData(ctx context.Context, svcCtx *svc.ServiceContext, refreshKey string, user *loginUser, client *authClient, refreshToken string) error {
-	data := map[string]interface{}{"token": refreshToken, "userId": strconv.FormatInt(user.Id, 10), "userName": user.UserName, "orgId": strconv.FormatInt(user.OrgID, 10), "clientId": client.ClientId, "clientKey": client.ClientKey, "deviceType": client.DeviceType, "timeout": strconv.FormatInt(client.Timeout, 10), "activeTimeout": strconv.FormatInt(client.ActiveTimeout, 10)}
-	if err := svcCtx.Redis.HSet(ctx, refreshKey, data).Err(); err != nil {
+func revokeUserSessions(ctx context.Context, svcCtx *svc.ServiceContext, userID int64, clientID string) error {
+	setKey := commonauth.UserSessionsKey(userID, clientID)
+	refreshKeys, err := svcCtx.Redis.SMembers(ctx, setKey).Result()
+	if err != nil {
 		return err
 	}
-	return svcCtx.Redis.Expire(ctx, refreshKey, time.Duration(client.Timeout)*time.Second).Err()
+	pipe := svcCtx.Redis.TxPipeline()
+	for _, refreshKey := range refreshKeys {
+		encoded, err := svcCtx.Redis.Get(ctx, refreshKey).Bytes()
+		if err == nil {
+			var session tokenSession
+			if json.Unmarshal(encoded, &session) == nil {
+				pipe.Del(ctx, commonauth.AccessTokenHashKey(session.AccessHash))
+			}
+		}
+		pipe.Del(ctx, refreshKey)
+	}
+	pipe.Del(ctx, setKey)
+	_, err = pipe.Exec(ctx)
+	return err
 }
 
 func enrichLoginUserAuthContext(ctx context.Context, svcCtx *svc.ServiceContext, user *loginUser) error {
@@ -252,12 +298,3 @@ func enrichLoginUserAuthContext(ctx context.Context, svcCtx *svc.ServiceContext,
 	user.Permissions = authCtx.Permissions
 	return nil
 }
-
-func buildRefreshKey(userId int64, clientId string) string {
-	return refreshTokenKeyPrefix + strconv.FormatInt(userId, 10) + ":" + clientId
-}
-func hashToken(token string) string {
-	sum := sha256.Sum256([]byte(token))
-	return hex.EncodeToString(sum[:])
-}
-func parseInt64(v string) int64 { n, _ := strconv.ParseInt(v, 10, 64); return n }

@@ -2314,24 +2314,25 @@ func (x *OperLogPageReq) GetEndTime() string {
 }
 
 type OperLogReq struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	BusinessType  string                 `protobuf:"bytes,2,opt,name=business_type,json=businessType,proto3" json:"business_type,omitempty"`
-	Method        string                 `protobuf:"bytes,3,opt,name=method,proto3" json:"method,omitempty"`
-	RequestMethod string                 `protobuf:"bytes,4,opt,name=request_method,json=requestMethod,proto3" json:"request_method,omitempty"`
-	DeviceType    string                 `protobuf:"bytes,5,opt,name=device_type,json=deviceType,proto3" json:"device_type,omitempty"`
-	OperName      string                 `protobuf:"bytes,6,opt,name=oper_name,json=operName,proto3" json:"oper_name,omitempty"`
-	OperUrl       string                 `protobuf:"bytes,7,opt,name=oper_url,json=operUrl,proto3" json:"oper_url,omitempty"`
-	OperIp        string                 `protobuf:"bytes,8,opt,name=oper_ip,json=operIp,proto3" json:"oper_ip,omitempty"`
-	OperLocation  string                 `protobuf:"bytes,9,opt,name=oper_location,json=operLocation,proto3" json:"oper_location,omitempty"`
-	OperParam     string                 `protobuf:"bytes,10,opt,name=oper_param,json=operParam,proto3" json:"oper_param,omitempty"`
-	JsonResult    string                 `protobuf:"bytes,11,opt,name=json_result,json=jsonResult,proto3" json:"json_result,omitempty"`
-	Status        string                 `protobuf:"bytes,12,opt,name=status,proto3" json:"status,omitempty"`
-	ErrorMsg      string                 `protobuf:"bytes,13,opt,name=error_msg,json=errorMsg,proto3" json:"error_msg,omitempty"`
-	CostTime      int64                  `protobuf:"varint,14,opt,name=cost_time,json=costTime,proto3" json:"cost_time,omitempty"`
-	UserAgent     string                 `protobuf:"bytes,15,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Title             string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	BusinessType      string                 `protobuf:"bytes,2,opt,name=business_type,json=businessType,proto3" json:"business_type,omitempty"`
+	Method            string                 `protobuf:"bytes,3,opt,name=method,proto3" json:"method,omitempty"`
+	RequestMethod     string                 `protobuf:"bytes,4,opt,name=request_method,json=requestMethod,proto3" json:"request_method,omitempty"`
+	DeviceType        string                 `protobuf:"bytes,5,opt,name=device_type,json=deviceType,proto3" json:"device_type,omitempty"`
+	OperName          string                 `protobuf:"bytes,6,opt,name=oper_name,json=operName,proto3" json:"oper_name,omitempty"`
+	OperUrl           string                 `protobuf:"bytes,7,opt,name=oper_url,json=operUrl,proto3" json:"oper_url,omitempty"`
+	OperIp            string                 `protobuf:"bytes,8,opt,name=oper_ip,json=operIp,proto3" json:"oper_ip,omitempty"`
+	OperLocation      string                 `protobuf:"bytes,9,opt,name=oper_location,json=operLocation,proto3" json:"oper_location,omitempty"`
+	OperParam         string                 `protobuf:"bytes,10,opt,name=oper_param,json=operParam,proto3" json:"oper_param,omitempty"`
+	JsonResult        string                 `protobuf:"bytes,11,opt,name=json_result,json=jsonResult,proto3" json:"json_result,omitempty"`
+	Status            string                 `protobuf:"bytes,12,opt,name=status,proto3" json:"status,omitempty"`
+	ErrorMsg          string                 `protobuf:"bytes,13,opt,name=error_msg,json=errorMsg,proto3" json:"error_msg,omitempty"`
+	CostTime          int64                  `protobuf:"varint,14,opt,name=cost_time,json=costTime,proto3" json:"cost_time,omitempty"`
+	UserAgent         string                 `protobuf:"bytes,15,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
+	OperTimeUnixMilli int64                  `protobuf:"varint,16,opt,name=oper_time_unix_milli,json=operTimeUnixMilli,proto3" json:"oper_time_unix_milli,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *OperLogReq) Reset() {
@@ -2469,6 +2470,57 @@ func (x *OperLogReq) GetUserAgent() string {
 	return ""
 }
 
+func (x *OperLogReq) GetOperTimeUnixMilli() int64 {
+	if x != nil {
+		return x.OperTimeUnixMilli
+	}
+	return 0
+}
+
+type OperLogBatchReq struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Logs          []*OperLogReq          `protobuf:"bytes,1,rep,name=logs,proto3" json:"logs,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OperLogBatchReq) Reset() {
+	*x = OperLogBatchReq{}
+	mi := &file_sys_proto_msgTypes[32]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OperLogBatchReq) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OperLogBatchReq) ProtoMessage() {}
+
+func (x *OperLogBatchReq) ProtoReflect() protoreflect.Message {
+	mi := &file_sys_proto_msgTypes[32]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OperLogBatchReq.ProtoReflect.Descriptor instead.
+func (*OperLogBatchReq) Descriptor() ([]byte, []int) {
+	return file_sys_proto_rawDescGZIP(), []int{32}
+}
+
+func (x *OperLogBatchReq) GetLogs() []*OperLogReq {
+	if x != nil {
+		return x.Logs
+	}
+	return nil
+}
+
 type OperLogUpdateReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            int64                  `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -2493,7 +2545,7 @@ type OperLogUpdateReq struct {
 
 func (x *OperLogUpdateReq) Reset() {
 	*x = OperLogUpdateReq{}
-	mi := &file_sys_proto_msgTypes[32]
+	mi := &file_sys_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2505,7 +2557,7 @@ func (x *OperLogUpdateReq) String() string {
 func (*OperLogUpdateReq) ProtoMessage() {}
 
 func (x *OperLogUpdateReq) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_proto_msgTypes[32]
+	mi := &file_sys_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2518,7 +2570,7 @@ func (x *OperLogUpdateReq) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperLogUpdateReq.ProtoReflect.Descriptor instead.
 func (*OperLogUpdateReq) Descriptor() ([]byte, []int) {
-	return file_sys_proto_rawDescGZIP(), []int{32}
+	return file_sys_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *OperLogUpdateReq) GetId() int64 {
@@ -2643,7 +2695,7 @@ type OperLogPageResp struct {
 
 func (x *OperLogPageResp) Reset() {
 	*x = OperLogPageResp{}
-	mi := &file_sys_proto_msgTypes[33]
+	mi := &file_sys_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2655,7 +2707,7 @@ func (x *OperLogPageResp) String() string {
 func (*OperLogPageResp) ProtoMessage() {}
 
 func (x *OperLogPageResp) ProtoReflect() protoreflect.Message {
-	mi := &file_sys_proto_msgTypes[33]
+	mi := &file_sys_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2668,7 +2720,7 @@ func (x *OperLogPageResp) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OperLogPageResp.ProtoReflect.Descriptor instead.
 func (*OperLogPageResp) Descriptor() ([]byte, []int) {
-	return file_sys_proto_rawDescGZIP(), []int{33}
+	return file_sys_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *OperLogPageResp) GetRecords() []*OperLog {
@@ -2892,7 +2944,7 @@ const file_sys_proto_rawDesc = "" +
 	"\x06status\x18\x06 \x01(\tR\x06status\x12\x1d\n" +
 	"\n" +
 	"start_time\x18\a \x01(\tR\tstartTime\x12\x19\n" +
-	"\bend_time\x18\b \x01(\tR\aendTime\"\xce\x03\n" +
+	"\bend_time\x18\b \x01(\tR\aendTime\"\xff\x03\n" +
 	"\n" +
 	"OperLogReq\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12#\n" +
@@ -2914,7 +2966,10 @@ const file_sys_proto_rawDesc = "" +
 	"\terror_msg\x18\r \x01(\tR\berrorMsg\x12\x1b\n" +
 	"\tcost_time\x18\x0e \x01(\x03R\bcostTime\x12\x1d\n" +
 	"\n" +
-	"user_agent\x18\x0f \x01(\tR\tuserAgent\"\xe4\x03\n" +
+	"user_agent\x18\x0f \x01(\tR\tuserAgent\x12/\n" +
+	"\x14oper_time_unix_milli\x18\x10 \x01(\x03R\x11operTimeUnixMilli\"5\n" +
+	"\x0fOperLogBatchReq\x12\"\n" +
+	"\x04logs\x18\x01 \x03(\v2\x0e.pb.OperLogReqR\x04logs\"\xe4\x03\n" +
 	"\x10OperLogUpdateReq\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\x03R\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12#\n" +
@@ -2939,7 +2994,7 @@ const file_sys_proto_rawDesc = "" +
 	"user_agent\x18\x10 \x01(\tR\tuserAgent\"Z\n" +
 	"\x0fOperLogPageResp\x12%\n" +
 	"\arecords\x18\x01 \x03(\v2\v.pb.OperLogR\arecords\x12 \n" +
-	"\x04page\x18\x02 \x01(\v2\f.pb.PageInfoR\x04page2\x8e\v\n" +
+	"\x04page\x18\x02 \x01(\v2\f.pb.PageInfoR\x04page2\xc2\v\n" +
 	"\n" +
 	"SysService\x12!\n" +
 	"\x04Ping\x12\v.pb.PingReq\x1a\f.pb.PingResp\x12(\n" +
@@ -2974,7 +3029,8 @@ const file_sys_proto_rawDesc = "" +
 	"\x0eLoginLogUpdate\x12\x15.pb.LoginLogUpdateReq\x1a\a.pb.Ack\x12)\n" +
 	"\x0eLoginLogDetail\x12\t.pb.IdReq\x1a\f.pb.LoginLog\x12$\n" +
 	"\x0eLoginLogDelete\x12\t.pb.IdReq\x1a\a.pb.Ack\x12(\n" +
-	"\rOperLogCreate\x12\x0e.pb.OperLogReq\x1a\a.pb.Ack\x126\n" +
+	"\rOperLogCreate\x12\x0e.pb.OperLogReq\x1a\a.pb.Ack\x122\n" +
+	"\x12OperLogBatchCreate\x12\x13.pb.OperLogBatchReq\x1a\a.pb.Ack\x126\n" +
 	"\vOperLogPage\x12\x12.pb.OperLogPageReq\x1a\x13.pb.OperLogPageResp\x12.\n" +
 	"\x12OperLogBatchDelete\x12\x0f.pb.BatchIdsReq\x1a\a.pb.Ack\x12(\n" +
 	"\fOperLogClean\x12\x0f.pb.LogCleanReq\x1a\a.pb.Ack\x12.\n" +
@@ -2994,7 +3050,7 @@ func file_sys_proto_rawDescGZIP() []byte {
 	return file_sys_proto_rawDescData
 }
 
-var file_sys_proto_msgTypes = make([]protoimpl.MessageInfo, 34)
+var file_sys_proto_msgTypes = make([]protoimpl.MessageInfo, 35)
 var file_sys_proto_goTypes = []any{
 	(*PingReq)(nil),            // 0: pb.PingReq
 	(*PingResp)(nil),           // 1: pb.PingResp
@@ -3028,8 +3084,9 @@ var file_sys_proto_goTypes = []any{
 	(*OperLog)(nil),            // 29: pb.OperLog
 	(*OperLogPageReq)(nil),     // 30: pb.OperLogPageReq
 	(*OperLogReq)(nil),         // 31: pb.OperLogReq
-	(*OperLogUpdateReq)(nil),   // 32: pb.OperLogUpdateReq
-	(*OperLogPageResp)(nil),    // 33: pb.OperLogPageResp
+	(*OperLogBatchReq)(nil),    // 32: pb.OperLogBatchReq
+	(*OperLogUpdateReq)(nil),   // 33: pb.OperLogUpdateReq
+	(*OperLogPageResp)(nil),    // 34: pb.OperLogPageResp
 }
 var file_sys_proto_depIdxs = []int32{
 	6,  // 0: pb.DictPageResp.records:type_name -> pb.Dict
@@ -3040,75 +3097,78 @@ var file_sys_proto_depIdxs = []int32{
 	15, // 5: pb.ConfigListResp.records:type_name -> pb.Config
 	23, // 6: pb.LoginLogPageResp.records:type_name -> pb.LoginLog
 	5,  // 7: pb.LoginLogPageResp.page:type_name -> pb.PageInfo
-	29, // 8: pb.OperLogPageResp.records:type_name -> pb.OperLog
-	5,  // 9: pb.OperLogPageResp.page:type_name -> pb.PageInfo
-	0,  // 10: pb.SysService.Ping:input_type -> pb.PingReq
-	8,  // 11: pb.SysService.DictCreate:input_type -> pb.DictCreateReq
-	7,  // 12: pb.SysService.DictPage:input_type -> pb.DictPageReq
-	4,  // 13: pb.SysService.DictBatchDelete:input_type -> pb.BatchIdsReq
-	10, // 14: pb.SysService.DictType:input_type -> pb.DictTypeQueryReq
-	11, // 15: pb.SysService.DictLabel:input_type -> pb.DictLabelQueryReq
-	9,  // 16: pb.SysService.DictUpdate:input_type -> pb.DictUpdateReq
-	3,  // 17: pb.SysService.DictDetail:input_type -> pb.IdReq
-	3,  // 18: pb.SysService.DictDelete:input_type -> pb.IdReq
-	17, // 19: pb.SysService.ConfigCreate:input_type -> pb.ConfigCreateReq
-	16, // 20: pb.SysService.ConfigPage:input_type -> pb.ConfigPageReq
-	4,  // 21: pb.SysService.ConfigBatchDelete:input_type -> pb.BatchIdsReq
-	19, // 22: pb.SysService.ConfigCode:input_type -> pb.ConfigCodeQueryReq
-	19, // 23: pb.SysService.ConfigData:input_type -> pb.ConfigCodeQueryReq
-	18, // 24: pb.SysService.ConfigUpdate:input_type -> pb.ConfigUpdateReq
-	3,  // 25: pb.SysService.ConfigDetail:input_type -> pb.IdReq
-	3,  // 26: pb.SysService.ConfigDelete:input_type -> pb.IdReq
-	25, // 27: pb.SysService.LoginLogCreate:input_type -> pb.LoginLogReq
-	24, // 28: pb.SysService.LoginLogPage:input_type -> pb.LoginLogPageReq
-	4,  // 29: pb.SysService.LoginLogBatchDelete:input_type -> pb.BatchIdsReq
-	27, // 30: pb.SysService.LoginLogClean:input_type -> pb.LogCleanReq
-	26, // 31: pb.SysService.LoginLogUpdate:input_type -> pb.LoginLogUpdateReq
-	3,  // 32: pb.SysService.LoginLogDetail:input_type -> pb.IdReq
-	3,  // 33: pb.SysService.LoginLogDelete:input_type -> pb.IdReq
-	31, // 34: pb.SysService.OperLogCreate:input_type -> pb.OperLogReq
-	30, // 35: pb.SysService.OperLogPage:input_type -> pb.OperLogPageReq
-	4,  // 36: pb.SysService.OperLogBatchDelete:input_type -> pb.BatchIdsReq
-	27, // 37: pb.SysService.OperLogClean:input_type -> pb.LogCleanReq
-	32, // 38: pb.SysService.OperLogUpdate:input_type -> pb.OperLogUpdateReq
-	3,  // 39: pb.SysService.OperLogDetail:input_type -> pb.IdReq
-	3,  // 40: pb.SysService.OperLogDelete:input_type -> pb.IdReq
-	1,  // 41: pb.SysService.Ping:output_type -> pb.PingResp
-	2,  // 42: pb.SysService.DictCreate:output_type -> pb.Ack
-	13, // 43: pb.SysService.DictPage:output_type -> pb.DictPageResp
-	2,  // 44: pb.SysService.DictBatchDelete:output_type -> pb.Ack
-	14, // 45: pb.SysService.DictType:output_type -> pb.DictListResp
-	12, // 46: pb.SysService.DictLabel:output_type -> pb.DictLabelResp
-	2,  // 47: pb.SysService.DictUpdate:output_type -> pb.Ack
-	6,  // 48: pb.SysService.DictDetail:output_type -> pb.Dict
-	2,  // 49: pb.SysService.DictDelete:output_type -> pb.Ack
-	2,  // 50: pb.SysService.ConfigCreate:output_type -> pb.Ack
-	21, // 51: pb.SysService.ConfigPage:output_type -> pb.ConfigPageResp
-	2,  // 52: pb.SysService.ConfigBatchDelete:output_type -> pb.Ack
-	22, // 53: pb.SysService.ConfigCode:output_type -> pb.ConfigListResp
-	20, // 54: pb.SysService.ConfigData:output_type -> pb.ConfigDataResp
-	2,  // 55: pb.SysService.ConfigUpdate:output_type -> pb.Ack
-	15, // 56: pb.SysService.ConfigDetail:output_type -> pb.Config
-	2,  // 57: pb.SysService.ConfigDelete:output_type -> pb.Ack
-	2,  // 58: pb.SysService.LoginLogCreate:output_type -> pb.Ack
-	28, // 59: pb.SysService.LoginLogPage:output_type -> pb.LoginLogPageResp
-	2,  // 60: pb.SysService.LoginLogBatchDelete:output_type -> pb.Ack
-	2,  // 61: pb.SysService.LoginLogClean:output_type -> pb.Ack
-	2,  // 62: pb.SysService.LoginLogUpdate:output_type -> pb.Ack
-	23, // 63: pb.SysService.LoginLogDetail:output_type -> pb.LoginLog
-	2,  // 64: pb.SysService.LoginLogDelete:output_type -> pb.Ack
-	2,  // 65: pb.SysService.OperLogCreate:output_type -> pb.Ack
-	33, // 66: pb.SysService.OperLogPage:output_type -> pb.OperLogPageResp
-	2,  // 67: pb.SysService.OperLogBatchDelete:output_type -> pb.Ack
-	2,  // 68: pb.SysService.OperLogClean:output_type -> pb.Ack
-	2,  // 69: pb.SysService.OperLogUpdate:output_type -> pb.Ack
-	29, // 70: pb.SysService.OperLogDetail:output_type -> pb.OperLog
-	2,  // 71: pb.SysService.OperLogDelete:output_type -> pb.Ack
-	41, // [41:72] is the sub-list for method output_type
-	10, // [10:41] is the sub-list for method input_type
-	10, // [10:10] is the sub-list for extension type_name
-	10, // [10:10] is the sub-list for extension extendee
-	0,  // [0:10] is the sub-list for field type_name
+	31, // 8: pb.OperLogBatchReq.logs:type_name -> pb.OperLogReq
+	29, // 9: pb.OperLogPageResp.records:type_name -> pb.OperLog
+	5,  // 10: pb.OperLogPageResp.page:type_name -> pb.PageInfo
+	0,  // 11: pb.SysService.Ping:input_type -> pb.PingReq
+	8,  // 12: pb.SysService.DictCreate:input_type -> pb.DictCreateReq
+	7,  // 13: pb.SysService.DictPage:input_type -> pb.DictPageReq
+	4,  // 14: pb.SysService.DictBatchDelete:input_type -> pb.BatchIdsReq
+	10, // 15: pb.SysService.DictType:input_type -> pb.DictTypeQueryReq
+	11, // 16: pb.SysService.DictLabel:input_type -> pb.DictLabelQueryReq
+	9,  // 17: pb.SysService.DictUpdate:input_type -> pb.DictUpdateReq
+	3,  // 18: pb.SysService.DictDetail:input_type -> pb.IdReq
+	3,  // 19: pb.SysService.DictDelete:input_type -> pb.IdReq
+	17, // 20: pb.SysService.ConfigCreate:input_type -> pb.ConfigCreateReq
+	16, // 21: pb.SysService.ConfigPage:input_type -> pb.ConfigPageReq
+	4,  // 22: pb.SysService.ConfigBatchDelete:input_type -> pb.BatchIdsReq
+	19, // 23: pb.SysService.ConfigCode:input_type -> pb.ConfigCodeQueryReq
+	19, // 24: pb.SysService.ConfigData:input_type -> pb.ConfigCodeQueryReq
+	18, // 25: pb.SysService.ConfigUpdate:input_type -> pb.ConfigUpdateReq
+	3,  // 26: pb.SysService.ConfigDetail:input_type -> pb.IdReq
+	3,  // 27: pb.SysService.ConfigDelete:input_type -> pb.IdReq
+	25, // 28: pb.SysService.LoginLogCreate:input_type -> pb.LoginLogReq
+	24, // 29: pb.SysService.LoginLogPage:input_type -> pb.LoginLogPageReq
+	4,  // 30: pb.SysService.LoginLogBatchDelete:input_type -> pb.BatchIdsReq
+	27, // 31: pb.SysService.LoginLogClean:input_type -> pb.LogCleanReq
+	26, // 32: pb.SysService.LoginLogUpdate:input_type -> pb.LoginLogUpdateReq
+	3,  // 33: pb.SysService.LoginLogDetail:input_type -> pb.IdReq
+	3,  // 34: pb.SysService.LoginLogDelete:input_type -> pb.IdReq
+	31, // 35: pb.SysService.OperLogCreate:input_type -> pb.OperLogReq
+	32, // 36: pb.SysService.OperLogBatchCreate:input_type -> pb.OperLogBatchReq
+	30, // 37: pb.SysService.OperLogPage:input_type -> pb.OperLogPageReq
+	4,  // 38: pb.SysService.OperLogBatchDelete:input_type -> pb.BatchIdsReq
+	27, // 39: pb.SysService.OperLogClean:input_type -> pb.LogCleanReq
+	33, // 40: pb.SysService.OperLogUpdate:input_type -> pb.OperLogUpdateReq
+	3,  // 41: pb.SysService.OperLogDetail:input_type -> pb.IdReq
+	3,  // 42: pb.SysService.OperLogDelete:input_type -> pb.IdReq
+	1,  // 43: pb.SysService.Ping:output_type -> pb.PingResp
+	2,  // 44: pb.SysService.DictCreate:output_type -> pb.Ack
+	13, // 45: pb.SysService.DictPage:output_type -> pb.DictPageResp
+	2,  // 46: pb.SysService.DictBatchDelete:output_type -> pb.Ack
+	14, // 47: pb.SysService.DictType:output_type -> pb.DictListResp
+	12, // 48: pb.SysService.DictLabel:output_type -> pb.DictLabelResp
+	2,  // 49: pb.SysService.DictUpdate:output_type -> pb.Ack
+	6,  // 50: pb.SysService.DictDetail:output_type -> pb.Dict
+	2,  // 51: pb.SysService.DictDelete:output_type -> pb.Ack
+	2,  // 52: pb.SysService.ConfigCreate:output_type -> pb.Ack
+	21, // 53: pb.SysService.ConfigPage:output_type -> pb.ConfigPageResp
+	2,  // 54: pb.SysService.ConfigBatchDelete:output_type -> pb.Ack
+	22, // 55: pb.SysService.ConfigCode:output_type -> pb.ConfigListResp
+	20, // 56: pb.SysService.ConfigData:output_type -> pb.ConfigDataResp
+	2,  // 57: pb.SysService.ConfigUpdate:output_type -> pb.Ack
+	15, // 58: pb.SysService.ConfigDetail:output_type -> pb.Config
+	2,  // 59: pb.SysService.ConfigDelete:output_type -> pb.Ack
+	2,  // 60: pb.SysService.LoginLogCreate:output_type -> pb.Ack
+	28, // 61: pb.SysService.LoginLogPage:output_type -> pb.LoginLogPageResp
+	2,  // 62: pb.SysService.LoginLogBatchDelete:output_type -> pb.Ack
+	2,  // 63: pb.SysService.LoginLogClean:output_type -> pb.Ack
+	2,  // 64: pb.SysService.LoginLogUpdate:output_type -> pb.Ack
+	23, // 65: pb.SysService.LoginLogDetail:output_type -> pb.LoginLog
+	2,  // 66: pb.SysService.LoginLogDelete:output_type -> pb.Ack
+	2,  // 67: pb.SysService.OperLogCreate:output_type -> pb.Ack
+	2,  // 68: pb.SysService.OperLogBatchCreate:output_type -> pb.Ack
+	34, // 69: pb.SysService.OperLogPage:output_type -> pb.OperLogPageResp
+	2,  // 70: pb.SysService.OperLogBatchDelete:output_type -> pb.Ack
+	2,  // 71: pb.SysService.OperLogClean:output_type -> pb.Ack
+	2,  // 72: pb.SysService.OperLogUpdate:output_type -> pb.Ack
+	29, // 73: pb.SysService.OperLogDetail:output_type -> pb.OperLog
+	2,  // 74: pb.SysService.OperLogDelete:output_type -> pb.Ack
+	43, // [43:75] is the sub-list for method output_type
+	11, // [11:43] is the sub-list for method input_type
+	11, // [11:11] is the sub-list for extension type_name
+	11, // [11:11] is the sub-list for extension extendee
+	0,  // [0:11] is the sub-list for field type_name
 }
 
 func init() { file_sys_proto_init() }
@@ -3122,7 +3182,7 @@ func file_sys_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_sys_proto_rawDesc), len(file_sys_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   34,
+			NumMessages:   35,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -1,13 +1,16 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/config"
 	sysserviceServer "github.com/gcc798/microservice-kit/application/sys-rpc/internal/server/sysservice"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/svc"
+	"github.com/gcc798/microservice-kit/application/sys-rpc/internal/workers"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/pb"
+	"github.com/gcc798/microservice-kit/internal/observability"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/core/logx"
@@ -24,12 +27,21 @@ func main() {
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
+	observability.Configure(&c.ServiceConf)
 	ctx, err := svc.NewServiceContext(c)
 	logx.Must(err)
 	defer func() {
 		if err := ctx.Close(); err != nil {
 			logx.Error(err)
 		}
+	}()
+	workerCtx, cancelWorkers := context.WithCancel(context.Background())
+	logCleanup, err := workers.NewLogCleanup(workerCtx, c.Workers.LogCleanup, ctx)
+	logx.Must(err)
+	logCleanup.Start()
+	defer func() {
+		cancelWorkers()
+		logCleanup.Stop()
 	}()
 
 	s := zrpc.MustNewServer(c.RpcServerConf, func(grpcServer *grpc.Server) {

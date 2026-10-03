@@ -11,6 +11,8 @@ import (
 	"github.com/gcc798/microservice-kit/application/resource-api/internal/handler"
 	"github.com/gcc798/microservice-kit/application/resource-api/internal/svc"
 	"github.com/gcc798/microservice-kit/common/middleware"
+	"github.com/gcc798/microservice-kit/internal/observability"
+	registry "github.com/gcc798/microservice-kit/internal/registry"
 
 	"github.com/zeromicro/go-zero/core/conf"
 	"github.com/zeromicro/go-zero/rest"
@@ -23,11 +25,14 @@ func main() {
 
 	var c config.Config
 	conf.MustLoad(*configFile, &c)
+	observability.Configure(&c.ServiceConf)
 
 	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()
 
 	server.Use(middleware.PanicRecoveryMiddleware)
+	server.Use(middleware.HTTPStatus)
+	server.Use(middleware.StringIDConverter)
 	server.Use(middleware.NewJWTAuthMiddleware(middleware.JWTAuthConfig{
 		Secret:      c.Jwt.Secret,
 		TokenHeader: c.Auth.TokenHeader,
@@ -41,6 +46,11 @@ func main() {
 
 	ctx := svc.NewServiceContext(c)
 	handler.RegisterHandlers(server, ctx)
+	publisher, err := registry.PublishHTTP(c.HTTPRegistry, c.Name, c.Port, server.Routes())
+	if err != nil {
+		panic(err)
+	}
+	defer publisher.Stop()
 
 	fmt.Printf("Starting server at %s:%d...\n", c.Host, c.Port)
 	server.Start()

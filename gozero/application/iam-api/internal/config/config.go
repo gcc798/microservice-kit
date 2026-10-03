@@ -4,6 +4,7 @@
 package config
 
 import (
+	registry "github.com/gcc798/microservice-kit/internal/registry"
 	"github.com/zeromicro/go-zero/rest"
 	"github.com/zeromicro/go-zero/zrpc"
 )
@@ -20,13 +21,15 @@ type JwtConf struct {
 }
 
 type AuthConf struct {
-	TokenHeader string
+	TokenHeader     string
+	AllowConcurrent bool
 }
 
 type Config struct {
 	rest.RestConf
-	IamRpc zrpc.RpcClientConf
-	Redis  RedisConf
-	Jwt    JwtConf
-	Auth   AuthConf
+	HTTPRegistry registry.HTTPConfig
+	IamRpc       zrpc.RpcClientConf
+	Redis        RedisConf
+	Jwt          JwtConf
+	Auth         AuthConf
 }

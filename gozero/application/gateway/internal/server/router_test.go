@@ -1,26 +1,68 @@
 package server
 
-import "testing"
+import (
+	"encoding/json"
+	"os"
+	"regexp"
+	"strings"
+	"testing"
 
-func TestTargetForPath(t *testing.T) {
-	targets := Targets{IAM: "iam", SYS: "sys", Resource: "resource", Realtime: "realtime"}
-	for path, want := range map[string]string{
-		"/login":                    "iam",
-		"/api/v1/user/1":            "iam",
-		"/api/v1/config/page":       "sys",
-		"/api/v1/attachment/1":      "resource",
-		"/realtime/websocket":       "realtime",
-		"/api/v1/configuration":     "",
-		"/realtime/websocket/extra": "",
-	} {
-		if got := targets.targetForPath(path); got != want {
-			t.Fatalf("targetForPath(%q) = %q, want %q", path, got, want)
+	registry "github.com/gcc798/microservice-kit/internal/registry"
+)
+
+func TestBuildRouteTable(t *testing.T) {
+	instances := []registry.HTTPInstance{
+		{Service: "iam-api", Endpoint: "http://127.0.0.1:9011", Routes: []registry.HTTPRoute{{Method: "GET", Path: "/api/v1/user/:id"}}},
+		{Service: "iam-api", Endpoint: "http://127.0.0.2:9011", Routes: []registry.HTTPRoute{{Method: "GET", Path: "/api/v1/user/:userId"}}},
+		{Service: "sys-api", Endpoint: "http://127.0.0.1:9012", Routes: []registry.HTTPRoute{{Method: "GET", Path: "/api/v1/config/code"}}},
+	}
+	table, err := buildRouteTable(instances)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if target := table.match("GET", "/api/v1/config/code"); target == nil || target.service != "sys-api" {
+		t.Fatalf("static route target = %#v", target)
+	}
+	if target := table.match("GET", "/api/v1/user/42"); target == nil || target.service != "iam-api" || len(target.endpoints) != 2 {
+		t.Fatalf("parameter route target = %#v", target)
+	}
+	instances = append(instances, registry.HTTPInstance{Service: "other", Endpoint: "http://127.0.0.1:9999", Routes: []registry.HTTPRoute{{Method: "GET", Path: "/api/v1/user/:name"}}})
+	if _, err := buildRouteTable(instances); err == nil {
+		t.Fatal("route ownership conflict must fail")
+	}
+}
+
+func TestEveryBusinessRouteHasPermissionPolicy(t *testing.T) {
+	data, err := os.ReadFile("../openapi/swagger.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var document struct {
+		Paths map[string]map[string]json.RawMessage `json:"paths"`
+	}
+	if err := json.Unmarshal(data, &document); err != nil {
+		t.Fatal(err)
+	}
+	parameter := regexp.MustCompile(`\{[^/]+\}`)
+	for path, operations := range document.Paths {
+		if !strings.HasPrefix(path, "/api/v1/") {
+			continue
+		}
+		route := parameter.ReplaceAllString(path, ":id")
+		for method := range operations {
+			method = strings.ToUpper(method)
+			if requiredPermission(method, route) == nil && !isPermissionExempt(method, route) {
+				t.Errorf("%s %s has no permission policy", method, path)
+			}
 		}
 	}
 }
 
 func TestPublicPaths(t *testing.T) {
-	for path, want := range map[string]bool{"/login": true, "/captcha/image": true, "/api/v1/user": false, "/authentic": false} {
+	for path, want := range map[string]bool{
+		"/login": true, "/auth/refresh": true, "/resource/sms/code": true, "/captcha/image": true,
+		"/logout": false, "/auth/anything": false, "/api/v1/user": false, "/authentic": false,
+	} {
 		if got := isPublic(path); got != want {
 			t.Fatalf("isPublic(%q) = %v, want %v", path, got, want)
 		}

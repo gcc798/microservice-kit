@@ -2,15 +2,37 @@ Name: gateway
 Host: 0.0.0.0
 Port: 9009
 
+DevServer:
+  Enabled: true
+  Port: 6060
+  EnableMetrics: true
+  EnablePprof: false
+
 Auth:
   TokenHeader: "Authorization"
 
 IamRpc:
-  Target: 127.0.0.1:9001
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: iam.rpc
   NonBlock: true
 
-Backends:
-  IAM: "http://127.0.0.1:9011"
-  SYS: "http://127.0.0.1:9012"
-  Resource: "http://127.0.0.1:9013"
-  Realtime: "http://127.0.0.1:9014"
+SysRpc:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: sys.rpc
+  NonBlock: true
+
+HTTPRegistry:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: /microservice-kit/http
+
+ServiceRegistry:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: /microservice-kit/services/gateway

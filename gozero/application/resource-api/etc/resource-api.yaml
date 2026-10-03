@@ -2,10 +2,29 @@ Name: resource-api
 Host: 0.0.0.0
 Port: 9013
 Mode: dev
+DevServer:
+  Enabled: true
+  Port: 6073
+  EnableMetrics: true
+  EnablePprof: false
+TraceIgnorePaths:
+  - /health
+  - /health/live
+  - /health/ready
+  - /health/startup
 
 ResourceRpc:
-  Target: 127.0.0.1:9003
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: resource.rpc
   NonBlock: true
+
+HTTPRegistry:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: /microservice-kit/http/resource-api
 
 Jwt:
   Secret: "your-256-bit-secret"

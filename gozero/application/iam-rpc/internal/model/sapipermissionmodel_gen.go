@@ -10,37 +10,22 @@ import (
 )
 
 type SApiPermission struct {
-	Id int64 `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
-
-	ParentId int64 `gorm:"column:parent_id" json:"parent_id"`
-
-	Module string `gorm:"column:module" json:"module"`
-
-	Code string `gorm:"column:code" json:"code"`
-
-	Name string `gorm:"column:name" json:"name"`
-
-	NodeType int64 `gorm:"column:node_type" json:"node_type"`
-
-	Action string `gorm:"column:action" json:"action"`
-
-	Method sql.NullString `gorm:"column:method" json:"method"`
-
-	Path sql.NullString `gorm:"column:path" json:"path"`
-
-	Sort int64 `gorm:"column:sort" json:"sort"`
-
-	Status int64 `gorm:"column:status" json:"status"`
-
-	Remark sql.NullString `gorm:"column:remark" json:"remark"`
-
-	CreateBy sql.NullInt64 `gorm:"column:create_by" json:"create_by"`
-
-	UpdateBy sql.NullInt64 `gorm:"column:update_by" json:"update_by"`
-
-	CreatedTime sql.NullTime `gorm:"column:created_time" json:"created_time"`
-
-	UpdatedTime sql.NullTime `gorm:"column:updated_time" json:"updated_time"`
+	Id          int64          `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
+	ParentId    int64          `gorm:"column:parent_id" json:"parent_id"`
+	Module      string         `gorm:"column:module" json:"module"`
+	Code        string         `gorm:"column:code" json:"code"`
+	Name        string         `gorm:"column:name" json:"name"`
+	NodeType    int64          `gorm:"column:node_type" json:"node_type"`
+	Action      string         `gorm:"column:action" json:"action"`
+	Method      sql.NullString `gorm:"column:method" json:"method"`
+	Path        sql.NullString `gorm:"column:path" json:"path"`
+	Sort        int64          `gorm:"column:sort" json:"sort"`
+	Status      int64          `gorm:"column:status" json:"status"`
+	Remark      sql.NullString `gorm:"column:remark" json:"remark"`
+	CreateBy    sql.NullInt64  `gorm:"column:create_by" json:"create_by"`
+	UpdateBy    sql.NullInt64  `gorm:"column:update_by" json:"update_by"`
+	CreatedTime sql.NullTime   `gorm:"column:created_time" json:"created_time"`
+	UpdatedTime sql.NullTime   `gorm:"column:updated_time" json:"updated_time"`
 }
 
 func (m *SApiPermissionModel) Delete(ctx context.Context, id int64) error {

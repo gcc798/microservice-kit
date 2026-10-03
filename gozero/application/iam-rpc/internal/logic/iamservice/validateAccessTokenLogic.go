@@ -37,6 +37,13 @@ func (l *ValidateAccessTokenLogic) ValidateAccessToken(in *pb.ValidateAccessToke
 	if err != nil {
 		return nil, status.Error(codes.Unauthenticated, "invalid access token")
 	}
+	active, err := l.svcCtx.Redis.Exists(l.ctx, auth.AccessTokenKey(in.Token)).Result()
+	if err != nil {
+		return nil, status.Error(codes.Unavailable, "failed to validate session")
+	}
+	if active != 1 {
+		return nil, status.Error(codes.Unauthenticated, "access token is revoked")
+	}
 	if _, err := gorm.G[model.SUser](l.svcCtx.DB).Select("id").Where("id = ? AND status = 0", claims.UserID).First(l.ctx); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, status.Error(codes.Unauthenticated, "user is unavailable")

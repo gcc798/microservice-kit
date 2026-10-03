@@ -1,0 +1,4891 @@
+{
+  "basePath": "/",
+  "consumes": [
+    "application/json"
+  ],
+  "info": {
+    "description": "go-zero implementation of the native HTTP contract",
+    "title": "microservice-kit API",
+    "version": "1.0"
+  },
+  "paths": {
+    "/api/v1/api-permission": {
+      "get": {
+        "operationId": "apipermissionApiPermissionList",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ApiPermissionList"
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "apipermissionApiPermissionCreate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "action": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "method": {
+                  "type": "string"
+                },
+                "module": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "nodeType": {
+                  "type": "integer"
+                },
+                "parentId": {
+                  "type": "integer"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "module",
+                "code",
+                "name",
+                "nodeType",
+                "action",
+                "status"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ApiPermissionCreate"
+      }
+    },
+    "/api/v1/api-permission/tree": {
+      "get": {
+        "operationId": "apipermissionApiPermissionTree",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ApiPermissionTree"
+      }
+    },
+    "/api/v1/api-permission/{id}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "operationId": "apipermissionApiPermissionDelete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ApiPermissionDelete"
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "apipermissionApiPermissionUpdate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "action": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "method": {
+                  "type": "string"
+                },
+                "module": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "nodeType": {
+                  "type": "integer"
+                },
+                "parentId": {
+                  "type": "integer"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "module",
+                "code",
+                "name",
+                "nodeType",
+                "action",
+                "status"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ApiPermissionUpdate"
+      }
+    },
+    "/api/v1/attachment/business": {
+      "get": {
+        "operationId": "attachmentAttachmentBusiness",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "businessType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "businessId",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "AttachmentBusiness"
+      }
+    },
+    "/api/v1/attachment/page": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "attachmentAttachmentPage",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "businessType": {
+                  "type": "string"
+                },
+                "fileName": {
+                  "type": "string"
+                },
+                "fileType": {
+                  "type": "string"
+                },
+                "pageNum": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "pageNum",
+                "pageSize"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "AttachmentPage"
+      }
+    },
+    "/api/v1/attachment/upload-file": {
+      "post": {
+        "operationId": "attachmentAttachmentUploadFile",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "AttachmentUploadFile"
+      }
+    },
+    "/api/v1/attachment/{attachmentId}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "operationId": "attachmentAttachmentDelete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attachmentId",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "AttachmentDelete"
+      },
+      "get": {
+        "operationId": "attachmentAttachmentDetail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attachmentId",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "AttachmentDetail"
+      }
+    },
+    "/api/v1/attachment/{attachmentId}/bind": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "attachmentAttachmentBind",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attachmentId",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "businessField": {
+                  "type": "string"
+                },
+                "businessId": {
+                  "type": "string"
+                },
+                "businessType": {
+                  "type": "string"
+                },
+                "expireTime": {
+                  "type": "string"
+                },
+                "isPublic": {
+                  "type": "boolean"
+                },
+                "metadata": {
+                  "additionalProperties": {},
+                  "type": "object"
+                }
+              },
+              "required": [
+                "businessType",
+                "businessId"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "AttachmentBind"
+      }
+    },
+    "/api/v1/attachment/{attachmentId}/download": {
+      "get": {
+        "operationId": "attachmentAttachmentDownload",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attachmentId",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "AttachmentDownload"
+      }
+    },
+    "/api/v1/attachment/{attachmentId}/url": {
+      "get": {
+        "operationId": "attachmentAttachmentUrl",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "attachmentId",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "allowEmptyValue": true,
+            "in": "query",
+            "name": "expires",
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "AttachmentUrl"
+      }
+    },
+    "/api/v1/config": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "configConfigCreate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "createBy": {
+                  "type": "integer"
+                },
+                "data": {},
+                "name": {
+                  "type": "string"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "updateBy": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "name",
+                "code",
+                "createBy",
+                "updateBy"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ConfigCreate"
+      }
+    },
+    "/api/v1/config/batch": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "configConfigBatchDelete",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "ids": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "ids"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ConfigBatchDelete"
+      }
+    },
+    "/api/v1/config/code": {
+      "get": {
+        "operationId": "configConfigCode",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "code",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ConfigCode"
+      }
+    },
+    "/api/v1/config/data": {
+      "get": {
+        "operationId": "configConfigData",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "code",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ConfigData"
+      }
+    },
+    "/api/v1/config/page": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "configConfigPage",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "pageNum": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ConfigPage"
+      }
+    },
+    "/api/v1/config/{id}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "operationId": "configConfigDelete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ConfigDelete"
+      },
+      "get": {
+        "operationId": "configConfigDetail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ConfigDetail"
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "configConfigUpdate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "string"
+                },
+                "data": {},
+                "name": {
+                  "type": "string"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "updateBy": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "name",
+                "code",
+                "updateBy"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ConfigUpdate"
+      }
+    },
+    "/api/v1/dict": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "dictDictCreate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "createBy": {
+                  "type": "integer"
+                },
+                "dictLabel": {
+                  "type": "string"
+                },
+                "dictType": {
+                  "type": "string"
+                },
+                "dictValue": {
+                  "type": "string"
+                },
+                "isDefault": {
+                  "type": "boolean"
+                },
+                "parentId": {
+                  "type": "integer"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                },
+                "updateBy": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "dictType",
+                "dictLabel",
+                "dictValue"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "DictCreate"
+      }
+    },
+    "/api/v1/dict/batch": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "dictDictBatchDelete",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "ids": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "ids"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "DictBatchDelete"
+      }
+    },
+    "/api/v1/dict/label": {
+      "get": {
+        "operationId": "dictDictLabel",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "dictType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "in": "query",
+            "name": "dictValue",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "DictLabel"
+      }
+    },
+    "/api/v1/dict/page": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "dictDictPage",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "dictLabel": {
+                  "type": "string"
+                },
+                "dictType": {
+                  "type": "string"
+                },
+                "pageNum": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "DictPage"
+      }
+    },
+    "/api/v1/dict/type": {
+      "get": {
+        "operationId": "dictDictType",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "dictType",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "allowEmptyValue": true,
+            "in": "query",
+            "name": "parentId",
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "DictType"
+      }
+    },
+    "/api/v1/dict/{id}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "operationId": "dictDictDelete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "DictDelete"
+      },
+      "get": {
+        "operationId": "dictDictDetail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "DictDetail"
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "dictDictUpdate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "dictLabel": {
+                  "type": "string"
+                },
+                "dictType": {
+                  "type": "string"
+                },
+                "dictValue": {
+                  "type": "string"
+                },
+                "isDefault": {
+                  "type": "boolean"
+                },
+                "parentId": {
+                  "type": "integer"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                },
+                "updateBy": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "dictType",
+                "dictLabel",
+                "dictValue"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "DictUpdate"
+      }
+    },
+    "/api/v1/loginLog": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "loginlogLoginLogCreate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "browser": {
+                  "type": "string"
+                },
+                "clientId": {
+                  "type": "string"
+                },
+                "ipaddr": {
+                  "type": "string"
+                },
+                "loginLocation": {
+                  "type": "string"
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "os": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "integer"
+                },
+                "userName": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "userName"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "LoginLogCreate"
+      }
+    },
+    "/api/v1/loginLog/batch": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "loginlogLoginLogBatchDelete",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "ids": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "ids"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "LoginLogBatchDelete"
+      }
+    },
+    "/api/v1/loginLog/clean": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "loginlogLoginLogClean",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "days": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "days"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "LoginLogClean"
+      }
+    },
+    "/api/v1/loginLog/page": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "loginlogLoginLogPage",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "endTime": {
+                  "type": "string"
+                },
+                "ipaddr": {
+                  "type": "string"
+                },
+                "pageNum": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "startTime": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "integer"
+                },
+                "userName": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "LoginLogPage"
+      }
+    },
+    "/api/v1/loginLog/{id}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "operationId": "loginlogLoginLogDelete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "LoginLogDelete"
+      },
+      "get": {
+        "operationId": "loginlogLoginLogDetail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "LoginLogDetail"
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "loginlogLoginLogUpdate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "browser": {
+                  "type": "string"
+                },
+                "clientId": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "ipaddr": {
+                  "type": "string"
+                },
+                "loginLocation": {
+                  "type": "string"
+                },
+                "msg": {
+                  "type": "string"
+                },
+                "os": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "integer"
+                },
+                "userName": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "LoginLogUpdate"
+      }
+    },
+    "/api/v1/menu": {
+      "get": {
+        "operationId": "menuMenuList",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "MenuList"
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "menuMenuCreate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "component": {
+                  "type": "string"
+                },
+                "icon": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "isCache": {
+                  "type": "integer"
+                },
+                "isFrame": {
+                  "type": "integer"
+                },
+                "menuName": {
+                  "type": "string"
+                },
+                "menuType": {
+                  "type": "integer"
+                },
+                "parentId": {
+                  "type": "integer"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "perms": {
+                  "type": "string"
+                },
+                "query": {
+                  "type": "string"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                },
+                "visible": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "MenuCreate"
+      }
+    },
+    "/api/v1/menu/tree": {
+      "get": {
+        "operationId": "menuMenuTree",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "MenuTree"
+      }
+    },
+    "/api/v1/menu/user/tree": {
+      "get": {
+        "operationId": "menuMenuUserTree",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "MenuUserTree"
+      }
+    },
+    "/api/v1/menu/{id}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "operationId": "menuMenuDelete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "MenuDelete"
+      },
+      "get": {
+        "operationId": "menuMenuDetail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "MenuDetail"
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "menuMenuUpdate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "component": {
+                  "type": "string"
+                },
+                "icon": {
+                  "type": "string"
+                },
+                "isCache": {
+                  "type": "integer"
+                },
+                "isFrame": {
+                  "type": "integer"
+                },
+                "menuName": {
+                  "type": "string"
+                },
+                "menuType": {
+                  "type": "integer"
+                },
+                "parentId": {
+                  "type": "integer"
+                },
+                "path": {
+                  "type": "string"
+                },
+                "perms": {
+                  "type": "string"
+                },
+                "query": {
+                  "type": "string"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                },
+                "visible": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "MenuUpdate"
+      }
+    },
+    "/api/v1/operLog": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "operlogOperLogCreate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "businessType": {
+                  "type": "string"
+                },
+                "costTime": {
+                  "type": "integer"
+                },
+                "deviceType": {
+                  "type": "string"
+                },
+                "errorMsg": {
+                  "type": "string"
+                },
+                "jsonResult": {
+                  "type": "string"
+                },
+                "method": {
+                  "type": "string"
+                },
+                "operIp": {
+                  "type": "string"
+                },
+                "operLocation": {
+                  "type": "string"
+                },
+                "operName": {
+                  "type": "string"
+                },
+                "operParam": {
+                  "type": "string"
+                },
+                "operUrl": {
+                  "type": "string"
+                },
+                "requestMethod": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "userAgent": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "title"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OperLogCreate"
+      }
+    },
+    "/api/v1/operLog/batch": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "operlogOperLogBatchDelete",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "ids": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "ids"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OperLogBatchDelete"
+      }
+    },
+    "/api/v1/operLog/clean": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "operlogOperLogClean",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "days": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "days"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OperLogClean"
+      }
+    },
+    "/api/v1/operLog/page": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "operlogOperLogPage",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "businessType": {
+                  "type": "string"
+                },
+                "endTime": {
+                  "type": "string"
+                },
+                "operName": {
+                  "type": "string"
+                },
+                "pageNum": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "startTime": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OperLogPage"
+      }
+    },
+    "/api/v1/operLog/{id}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "operationId": "operlogOperLogDelete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OperLogDelete"
+      },
+      "get": {
+        "operationId": "operlogOperLogDetail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OperLogDetail"
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "operlogOperLogUpdate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "businessType": {
+                  "type": "string"
+                },
+                "costTime": {
+                  "type": "integer"
+                },
+                "deviceType": {
+                  "type": "string"
+                },
+                "errorMsg": {
+                  "type": "string"
+                },
+                "id": {
+                  "type": "integer"
+                },
+                "jsonResult": {
+                  "type": "string"
+                },
+                "method": {
+                  "type": "string"
+                },
+                "operIp": {
+                  "type": "string"
+                },
+                "operLocation": {
+                  "type": "string"
+                },
+                "operName": {
+                  "type": "string"
+                },
+                "operParam": {
+                  "type": "string"
+                },
+                "operUrl": {
+                  "type": "string"
+                },
+                "requestMethod": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "userAgent": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OperLogUpdate"
+      }
+    },
+    "/api/v1/org": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "orgOrgCreate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "email": {
+                  "type": "string"
+                },
+                "leader": {
+                  "type": "string"
+                },
+                "orgCode": {
+                  "type": "string"
+                },
+                "orgName": {
+                  "type": "string"
+                },
+                "orgType": {
+                  "type": "string"
+                },
+                "parentId": {
+                  "type": "integer"
+                },
+                "phone": {
+                  "type": "string"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "orgName",
+                "orgCode"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OrgCreate"
+      }
+    },
+    "/api/v1/org/batch": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "orgOrgBatchDelete",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "ids": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "ids"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OrgBatchDelete"
+      }
+    },
+    "/api/v1/org/page": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "orgOrgPage",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "orgCode": {
+                  "type": "string"
+                },
+                "orgName": {
+                  "type": "string"
+                },
+                "pageNum": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "parentId": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OrgPage"
+      }
+    },
+    "/api/v1/org/tree": {
+      "get": {
+        "operationId": "orgOrgTree",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OrgTree"
+      }
+    },
+    "/api/v1/org/{id}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "operationId": "orgOrgDelete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OrgDelete"
+      },
+      "get": {
+        "operationId": "orgOrgDetail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OrgDetail"
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "orgOrgUpdate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "email": {
+                  "type": "string"
+                },
+                "leader": {
+                  "type": "string"
+                },
+                "orgCode": {
+                  "type": "string"
+                },
+                "orgName": {
+                  "type": "string"
+                },
+                "orgType": {
+                  "type": "string"
+                },
+                "parentId": {
+                  "type": "integer"
+                },
+                "phone": {
+                  "type": "string"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "OrgUpdate"
+      }
+    },
+    "/api/v1/role": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "roleRoleCreate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "dataScope": {
+                  "type": "integer"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "roleKey": {
+                  "type": "string"
+                },
+                "roleName": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "roleKey",
+                "roleName"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleCreate"
+      }
+    },
+    "/api/v1/role/assign": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "roleRoleAssign",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "roleId": {
+                  "type": "integer"
+                },
+                "userId": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "userId",
+                "roleId"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleAssign"
+      }
+    },
+    "/api/v1/role/page": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "roleRolePage",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "pageNum": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "roleName": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RolePage"
+      }
+    },
+    "/api/v1/role/remove": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "operationId": "roleRoleRemove",
+        "parameters": [
+          {
+            "in": "formData",
+            "name": "userId",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "formData",
+            "name": "roleId",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleRemove"
+      }
+    },
+    "/api/v1/role/user": {
+      "get": {
+        "operationId": "roleRoleUser",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "userId",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleUser"
+      }
+    },
+    "/api/v1/role/{roleId}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "operationId": "roleRoleDelete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleDelete"
+      },
+      "get": {
+        "operationId": "roleRoleDetail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleDetail"
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "roleRoleUpdate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "dataScope": {
+                  "type": "integer"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "roleName": {
+                  "type": "string"
+                },
+                "sort": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "roleName"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleUpdate"
+      }
+    },
+    "/api/v1/role/{roleId}/api-permissions": {
+      "get": {
+        "operationId": "apipermissionRoleApiPermissions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleApiPermissions"
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "apipermissionRoleApiPermissionsAssign",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "permissionIds": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "permissionIds"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleApiPermissionsAssign"
+      }
+    },
+    "/api/v1/role/{roleId}/menus": {
+      "get": {
+        "operationId": "roleRoleMenus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleMenus"
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "roleRoleAssignMenus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "menuIds": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "menuIds"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleAssignMenus"
+      }
+    },
+    "/api/v1/role/{roleId}/users": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "roleRoleRemoveUsers",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "userIds": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "userIds"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleRemoveUsers"
+      },
+      "get": {
+        "operationId": "roleRoleUsers",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleUsers"
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "roleRoleAssignUsers",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "roleId",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "userIds": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "userIds"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RoleAssignUsers"
+      }
+    },
+    "/api/v1/user": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "userUserCreate",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "avatar": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "nickName": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                },
+                "phonenumber": {
+                  "type": "string"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "sex": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                },
+                "userName": {
+                  "type": "string"
+                },
+                "userType": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "userName",
+                "nickName",
+                "password"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "UserCreate"
+      }
+    },
+    "/api/v1/user/batch": {
+      "delete": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "userUserBatchDelete",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "ids": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "ids"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "UserBatchDelete"
+      }
+    },
+    "/api/v1/user/import": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "userUserImport",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "users": {
+                  "items": {
+                    "properties": {
+                      "avatar": {
+                        "type": "string"
+                      },
+                      "email": {
+                        "type": "string"
+                      },
+                      "nickName": {
+                        "type": "string"
+                      },
+                      "password": {
+                        "type": "string"
+                      },
+                      "phonenumber": {
+                        "type": "string"
+                      },
+                      "remark": {
+                        "type": "string"
+                      },
+                      "sex": {
+                        "type": "integer"
+                      },
+                      "status": {
+                        "type": "integer"
+                      },
+                      "userName": {
+                        "type": "string"
+                      },
+                      "userType": {
+                        "type": "integer"
+                      }
+                    },
+                    "required": [
+                      "userName",
+                      "nickName",
+                      "password"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "users"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "UserImport"
+      }
+    },
+    "/api/v1/user/page": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "userUserPage",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "pageNum": {
+                  "type": "integer"
+                },
+                "pageSize": {
+                  "type": "integer"
+                },
+                "phonenumber": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "integer"
+                },
+                "username": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "UserPage"
+      }
+    },
+    "/api/v1/user/password/change": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "userUserChangePassword",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "newPassword": {
+                  "type": "string"
+                },
+                "oldPassword": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "oldPassword",
+                "newPassword"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "UserChangePassword"
+      }
+    },
+    "/api/v1/user/{id}": {
+      "delete": {
+        "consumes": [
+          "application/x-www-form-urlencoded"
+        ],
+        "operationId": "userUserDelete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "UserDelete"
+      },
+      "get": {
+        "operationId": "userUserDetail",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "UserDetail"
+      },
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "userUserUpdate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "avatar": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "nickName": {
+                  "type": "string"
+                },
+                "phonenumber": {
+                  "type": "string"
+                },
+                "remark": {
+                  "type": "string"
+                },
+                "sex": {
+                  "type": "integer"
+                },
+                "status": {
+                  "type": "integer"
+                },
+                "userName": {
+                  "type": "string"
+                },
+                "userType": {
+                  "type": "integer"
+                }
+              },
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "UserUpdate"
+      }
+    },
+    "/api/v1/user/{id}/api-permissions": {
+      "get": {
+        "operationId": "apipermissionUserApiPermissions",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "UserApiPermissions"
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "apipermissionUserApiPermissionsAssign",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "permissionIds": {
+                  "items": {
+                    "type": "integer"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "permissionIds"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "UserApiPermissionsAssign"
+      }
+    },
+    "/api/v1/user/{id}/password": {
+      "put": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "userUserResetPassword",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "type": "integer"
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "newPassword": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "newPassword"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "UserResetPassword"
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "authRefreshToken",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "clientId": {
+                  "type": "string"
+                },
+                "refreshToken": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "refreshToken",
+                "clientId"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "RefreshToken"
+      }
+    },
+    "/captcha/email": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "captchaCaptchaEmail",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "email": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "email"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "CaptchaEmail"
+      }
+    },
+    "/captcha/enabled-types": {
+      "get": {
+        "operationId": "captchaCaptchaEnabledTypes",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "CaptchaEnabledTypes"
+      }
+    },
+    "/captcha/image": {
+      "get": {
+        "operationId": "captchaCaptchaImage",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "CaptchaImage"
+      }
+    },
+    "/captcha/sms": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "captchaCaptchaSms",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "phone": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "phone"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "CaptchaSms"
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "healthHealth",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "Health"
+      }
+    },
+    "/health/live": {
+      "get": {
+        "operationId": "healthHealthLive",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "HealthLive"
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "healthHealthReady",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "HealthReady"
+      }
+    },
+    "/health/startup": {
+      "get": {
+        "operationId": "healthHealthStartup",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "HealthStartup"
+      }
+    },
+    "/login": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "operationId": "authLogin",
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "properties": {
+                "appid": {
+                  "type": "string"
+                },
+                "clientId": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                },
+                "email": {
+                  "type": "string"
+                },
+                "grantType": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                },
+                "phonenumber": {
+                  "type": "string"
+                },
+                "smsCode": {
+                  "type": "string"
+                },
+                "username": {
+                  "type": "string"
+                },
+                "uuid": {
+                  "type": "string"
+                },
+                "wxCode": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "clientId",
+                "grantType"
+              ],
+              "type": "object"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "Login"
+      }
+    },
+    "/logout": {
+      "post": {
+        "operationId": "authLogout",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "Logout"
+      }
+    },
+    "/resource/sms/code": {
+      "get": {
+        "operationId": "captchaResourceSmsCode",
+        "parameters": [
+          {
+            "allowEmptyValue": true,
+            "in": "query",
+            "name": "phone",
+            "type": "string"
+          },
+          {
+            "allowEmptyValue": true,
+            "in": "query",
+            "name": "phonenumber",
+            "type": "string"
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "ResourceSmsCode"
+      }
+    },
+    "/system/user/xcxGetInfo": {
+      "post": {
+        "operationId": "userXcxGetInfo",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "properties": {
+                "code": {
+                  "type": "integer"
+                },
+                "data": {},
+                "msg": {
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "schemes": [
+          "https"
+        ],
+        "summary": "XcxGetInfo"
+      }
+    }
+  },
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "securityDefinitions": {
+    "Bearer": {
+      "in": "header",
+      "name": "Authorization",
+      "type": "apiKey"
+    }
+  },
+  "swagger": "2.0",
+  "x-date": "2026-10-03 10:10:57",
+  "x-description": "This is a goctl generated swagger file.",
+  "x-github": "https://github.com/zeromicro/go-zero",
+  "x-go-zero-doc": "https://go-zero.dev/",
+  "x-goctl-version": "1.10.2"
+}

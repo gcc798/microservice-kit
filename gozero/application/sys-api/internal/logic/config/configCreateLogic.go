@@ -7,6 +7,7 @@ import (
 	"github.com/gcc798/microservice-kit/application/sys-api/internal/svc"
 	"github.com/gcc798/microservice-kit/application/sys-api/internal/types"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/client/sysservice"
+	"github.com/gcc798/microservice-kit/internal/runtimeconfig"
 	"github.com/zeromicro/go-zero/core/logx"
 )
 
@@ -26,6 +27,9 @@ func (l *ConfigCreateLogic) ConfigCreate(req *types.ConfigCreateReq) (resp *type
 	data, err := commonutil.InterfaceToJSONString(req.Data)
 	if err != nil {
 		return &types.CommonResp{Code: 400, Msg: "data 格式错误"}, nil
+	}
+	if err := runtimeconfig.Validate(req.Code, data); err != nil {
+		return &types.CommonResp{Code: 400, Msg: err.Error()}, nil
 	}
 	if _, err := l.svcCtx.SysRpcClient.ConfigCreate(l.ctx, &sysservice.ConfigCreateReq{
 		Name:     req.Name,

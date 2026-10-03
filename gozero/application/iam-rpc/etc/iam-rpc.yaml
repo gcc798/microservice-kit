@@ -1,9 +1,21 @@
 Name: iam-rpc
 ListenOn: 0.0.0.0:9001
 Mode: dev
+DevServer:
+  Enabled: true
+  Port: 6061
+  EnableMetrics: true
+  EnablePprof: false
+Etcd:
+  Hosts:
+    - 127.0.0.1:2379
+  Key: iam.rpc
 
 SysRpc:
-  Target: 127.0.0.1:9002
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: sys.rpc
   NonBlock: true
 
 Postgres:
@@ -19,16 +31,3 @@ CacheRedis:
 
 Jwt:
   Secret: "your-256-bit-secret"
-
-Captcha:
-  Image:
-    Enabled: false
-  Sms:
-    Enabled: true
-  Email:
-    Enabled: true
-
-Wechat:
-  Enabled: false
-  AppId: ""
-  Secret: ""

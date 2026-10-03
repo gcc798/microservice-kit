@@ -13,6 +13,7 @@ import (
 
 	"github.com/gcc798/microservice-kit/application/iam-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/iam-rpc/internal/svc"
+	"github.com/gcc798/microservice-kit/internal/runtimeconfig"
 	"gorm.io/gorm"
 )
 
@@ -58,10 +59,14 @@ func authenticateXcx(ctx context.Context, svcCtx *svc.ServiceContext, phonenumbe
 	if phonenumber == "" || code == "" || wxCode == "" {
 		return nil, fmt.Errorf("手机号、验证码和微信code不能为空")
 	}
-	if !svcCtx.Config.Wechat.Enabled {
+	var config runtimeconfig.WeChat
+	if err := loadRuntimeConfig(ctx, svcCtx, runtimeconfig.CodeWeChat, &config); err != nil {
+		return nil, err
+	}
+	if !config.Enabled {
 		return nil, fmt.Errorf("微信小程序登录未启用")
 	}
-	wxResp, err := wechatCode2Session(svcCtx.Config.Wechat.AppId, svcCtx.Config.Wechat.Secret, wxCode)
+	wxResp, err := wechatCode2Session(config.AppID, config.Secret, wxCode)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +90,7 @@ func authenticateXcx(ctx context.Context, svcCtx *svc.ServiceContext, phonenumbe
 		}
 		row = userAuthRow{Id: user.Id, OrgId: sql.NullInt64{Int64: user.OrgId, Valid: true}, UserName: user.UserName,
 			NickName: user.NickName, UserType: user.UserType, Email: user.Email, Phonenumber: user.Phonenumber,
-			Avatar: user.Avatar, Password: user.Password, Status: user.Status}
+			Avatar: user.Avatar, Password: user.Password, Status: user.Status, OpenId: user.OpenId, UnionId: user.UnionId}
 	} else if err := svcCtx.DB.WithContext(ctx).Model(&model.SUser{}).Where("id = ?", row.Id).Updates(map[string]any{
 		"open_id": nullableString(wxResp.OpenId), "union_id": nullableString(wxResp.UnionId),
 		"login_date": time.Now().Unix(), "updated_time": time.Now(),
@@ -102,10 +107,14 @@ func authenticateWechat(ctx context.Context, svcCtx *svc.ServiceContext, wxCode 
 	if wxCode == "" {
 		return nil, fmt.Errorf("微信code不能为空")
 	}
-	if !svcCtx.Config.Wechat.Enabled {
+	var config runtimeconfig.WeChat
+	if err := loadRuntimeConfig(ctx, svcCtx, runtimeconfig.CodeWeChat, &config); err != nil {
+		return nil, err
+	}
+	if !config.Enabled {
 		return nil, fmt.Errorf("微信小程序登录未启用")
 	}
-	wxResp, err := wechatCode2Session(svcCtx.Config.Wechat.AppId, svcCtx.Config.Wechat.Secret, wxCode)
+	wxResp, err := wechatCode2Session(config.AppID, config.Secret, wxCode)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +138,7 @@ func authenticateWechat(ctx context.Context, svcCtx *svc.ServiceContext, wxCode 
 		}
 		row = userAuthRow{Id: user.Id, OrgId: sql.NullInt64{Int64: user.OrgId, Valid: true}, UserName: user.UserName,
 			NickName: user.NickName, UserType: user.UserType, Email: user.Email, Phonenumber: user.Phonenumber,
-			Avatar: user.Avatar, Password: user.Password, Status: user.Status}
+			Avatar: user.Avatar, Password: user.Password, Status: user.Status, OpenId: user.OpenId, UnionId: user.UnionId}
 	} else if wxResp.UnionId != "" {
 		_ = svcCtx.DB.WithContext(ctx).Model(&model.SUser{}).Where("id = ?", row.Id).Updates(map[string]any{
 			"union_id": wxResp.UnionId, "login_date": time.Now().Unix(), "updated_time": time.Now(),

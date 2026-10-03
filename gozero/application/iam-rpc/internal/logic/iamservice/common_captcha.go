@@ -12,6 +12,7 @@ import (
 
 	"github.com/gcc798/microservice-kit/application/iam-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/iam-rpc/pb"
+	"github.com/gcc798/microservice-kit/internal/runtimeconfig"
 	"github.com/google/uuid"
 	base64Captcha "github.com/mojocn/base64Captcha"
 )
@@ -23,18 +24,22 @@ const (
 	captchaRatePrefix     = "captcha:ratelimit:"
 )
 
-func captchaEnabledTypes(svcCtx *svc.ServiceContext) []string {
+func captchaEnabledTypes(ctx context.Context, svcCtx *svc.ServiceContext) ([]string, error) {
+	var config runtimeconfig.Captcha
+	if err := loadRuntimeConfig(ctx, svcCtx, runtimeconfig.CodeCaptcha, &config); err != nil {
+		return nil, err
+	}
 	types := make([]string, 0, 3)
-	if svcCtx.Config.Captcha.Image.Enabled {
+	if config.Image.Enabled {
 		types = append(types, "image")
 	}
-	if svcCtx.Config.Captcha.Sms.Enabled {
+	if config.SMS.Enabled {
 		types = append(types, "sms")
 	}
-	if svcCtx.Config.Captcha.Email.Enabled {
+	if config.Email.Enabled {
 		types = append(types, "email")
 	}
-	return types
+	return types, nil
 }
 
 func verifySmsCaptcha(ctx context.Context, svcCtx *svc.ServiceContext, uuidValue, phone, code string) error {
@@ -76,7 +81,11 @@ func verifyEmailCaptcha(ctx context.Context, svcCtx *svc.ServiceContext, uuidVal
 }
 
 func verifyImageCaptcha(ctx context.Context, svcCtx *svc.ServiceContext, uuidValue, code string) error {
-	if !svcCtx.Config.Captcha.Image.Enabled {
+	var config runtimeconfig.Captcha
+	if err := loadRuntimeConfig(ctx, svcCtx, runtimeconfig.CodeCaptcha, &config); err != nil {
+		return err
+	}
+	if !config.Image.Enabled {
 		return nil
 	}
 	if uuidValue == "" || code == "" {
@@ -108,17 +117,21 @@ func newCaptchaData(captchaType, id string, data interface{}, expireAt time.Time
 }
 
 func generateImageCaptcha(ctx context.Context, svcCtx *svc.ServiceContext) (*pb.CaptchaDataResp, error) {
-	if !svcCtx.Config.Captcha.Image.Enabled {
+	var config runtimeconfig.Captcha
+	if err := loadRuntimeConfig(ctx, svcCtx, runtimeconfig.CodeCaptcha, &config); err != nil {
+		return nil, err
+	}
+	if !config.Image.Enabled {
 		return nil, fmt.Errorf("验证码类型 image 未启用")
 	}
-	driver := base64Captcha.NewDriverDigit(80, 240, 4, 0.7, 80)
+	driver := base64Captcha.NewDriverDigit(config.Image.Height, config.Image.Width, config.Image.Length, 0.7, 80)
 	captcha := base64Captcha.NewCaptcha(driver, base64Captcha.DefaultMemStore)
 	_, b64s, answer, err := captcha.Generate()
 	if err != nil {
 		return nil, fmt.Errorf("生成验证码失败: %w", err)
 	}
 	id := uuid.NewString()
-	expire := 5 * time.Minute
+	expire := time.Duration(config.Image.Expire) * time.Second
 	if err := svcCtx.Redis.Set(ctx, captchaImageKeyPrefix+id, answer, expire).Err(); err != nil {
 		return nil, err
 	}
@@ -126,7 +139,11 @@ func generateImageCaptcha(ctx context.Context, svcCtx *svc.ServiceContext) (*pb.
 }
 
 func generateSmsCaptcha(ctx context.Context, svcCtx *svc.ServiceContext, phone string) (*pb.CaptchaDataResp, error) {
-	if !svcCtx.Config.Captcha.Sms.Enabled {
+	var config runtimeconfig.Captcha
+	if err := loadRuntimeConfig(ctx, svcCtx, runtimeconfig.CodeCaptcha, &config); err != nil {
+		return nil, err
+	}
+	if !config.SMS.Enabled {
 		return nil, fmt.Errorf("验证码类型 sms 未启用")
 	}
 	if phone == "" {
@@ -144,8 +161,8 @@ func generateSmsCaptcha(ctx context.Context, svcCtx *svc.ServiceContext, phone s
 		return nil, fmt.Errorf("发送过于频繁，请稍后再试")
 	}
 	id := uuid.NewString()
-	code := randomDigits(6)
-	expire := 5 * time.Minute
+	code := randomDigits(config.SMS.Length)
+	expire := time.Duration(config.SMS.Expire) * time.Second
 	if err := svcCtx.Redis.HSet(ctx, captchaSmsKeyPrefix+id, map[string]interface{}{"code": code, "phone": phone}).Err(); err != nil {
 		return nil, err
 	}
@@ -153,14 +170,18 @@ func generateSmsCaptcha(ctx context.Context, svcCtx *svc.ServiceContext, phone s
 		return nil, err
 	}
 	_ = svcCtx.Redis.Set(ctx, rateKey, "1", time.Minute).Err()
-	if err := svcCtx.SMSProvider.SendSMS(phone, code); err != nil {
+	if err := sendSMS(ctx, svcCtx, phone, code, config.SMS.Template); err != nil {
 		return nil, fmt.Errorf("发送短信验证码失败: %w", err)
 	}
 	return newCaptchaData("sms", id, map[string]interface{}{"phone": maskPhone(phone)}, time.Now().Add(expire))
 }
 
 func generateEmailCaptcha(ctx context.Context, svcCtx *svc.ServiceContext, email string) (*pb.CaptchaDataResp, error) {
-	if !svcCtx.Config.Captcha.Email.Enabled {
+	var config runtimeconfig.Captcha
+	if err := loadRuntimeConfig(ctx, svcCtx, runtimeconfig.CodeCaptcha, &config); err != nil {
+		return nil, err
+	}
+	if !config.Email.Enabled {
 		return nil, fmt.Errorf("验证码类型 email 未启用")
 	}
 	if email == "" {
@@ -178,8 +199,8 @@ func generateEmailCaptcha(ctx context.Context, svcCtx *svc.ServiceContext, email
 		return nil, fmt.Errorf("发送过于频繁，请稍后再试")
 	}
 	id := uuid.NewString()
-	code := randomDigits(6)
-	expire := 5 * time.Minute
+	code := randomDigits(config.Email.Length)
+	expire := time.Duration(config.Email.Expire) * time.Second
 	if err := svcCtx.Redis.HSet(ctx, captchaEmailKeyPrefix+id, map[string]interface{}{"code": code, "email": email}).Err(); err != nil {
 		return nil, err
 	}
@@ -187,7 +208,7 @@ func generateEmailCaptcha(ctx context.Context, svcCtx *svc.ServiceContext, email
 		return nil, err
 	}
 	_ = svcCtx.Redis.Set(ctx, rateKey, "1", time.Minute).Err()
-	if err := svcCtx.EmailProvider.SendEmail(email, code); err != nil {
+	if err := sendEmail(ctx, svcCtx, email, code, config.Email.Template); err != nil {
 		return nil, fmt.Errorf("发送邮箱验证码失败: %w", err)
 	}
 	return newCaptchaData("email", id, map[string]interface{}{"email": maskEmail(email)}, time.Now().Add(expire))

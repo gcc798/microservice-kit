@@ -1,10 +1,25 @@
 Name: realtime-rpc
 ListenOn: 0.0.0.0:9004
 Mode: dev
+DevServer:
+  Enabled: true
+  Port: 6064
+  EnableMetrics: true
+  EnablePprof: false
+Etcd:
+  Hosts:
+    - 127.0.0.1:2379
+  Key: realtime.rpc
 
 HTTP:
   Host: 0.0.0.0
   Port: 9014
+
+HTTPRegistry:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: /microservice-kit/http/realtime
 
 RelayRedis:
   Addr: "127.0.0.1:6379"
@@ -15,5 +30,8 @@ Security:
   TokenHeader: "Authorization"
 
 IamRpc:
-  Target: 127.0.0.1:9001
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: iam.rpc
   NonBlock: true

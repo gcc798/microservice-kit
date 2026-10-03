@@ -6,12 +6,19 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"time"
 
 	"github.com/gcc798/microservice-kit/application/iam-rpc/internal/model"
 	"github.com/gcc798/microservice-kit/application/iam-rpc/internal/svc"
 	"github.com/gcc798/microservice-kit/application/iam-rpc/pb"
+	"github.com/redis/go-redis/v9"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+)
+
+const (
+	passwordErrorLimit = 5
+	passwordLockTTL    = 10 * time.Minute
 )
 
 type authClientRow struct {
@@ -36,6 +43,8 @@ type userAuthRow struct {
 	Avatar      sql.NullString `db:"avatar"`
 	Password    sql.NullString `db:"password"`
 	Status      int64          `db:"status"`
+	OpenId      sql.NullString `db:"open_id"`
+	UnionId     sql.NullString `db:"union_id"`
 }
 
 type menuRow struct {
@@ -92,25 +101,53 @@ func authenticatePassword(ctx context.Context, svcCtx *svc.ServiceContext, usern
 	if username == "" || password == "" {
 		return nil, fmt.Errorf("用户名和密码不能为空")
 	}
+	if err := checkPasswordAttempts(ctx, svcCtx, username); err != nil {
+		return nil, err
+	}
 	var row userAuthRow
 	err := svcCtx.DB.WithContext(ctx).Model(&model.SUser{}).Where("user_name = ?", username).Take(&row).Error
 	if err != nil {
+		incrementPasswordAttempts(ctx, svcCtx, username)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("用户名或密码错误")
 		}
 		return nil, fmt.Errorf("登录失败")
 	}
 	if !row.Password.Valid || row.Password.String == "" {
+		incrementPasswordAttempts(ctx, svcCtx, username)
 		return nil, fmt.Errorf("用户名或密码错误")
 	}
 	if err := bcrypt.CompareHashAndPassword([]byte(row.Password.String), []byte(password)); err != nil {
+		incrementPasswordAttempts(ctx, svcCtx, username)
 		return nil, fmt.Errorf("用户名或密码错误")
 	}
 	if row.Status != 0 {
 		return nil, fmt.Errorf("用户已被停用")
 	}
+	_ = svcCtx.Redis.Del(ctx, passwordAttemptKey(username)).Err()
 	return &row, nil
 }
+
+func checkPasswordAttempts(ctx context.Context, svcCtx *svc.ServiceContext, username string) error {
+	count, err := svcCtx.Redis.Get(ctx, passwordAttemptKey(username)).Int()
+	if err != nil && !errors.Is(err, redis.Nil) {
+		return fmt.Errorf("读取登录限制失败: %w", err)
+	}
+	if count < passwordErrorLimit {
+		return nil
+	}
+	ttl, _ := svcCtx.Redis.TTL(ctx, passwordAttemptKey(username)).Result()
+	return fmt.Errorf("密码错误次数过多，请%d分钟后再试", int(ttl.Minutes())+1)
+}
+
+func incrementPasswordAttempts(ctx context.Context, svcCtx *svc.ServiceContext, username string) {
+	pipe := svcCtx.Redis.TxPipeline()
+	pipe.Incr(ctx, passwordAttemptKey(username))
+	pipe.Expire(ctx, passwordAttemptKey(username), passwordLockTTL)
+	_, _ = pipe.Exec(ctx)
+}
+
+func passwordAttemptKey(username string) string { return "auth:password-errors:" + username }
 
 func authenticateEmail(ctx context.Context, svcCtx *svc.ServiceContext, email, uuidValue, code string) (*userAuthRow, error) {
 	if email == "" {

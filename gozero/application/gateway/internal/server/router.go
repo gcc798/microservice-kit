@@ -1,6 +1,15 @@
 package server
 
-import "strings"
+import (
+	"errors"
+	"fmt"
+	"net/url"
+	"sort"
+	"strings"
+	"sync/atomic"
+
+	registry "github.com/gcc798/microservice-kit/internal/registry"
+)
 
 type permissionRule struct {
 	method   string
@@ -102,34 +111,126 @@ var permissionRules = []permissionRule{
 	{"DELETE", "/api/v1/attachment/:attachmentId", "attachment.delete", "write"},
 }
 
-type Targets struct {
-	IAM      string
-	SYS      string
-	Resource string
-	Realtime string
+type routeTarget struct {
+	method    string
+	path      string
+	service   string
+	endpoints []*url.URL
+	next      *atomic.Uint64
 }
 
-func (t Targets) targetForPath(path string) string {
-	if path == "/realtime/websocket" {
-		return t.Realtime
-	}
-	if hasPathPrefix(path, "/api/v1/attachment") {
-		return t.Resource
-	}
-	for _, prefix := range []string{"/api/v1/dict", "/api/v1/config", "/api/v1/loginLog", "/api/v1/operLog"} {
-		if hasPathPrefix(path, prefix) {
-			return t.SYS
+type routeTable struct {
+	targets  []*routeTarget
+	services map[string]struct{}
+}
+
+func buildRouteTable(instances []registry.HTTPInstance) (*routeTable, error) {
+	byRoute := make(map[string]*routeTarget)
+	services := make(map[string]struct{})
+	selectors := make(map[string]*atomic.Uint64)
+	for _, instance := range instances {
+		endpoint, err := url.Parse(instance.Endpoint)
+		if err != nil {
+			return nil, err
+		}
+		services[instance.Service] = struct{}{}
+		for _, route := range instance.Routes {
+			key := strings.ToUpper(route.Method) + " " + canonicalPath(route.Path)
+			target, ok := byRoute[key]
+			if !ok {
+				selector := selectors[instance.Service]
+				if selector == nil {
+					selector = &atomic.Uint64{}
+					selectors[instance.Service] = selector
+				}
+				byRoute[key] = &routeTarget{method: strings.ToUpper(route.Method), path: route.Path, service: instance.Service, endpoints: []*url.URL{endpoint}, next: selector}
+				continue
+			}
+			if target.service != instance.Service {
+				return nil, fmt.Errorf("HTTP route %s belongs to both %s and %s", key, target.service, instance.Service)
+			}
+			if !hasEndpoint(target.endpoints, endpoint.String()) {
+				target.endpoints = append(target.endpoints, endpoint)
+			}
 		}
 	}
-	for _, prefix := range []string{
-		"/login", "/logout", "/auth", "/captcha", "/resource/sms/code",
-		"/api/v1/user", "/api/v1/role", "/api/v1/menu", "/api/v1/api-permission", "/api/v1/org",
-	} {
-		if hasPathPrefix(path, prefix) {
-			return t.IAM
+
+	targets := make([]*routeTarget, 0, len(byRoute))
+	for _, target := range byRoute {
+		targets = append(targets, target)
+	}
+	sort.Slice(targets, func(i, j int) bool {
+		return routeLess(targets[i].path, targets[j].path)
+	})
+	return &routeTable{targets: targets, services: services}, nil
+}
+
+func (t *routeTable) match(method, path string) *routeTarget {
+	if t == nil {
+		return nil
+	}
+	for _, target := range t.targets {
+		if target.method == method && matchRoute(target.path, path) {
+			return target
 		}
 	}
-	return ""
+	return nil
+}
+
+func (t *routeTable) ready() error {
+	if t == nil {
+		return errors.New("HTTP routes have not been discovered")
+	}
+	for _, service := range []string{"iam-api", "sys-api", "resource-api", "realtime"} {
+		if _, ok := t.services[service]; !ok {
+			return fmt.Errorf("HTTP service %s has not been discovered", service)
+		}
+	}
+	return nil
+}
+
+func canonicalPath(path string) string {
+	parts := strings.Split(path, "/")
+	for i, part := range parts {
+		if strings.HasPrefix(part, ":") {
+			parts[i] = ":"
+		}
+	}
+	return strings.Join(parts, "/")
+}
+
+func routeLess(left, right string) bool {
+	leftParts := strings.Split(strings.TrimPrefix(left, "/"), "/")
+	rightParts := strings.Split(strings.TrimPrefix(right, "/"), "/")
+	for i := 0; i < min(len(leftParts), len(rightParts)); i++ {
+		leftRank, rightRank := routeSegmentRank(leftParts[i]), routeSegmentRank(rightParts[i])
+		if leftRank != rightRank {
+			return leftRank > rightRank
+		}
+	}
+	if len(leftParts) != len(rightParts) {
+		return len(leftParts) > len(rightParts)
+	}
+	return left < right
+}
+
+func routeSegmentRank(segment string) int {
+	if segment == "*" {
+		return 0
+	}
+	if strings.HasPrefix(segment, ":") {
+		return 1
+	}
+	return 2
+}
+
+func hasEndpoint(endpoints []*url.URL, endpoint string) bool {
+	for _, existing := range endpoints {
+		if existing.String() == endpoint {
+			return true
+		}
+	}
+	return false
 }
 
 func hasPathPrefix(path, prefix string) bool {
@@ -154,10 +255,13 @@ func isPermissionExempt(method, path string) bool {
 func matchRoute(pattern, requestPath string) bool {
 	patternParts := strings.Split(strings.Trim(pattern, "/"), "/")
 	pathParts := strings.Split(strings.Trim(requestPath, "/"), "/")
-	if len(patternParts) != len(pathParts) {
-		return false
-	}
 	for i := range patternParts {
+		if patternParts[i] == "*" {
+			return true
+		}
+		if i >= len(pathParts) {
+			return false
+		}
 		if strings.HasPrefix(patternParts[i], ":") {
 			if pathParts[i] == "" {
 				return false
@@ -168,5 +272,5 @@ func matchRoute(pattern, requestPath string) bool {
 			return false
 		}
 	}
-	return true
+	return len(patternParts) == len(pathParts)
 }

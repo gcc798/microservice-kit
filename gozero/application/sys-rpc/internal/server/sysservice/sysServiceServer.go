@@ -148,6 +148,11 @@ func (s *SysServiceServer) OperLogCreate(ctx context.Context, in *pb.OperLogReq)
 	return l.OperLogCreate(in)
 }
 
+func (s *SysServiceServer) OperLogBatchCreate(ctx context.Context, in *pb.OperLogBatchReq) (*pb.Ack, error) {
+	l := sysservicelogic.NewOperLogBatchCreateLogic(ctx, s.svcCtx)
+	return l.OperLogBatchCreate(in)
+}
+
 func (s *SysServiceServer) OperLogPage(ctx context.Context, in *pb.OperLogPageReq) (*pb.OperLogPageResp, error) {
 	l := sysservicelogic.NewOperLogPageLogic(ctx, s.svcCtx)
 	return l.OperLogPage(in)

@@ -10,39 +10,23 @@ import (
 )
 
 type SOperLog struct {
-	Id int64 `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
-
-	Title sql.NullString `gorm:"column:title" json:"title"`
-
-	BusinessType sql.NullString `gorm:"column:business_type" json:"business_type"`
-
-	Method sql.NullString `gorm:"column:method" json:"method"`
-
+	Id            int64          `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
+	Title         sql.NullString `gorm:"column:title" json:"title"`
+	BusinessType  sql.NullString `gorm:"column:business_type" json:"business_type"`
+	Method        sql.NullString `gorm:"column:method" json:"method"`
 	RequestMethod sql.NullString `gorm:"column:request_method" json:"request_method"`
-
-	DeviceType sql.NullString `gorm:"column:device_type" json:"device_type"`
-
-	OperName sql.NullString `gorm:"column:oper_name" json:"oper_name"`
-
-	OperUrl sql.NullString `gorm:"column:oper_url" json:"oper_url"`
-
-	OperIp sql.NullString `gorm:"column:oper_ip" json:"oper_ip"`
-
-	OperLocation sql.NullString `gorm:"column:oper_location" json:"oper_location"`
-
-	OperParam sql.NullString `gorm:"column:oper_param" json:"oper_param"`
-
-	JsonResult sql.NullString `gorm:"column:json_result" json:"json_result"`
-
-	Status sql.NullString `gorm:"column:status" json:"status"`
-
-	ErrorMsg sql.NullString `gorm:"column:error_msg" json:"error_msg"`
-
-	OperTime sql.NullTime `gorm:"column:oper_time" json:"oper_time"`
-
-	CostTime sql.NullInt64 `gorm:"column:cost_time" json:"cost_time"`
-
-	UserAgent sql.NullString `gorm:"column:user_agent" json:"user_agent"`
+	DeviceType    sql.NullString `gorm:"column:device_type" json:"device_type"`
+	OperName      sql.NullString `gorm:"column:oper_name" json:"oper_name"`
+	OperUrl       sql.NullString `gorm:"column:oper_url" json:"oper_url"`
+	OperIp        sql.NullString `gorm:"column:oper_ip" json:"oper_ip"`
+	OperLocation  sql.NullString `gorm:"column:oper_location" json:"oper_location"`
+	OperParam     sql.NullString `gorm:"column:oper_param" json:"oper_param"`
+	JsonResult    sql.NullString `gorm:"column:json_result" json:"json_result"`
+	Status        sql.NullString `gorm:"column:status" json:"status"`
+	ErrorMsg      sql.NullString `gorm:"column:error_msg" json:"error_msg"`
+	OperTime      sql.NullTime   `gorm:"column:oper_time" json:"oper_time"`
+	CostTime      sql.NullInt64  `gorm:"column:cost_time" json:"cost_time"`
+	UserAgent     sql.NullString `gorm:"column:user_agent" json:"user_agent"`
 }
 
 func (m *SOperLogModel) Delete(ctx context.Context, id int64) error {

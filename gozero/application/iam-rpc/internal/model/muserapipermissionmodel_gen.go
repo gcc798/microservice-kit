@@ -10,21 +10,14 @@ import (
 )
 
 type MUserApiPermission struct {
-	Id int64 `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
-
-	UserId int64 `gorm:"column:user_id" json:"user_id"`
-
-	PermissionId int64 `gorm:"column:permission_id" json:"permission_id"`
-
-	Source int64 `gorm:"column:source" json:"source"`
-
-	CreateBy sql.NullInt64 `gorm:"column:create_by" json:"create_by"`
-
-	UpdateBy sql.NullInt64 `gorm:"column:update_by" json:"update_by"`
-
-	CreatedTime sql.NullTime `gorm:"column:created_time" json:"created_time"`
-
-	UpdatedTime sql.NullTime `gorm:"column:updated_time" json:"updated_time"`
+	Id           int64         `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
+	UserId       int64         `gorm:"column:user_id" json:"user_id"`
+	PermissionId int64         `gorm:"column:permission_id" json:"permission_id"`
+	Source       int64         `gorm:"column:source" json:"source"`
+	CreateBy     sql.NullInt64 `gorm:"column:create_by" json:"create_by"`
+	UpdateBy     sql.NullInt64 `gorm:"column:update_by" json:"update_by"`
+	CreatedTime  sql.NullTime  `gorm:"column:created_time" json:"created_time"`
+	UpdatedTime  sql.NullTime  `gorm:"column:updated_time" json:"updated_time"`
 }
 
 func (m *MUserApiPermissionModel) Delete(ctx context.Context, id int64) error {

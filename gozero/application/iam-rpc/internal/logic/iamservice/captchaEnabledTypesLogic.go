@@ -24,5 +24,9 @@ func NewCaptchaEnabledTypesLogic(ctx context.Context, svcCtx *svc.ServiceContext
 }
 
 func (l *CaptchaEnabledTypesLogic) CaptchaEnabledTypes(in *pb.CaptchaReq) (*pb.CaptchaTypesResp, error) {
-	return &pb.CaptchaTypesResp{Types: captchaEnabledTypes(l.svcCtx)}, nil
+	types, err := captchaEnabledTypes(l.ctx, l.svcCtx)
+	if err != nil {
+		return nil, err
+	}
+	return &pb.CaptchaTypesResp{Types: types}, nil
 }

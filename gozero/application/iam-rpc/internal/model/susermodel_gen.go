@@ -10,47 +10,27 @@ import (
 )
 
 type SUser struct {
-	Id int64 `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
-
-	UserName string `gorm:"column:user_name" json:"user_name"`
-
-	NickName sql.NullString `gorm:"column:nick_name" json:"nick_name"`
-
-	UserType int64 `gorm:"column:user_type" json:"user_type"`
-
-	OrgId int64 `gorm:"column:org_id" json:"org_id"`
-
-	Email sql.NullString `gorm:"column:email" json:"email"`
-
+	Id          int64          `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
+	UserName    string         `gorm:"column:user_name" json:"user_name"`
+	NickName    sql.NullString `gorm:"column:nick_name" json:"nick_name"`
+	UserType    int64          `gorm:"column:user_type" json:"user_type"`
+	OrgId       int64          `gorm:"column:org_id" json:"org_id"`
+	Email       sql.NullString `gorm:"column:email" json:"email"`
 	Phonenumber sql.NullString `gorm:"column:phonenumber" json:"phonenumber"`
-
-	Sex int64 `gorm:"column:sex" json:"sex"`
-
-	Avatar sql.NullString `gorm:"column:avatar" json:"avatar"`
-
-	Password sql.NullString `gorm:"column:password" json:"password"`
-
-	Status int64 `gorm:"column:status" json:"status"`
-
-	Sort int64 `gorm:"column:sort" json:"sort"`
-
-	LoginIp sql.NullString `gorm:"column:login_ip" json:"login_ip"`
-
-	LoginDate sql.NullInt64 `gorm:"column:login_date" json:"login_date"`
-
-	OpenId sql.NullString `gorm:"column:open_id" json:"open_id"`
-
-	UnionId sql.NullString `gorm:"column:union_id" json:"union_id"`
-
-	Remark sql.NullString `gorm:"column:remark" json:"remark"`
-
-	CreateBy sql.NullInt64 `gorm:"column:create_by" json:"create_by"`
-
-	UpdateBy sql.NullInt64 `gorm:"column:update_by" json:"update_by"`
-
-	CreatedTime sql.NullTime `gorm:"column:created_time" json:"created_time"`
-
-	UpdatedTime sql.NullTime `gorm:"column:updated_time" json:"updated_time"`
+	Sex         int64          `gorm:"column:sex" json:"sex"`
+	Avatar      sql.NullString `gorm:"column:avatar" json:"avatar"`
+	Password    sql.NullString `gorm:"column:password" json:"password"`
+	Status      int64          `gorm:"column:status" json:"status"`
+	Sort        int64          `gorm:"column:sort" json:"sort"`
+	LoginIp     sql.NullString `gorm:"column:login_ip" json:"login_ip"`
+	LoginDate   sql.NullInt64  `gorm:"column:login_date" json:"login_date"`
+	OpenId      sql.NullString `gorm:"column:open_id" json:"open_id"`
+	UnionId     sql.NullString `gorm:"column:union_id" json:"union_id"`
+	Remark      sql.NullString `gorm:"column:remark" json:"remark"`
+	CreateBy    sql.NullInt64  `gorm:"column:create_by" json:"create_by"`
+	UpdateBy    sql.NullInt64  `gorm:"column:update_by" json:"update_by"`
+	CreatedTime sql.NullTime   `gorm:"column:created_time" json:"created_time"`
+	UpdatedTime sql.NullTime   `gorm:"column:updated_time" json:"updated_time"`
 }
 
 func (m *SUserModel) Delete(ctx context.Context, id int64) error {

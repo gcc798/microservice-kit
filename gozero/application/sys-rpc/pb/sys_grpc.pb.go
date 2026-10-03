@@ -44,6 +44,7 @@ const (
 	SysService_LoginLogDetail_FullMethodName      = "/pb.SysService/LoginLogDetail"
 	SysService_LoginLogDelete_FullMethodName      = "/pb.SysService/LoginLogDelete"
 	SysService_OperLogCreate_FullMethodName       = "/pb.SysService/OperLogCreate"
+	SysService_OperLogBatchCreate_FullMethodName  = "/pb.SysService/OperLogBatchCreate"
 	SysService_OperLogPage_FullMethodName         = "/pb.SysService/OperLogPage"
 	SysService_OperLogBatchDelete_FullMethodName  = "/pb.SysService/OperLogBatchDelete"
 	SysService_OperLogClean_FullMethodName        = "/pb.SysService/OperLogClean"
@@ -81,6 +82,7 @@ type SysServiceClient interface {
 	LoginLogDetail(ctx context.Context, in *IdReq, opts ...grpc.CallOption) (*LoginLog, error)
 	LoginLogDelete(ctx context.Context, in *IdReq, opts ...grpc.CallOption) (*Ack, error)
 	OperLogCreate(ctx context.Context, in *OperLogReq, opts ...grpc.CallOption) (*Ack, error)
+	OperLogBatchCreate(ctx context.Context, in *OperLogBatchReq, opts ...grpc.CallOption) (*Ack, error)
 	OperLogPage(ctx context.Context, in *OperLogPageReq, opts ...grpc.CallOption) (*OperLogPageResp, error)
 	OperLogBatchDelete(ctx context.Context, in *BatchIdsReq, opts ...grpc.CallOption) (*Ack, error)
 	OperLogClean(ctx context.Context, in *LogCleanReq, opts ...grpc.CallOption) (*Ack, error)
@@ -347,6 +349,16 @@ func (c *sysServiceClient) OperLogCreate(ctx context.Context, in *OperLogReq, op
 	return out, nil
 }
 
+func (c *sysServiceClient) OperLogBatchCreate(ctx context.Context, in *OperLogBatchReq, opts ...grpc.CallOption) (*Ack, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Ack)
+	err := c.cc.Invoke(ctx, SysService_OperLogBatchCreate_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *sysServiceClient) OperLogPage(ctx context.Context, in *OperLogPageReq, opts ...grpc.CallOption) (*OperLogPageResp, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(OperLogPageResp)
@@ -436,6 +448,7 @@ type SysServiceServer interface {
 	LoginLogDetail(context.Context, *IdReq) (*LoginLog, error)
 	LoginLogDelete(context.Context, *IdReq) (*Ack, error)
 	OperLogCreate(context.Context, *OperLogReq) (*Ack, error)
+	OperLogBatchCreate(context.Context, *OperLogBatchReq) (*Ack, error)
 	OperLogPage(context.Context, *OperLogPageReq) (*OperLogPageResp, error)
 	OperLogBatchDelete(context.Context, *BatchIdsReq) (*Ack, error)
 	OperLogClean(context.Context, *LogCleanReq) (*Ack, error)
@@ -526,6 +539,9 @@ func (UnimplementedSysServiceServer) LoginLogDelete(context.Context, *IdReq) (*A
 }
 func (UnimplementedSysServiceServer) OperLogCreate(context.Context, *OperLogReq) (*Ack, error) {
 	return nil, status.Error(codes.Unimplemented, "method OperLogCreate not implemented")
+}
+func (UnimplementedSysServiceServer) OperLogBatchCreate(context.Context, *OperLogBatchReq) (*Ack, error) {
+	return nil, status.Error(codes.Unimplemented, "method OperLogBatchCreate not implemented")
 }
 func (UnimplementedSysServiceServer) OperLogPage(context.Context, *OperLogPageReq) (*OperLogPageResp, error) {
 	return nil, status.Error(codes.Unimplemented, "method OperLogPage not implemented")
@@ -1016,6 +1032,24 @@ func _SysService_OperLogCreate_Handler(srv interface{}, ctx context.Context, dec
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SysService_OperLogBatchCreate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(OperLogBatchReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SysServiceServer).OperLogBatchCreate(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SysService_OperLogBatchCreate_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SysServiceServer).OperLogBatchCreate(ctx, req.(*OperLogBatchReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SysService_OperLogPage_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OperLogPageReq)
 	if err := dec(in); err != nil {
@@ -1230,6 +1264,10 @@ var SysService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "OperLogCreate",
 			Handler:    _SysService_OperLogCreate_Handler,
+		},
+		{
+			MethodName: "OperLogBatchCreate",
+			Handler:    _SysService_OperLogBatchCreate_Handler,
 		},
 		{
 			MethodName: "OperLogPage",

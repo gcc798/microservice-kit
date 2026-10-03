@@ -10,23 +10,15 @@ import (
 )
 
 type SConfig struct {
-	Id int64 `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
-
-	Name string `gorm:"column:name" json:"name"`
-
-	Code string `gorm:"column:code" json:"code"`
-
-	Data string `gorm:"column:data" json:"data"`
-
-	Remark sql.NullString `gorm:"column:remark" json:"remark"`
-
-	CreateBy sql.NullInt64 `gorm:"column:create_by" json:"create_by"`
-
-	CreatedTime sql.NullTime `gorm:"column:created_time" json:"created_time"`
-
-	UpdateBy sql.NullInt64 `gorm:"column:update_by" json:"update_by"`
-
-	UpdatedTime sql.NullTime `gorm:"column:updated_time" json:"updated_time"`
+	Id          int64          `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
+	Name        string         `gorm:"column:name" json:"name"`
+	Code        string         `gorm:"column:code" json:"code"`
+	Data        string         `gorm:"column:data" json:"data"`
+	Remark      sql.NullString `gorm:"column:remark" json:"remark"`
+	CreateBy    sql.NullInt64  `gorm:"column:create_by" json:"create_by"`
+	CreatedTime sql.NullTime   `gorm:"column:created_time" json:"created_time"`
+	UpdateBy    sql.NullInt64  `gorm:"column:update_by" json:"update_by"`
+	UpdatedTime sql.NullTime   `gorm:"column:updated_time" json:"updated_time"`
 }
 
 func (m *SConfigModel) Delete(ctx context.Context, id int64) error {

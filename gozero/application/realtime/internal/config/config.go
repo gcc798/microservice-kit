@@ -1,6 +1,9 @@
 package config
 
-import "github.com/zeromicro/go-zero/zrpc"
+import (
+	registry "github.com/gcc798/microservice-kit/internal/registry"
+	"github.com/zeromicro/go-zero/zrpc"
+)
 
 type HTTP struct {
 	Host string
@@ -19,8 +22,9 @@ type Auth struct {
 
 type Config struct {
 	zrpc.RpcServerConf
-	HTTP       HTTP
-	RelayRedis Redis
-	Security   Auth
-	IamRpc     zrpc.RpcClientConf
+	HTTP         HTTP
+	HTTPRegistry registry.HTTPConfig
+	RelayRedis   Redis
+	Security     Auth
+	IamRpc       zrpc.RpcClientConf
 }

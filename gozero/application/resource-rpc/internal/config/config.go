@@ -18,8 +18,26 @@ type StorageConf struct {
 	UseSSL    bool
 }
 
+type RedisConf struct {
+	Addr     string
+	Password string
+	Db       int
+}
+
+type ExpiredAttachmentCleanupConf struct {
+	Enabled        bool
+	Cron           string
+	LockTTLMinutes int
+}
+
+type WorkersConf struct {
+	ExpiredAttachmentCleanup ExpiredAttachmentCleanupConf
+}
+
 type Config struct {
 	zrpc.RpcServerConf
 	Postgres PostgresConf
 	Storage  StorageConf
+	Redis    RedisConf
+	Workers  WorkersConf
 }

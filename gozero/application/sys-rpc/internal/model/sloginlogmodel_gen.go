@@ -10,25 +10,16 @@ import (
 )
 
 type SLoginLog struct {
-	Id int64 `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
-
-	UserName sql.NullString `gorm:"column:user_name" json:"user_name"`
-
-	Ipaddr sql.NullString `gorm:"column:ipaddr" json:"ipaddr"`
-
+	Id            int64          `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
+	UserName      sql.NullString `gorm:"column:user_name" json:"user_name"`
+	Ipaddr        sql.NullString `gorm:"column:ipaddr" json:"ipaddr"`
 	LoginLocation sql.NullString `gorm:"column:login_location" json:"login_location"`
-
-	Browser sql.NullString `gorm:"column:browser" json:"browser"`
-
-	Os sql.NullString `gorm:"column:os" json:"os"`
-
-	Status int64 `gorm:"column:status" json:"status"`
-
-	Msg sql.NullString `gorm:"column:msg" json:"msg"`
-
-	LoginTime sql.NullTime `gorm:"column:login_time" json:"login_time"`
-
-	ClientId sql.NullString `gorm:"column:client_id" json:"client_id"`
+	Browser       sql.NullString `gorm:"column:browser" json:"browser"`
+	Os            sql.NullString `gorm:"column:os" json:"os"`
+	Status        int64          `gorm:"column:status" json:"status"`
+	Msg           sql.NullString `gorm:"column:msg" json:"msg"`
+	LoginTime     sql.NullTime   `gorm:"column:login_time" json:"login_time"`
+	ClientId      sql.NullString `gorm:"column:client_id" json:"client_id"`
 }
 
 func (m *SLoginLogModel) Delete(ctx context.Context, id int64) error {

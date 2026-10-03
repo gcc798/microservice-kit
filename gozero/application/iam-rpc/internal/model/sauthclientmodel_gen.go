@@ -10,27 +10,17 @@ import (
 )
 
 type SAuthClient struct {
-	ClientId string `gorm:"column:client_id;primaryKey;autoIncrement:false" json:"client_id"`
-
-	GrantType sql.NullString `gorm:"column:grant_type" json:"grant_type"`
-
-	DeviceType sql.NullString `gorm:"column:device_type" json:"device_type"`
-
-	Status int64 `gorm:"column:status" json:"status"`
-
-	Timeout int64 `gorm:"column:timeout" json:"timeout"`
-
-	ActiveTimeout int64 `gorm:"column:active_timeout" json:"active_timeout"`
-
-	Remark sql.NullString `gorm:"column:remark" json:"remark"`
-
-	CreateBy sql.NullInt64 `gorm:"column:create_by" json:"create_by"`
-
-	CreatedTime sql.NullTime `gorm:"column:created_time" json:"created_time"`
-
-	UpdateBy sql.NullInt64 `gorm:"column:update_by" json:"update_by"`
-
-	UpdatedTime sql.NullTime `gorm:"column:updated_time" json:"updated_time"`
+	ClientId      string         `gorm:"column:client_id;primaryKey;autoIncrement:false" json:"client_id"`
+	GrantType     sql.NullString `gorm:"column:grant_type" json:"grant_type"`
+	DeviceType    sql.NullString `gorm:"column:device_type" json:"device_type"`
+	Status        int64          `gorm:"column:status" json:"status"`
+	Timeout       int64          `gorm:"column:timeout" json:"timeout"`
+	ActiveTimeout int64          `gorm:"column:active_timeout" json:"active_timeout"`
+	Remark        sql.NullString `gorm:"column:remark" json:"remark"`
+	CreateBy      sql.NullInt64  `gorm:"column:create_by" json:"create_by"`
+	CreatedTime   sql.NullTime   `gorm:"column:created_time" json:"created_time"`
+	UpdateBy      sql.NullInt64  `gorm:"column:update_by" json:"update_by"`
+	UpdatedTime   sql.NullTime   `gorm:"column:updated_time" json:"updated_time"`
 }
 
 func (m *SAuthClientModel) Delete(ctx context.Context, clientId string) error {

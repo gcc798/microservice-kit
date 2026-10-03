@@ -10,37 +10,22 @@ import (
 )
 
 type SOrg struct {
-	Id int64 `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
-
-	ParentId int64 `gorm:"column:parent_id" json:"parent_id"`
-
-	Ancestors sql.NullString `gorm:"column:ancestors" json:"ancestors"`
-
-	OrgName string `gorm:"column:org_name" json:"org_name"`
-
-	OrgCode sql.NullString `gorm:"column:org_code" json:"org_code"`
-
-	OrgType string `gorm:"column:org_type" json:"org_type"`
-
-	Leader sql.NullString `gorm:"column:leader" json:"leader"`
-
-	Phone sql.NullString `gorm:"column:phone" json:"phone"`
-
-	Email sql.NullString `gorm:"column:email" json:"email"`
-
-	Status int64 `gorm:"column:status" json:"status"`
-
-	Sort int64 `gorm:"column:sort" json:"sort"`
-
-	Remark sql.NullString `gorm:"column:remark" json:"remark"`
-
-	CreateBy sql.NullInt64 `gorm:"column:create_by" json:"create_by"`
-
-	UpdateBy sql.NullInt64 `gorm:"column:update_by" json:"update_by"`
-
-	CreatedTime sql.NullTime `gorm:"column:created_time" json:"created_time"`
-
-	UpdatedTime sql.NullTime `gorm:"column:updated_time" json:"updated_time"`
+	Id          int64          `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
+	ParentId    int64          `gorm:"column:parent_id" json:"parent_id"`
+	Ancestors   sql.NullString `gorm:"column:ancestors" json:"ancestors"`
+	OrgName     string         `gorm:"column:org_name" json:"org_name"`
+	OrgCode     sql.NullString `gorm:"column:org_code" json:"org_code"`
+	OrgType     string         `gorm:"column:org_type" json:"org_type"`
+	Leader      sql.NullString `gorm:"column:leader" json:"leader"`
+	Phone       sql.NullString `gorm:"column:phone" json:"phone"`
+	Email       sql.NullString `gorm:"column:email" json:"email"`
+	Status      int64          `gorm:"column:status" json:"status"`
+	Sort        int64          `gorm:"column:sort" json:"sort"`
+	Remark      sql.NullString `gorm:"column:remark" json:"remark"`
+	CreateBy    sql.NullInt64  `gorm:"column:create_by" json:"create_by"`
+	UpdateBy    sql.NullInt64  `gorm:"column:update_by" json:"update_by"`
+	CreatedTime sql.NullTime   `gorm:"column:created_time" json:"created_time"`
+	UpdatedTime sql.NullTime   `gorm:"column:updated_time" json:"updated_time"`
 }
 
 func (m *SOrgModel) Delete(ctx context.Context, id int64) error {

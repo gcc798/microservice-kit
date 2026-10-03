@@ -10,39 +10,23 @@ import (
 )
 
 type BizAttachment struct {
-	Id int64 `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
-
-	FileName string `gorm:"column:file_name" json:"file_name"`
-
-	FileKey string `gorm:"column:file_key" json:"file_key"`
-
-	FileSize int64 `gorm:"column:file_size" json:"file_size"`
-
-	FileType sql.NullString `gorm:"column:file_type" json:"file_type"`
-
-	FileExt sql.NullString `gorm:"column:file_ext" json:"file_ext"`
-
-	BusinessType sql.NullString `gorm:"column:business_type" json:"business_type"`
-
-	BusinessId sql.NullString `gorm:"column:business_id" json:"business_id"`
-
+	Id            int64          `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
+	FileName      string         `gorm:"column:file_name" json:"file_name"`
+	FileKey       string         `gorm:"column:file_key" json:"file_key"`
+	FileSize      int64          `gorm:"column:file_size" json:"file_size"`
+	FileType      sql.NullString `gorm:"column:file_type" json:"file_type"`
+	FileExt       sql.NullString `gorm:"column:file_ext" json:"file_ext"`
+	BusinessType  sql.NullString `gorm:"column:business_type" json:"business_type"`
+	BusinessId    sql.NullString `gorm:"column:business_id" json:"business_id"`
 	BusinessField sql.NullString `gorm:"column:business_field" json:"business_field"`
-
-	IsPublic bool `gorm:"column:is_public" json:"is_public"`
-
-	AccessUrl sql.NullString `gorm:"column:access_url" json:"access_url"`
-
-	Metadata sql.NullString `gorm:"column:metadata" json:"metadata"`
-
-	Status int64 `gorm:"column:status" json:"status"`
-
-	ExpireTime sql.NullTime `gorm:"column:expire_time" json:"expire_time"`
-
-	CreateBy sql.NullInt64 `gorm:"column:create_by" json:"create_by"`
-
-	CreateTime sql.NullTime `gorm:"column:create_time" json:"create_time"`
-
-	UpdateTime sql.NullTime `gorm:"column:update_time" json:"update_time"`
+	IsPublic      bool           `gorm:"column:is_public" json:"is_public"`
+	AccessUrl     sql.NullString `gorm:"column:access_url" json:"access_url"`
+	Metadata      sql.NullString `gorm:"column:metadata" json:"metadata"`
+	Status        int64          `gorm:"column:status" json:"status"`
+	ExpireTime    sql.NullTime   `gorm:"column:expire_time" json:"expire_time"`
+	CreateBy      sql.NullInt64  `gorm:"column:create_by" json:"create_by"`
+	CreateTime    sql.NullTime   `gorm:"column:create_time" json:"create_time"`
+	UpdateTime    sql.NullTime   `gorm:"column:update_time" json:"update_time"`
 }
 
 func (m *BizAttachmentModel) Delete(ctx context.Context, id int64) error {

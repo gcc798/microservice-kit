@@ -13,7 +13,10 @@ import (
 	"github.com/gcc798/microservice-kit/application/realtime/internal/svc"
 	"github.com/gcc798/microservice-kit/common/auth"
 	"github.com/gorilla/websocket"
+	resthandler "github.com/zeromicro/go-zero/rest/handler"
 )
+
+const WebSocketPath = "/realtime/websocket"
 
 func NewHTTP(ctx *svc.ServiceContext) *http.Server {
 	mux := http.NewServeMux()
@@ -30,15 +33,17 @@ func NewHTTP(ctx *svc.ServiceContext) *http.Server {
 	mux.HandleFunc("GET /health", health)
 	mux.HandleFunc("GET /health/ready", health)
 	mux.HandleFunc("GET /health/startup", health)
-	mux.HandleFunc("GET /realtime/websocket", func(w http.ResponseWriter, r *http.Request) { serveWebSocket(ctx, w, r) })
-	return &http.Server{Addr: fmt.Sprintf("%s:%d", ctx.Config.HTTP.Host, ctx.Config.HTTP.Port), Handler: mux, ReadHeaderTimeout: 10 * time.Second}
+	mux.HandleFunc("GET "+WebSocketPath, func(w http.ResponseWriter, r *http.Request) { serveWebSocket(ctx, w, r) })
+	handler := resthandler.TraceHandler(ctx.Config.Name, "realtime", resthandler.WithTraceIgnorePaths([]string{"/health", "/health/live", "/health/ready", "/health/startup", "/metrics"}))(mux)
+	handler = resthandler.PrometheusHandler(WebSocketPath, http.MethodGet)(handler)
+	return &http.Server{Addr: fmt.Sprintf("%s:%d", ctx.Config.HTTP.Host, ctx.Config.HTTP.Port), Handler: handler, ReadHeaderTimeout: 10 * time.Second}
 }
 
 func serveWebSocket(ctx *svc.ServiceContext, w http.ResponseWriter, r *http.Request) {
 	token := auth.TokenFromRequest(r, ctx.Config.Security.TokenHeader)
 	claims, err := ctx.IamRpc.ValidateAccessToken(r.Context(), &iamservice.ValidateAccessTokenReq{Token: token})
 	if err != nil {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "未登录或登录已失效"})
+		writeError(w, http.StatusUnauthorized, "未登录或登录已失效")
 		return
 	}
 	clientID := strings.TrimSpace(r.Header.Get("clientid"))
@@ -46,7 +51,7 @@ func serveWebSocket(ctx *svc.ServiceContext, w http.ResponseWriter, r *http.Requ
 		clientID = strings.TrimSpace(r.URL.Query().Get("clientid"))
 	}
 	if clientID != "" && claims.ClientId != "" && clientID != claims.ClientId {
-		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "客户端ID与Token不匹配"})
+		writeError(w, http.StatusUnauthorized, "客户端ID与Token不匹配")
 		return
 	}
 	conn, err := (&websocket.Upgrader{CheckOrigin: sameOrigin}).Upgrade(w, r, nil)
@@ -95,4 +100,8 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(value)
+}
+
+func writeError(w http.ResponseWriter, status int, message string) {
+	writeJSON(w, status, map[string]any{"code": status, "msg": message})
 }

@@ -2,10 +2,29 @@ Name: sys-api
 Host: 0.0.0.0
 Port: 9012
 Mode: dev
+DevServer:
+  Enabled: true
+  Port: 6072
+  EnableMetrics: true
+  EnablePprof: false
+TraceIgnorePaths:
+  - /health
+  - /health/live
+  - /health/ready
+  - /health/startup
 
 SysRpc:
-  Target: 127.0.0.1:9002
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: sys.rpc
   NonBlock: true
+
+HTTPRegistry:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: /microservice-kit/http/sys-api
 
 Jwt:
   Secret: "your-256-bit-secret"

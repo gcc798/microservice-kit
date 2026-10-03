@@ -9,7 +9,26 @@ type PostgresConf struct {
 	ConnMaxLifetimeMinutes int
 }
 
+type RedisConf struct {
+	Addr     string
+	Password string
+	Db       int
+}
+
+type LogCleanupConf struct {
+	Enabled        bool
+	Cron           string
+	RetentionDays  int
+	LockTTLMinutes int
+}
+
+type WorkersConf struct {
+	LogCleanup LogCleanupConf
+}
+
 type Config struct {
 	zrpc.RpcServerConf
 	Postgres PostgresConf
+	Redis    RedisConf
+	Workers  WorkersConf
 }

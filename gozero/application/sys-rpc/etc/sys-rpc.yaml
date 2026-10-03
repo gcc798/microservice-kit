@@ -1,9 +1,30 @@
 Name: sys-rpc
 ListenOn: 0.0.0.0:9002
 Mode: dev
+DevServer:
+  Enabled: true
+  Port: 6062
+  EnableMetrics: true
+  EnablePprof: false
+Etcd:
+  Hosts:
+    - 127.0.0.1:2379
+  Key: sys.rpc
 
 Postgres:
   Dsn: "host=127.0.0.1 user=postgres password=post123 dbname=microservice_kit port=5433 sslmode=disable TimeZone=Asia/Shanghai"
   MaxIdleConns: 10
   MaxOpenConns: 100
   ConnMaxLifetimeMinutes: 60
+
+Redis:
+  Addr: "127.0.0.1:6379"
+  Password: "123456"
+  Db: 0
+
+Workers:
+  LogCleanup:
+    Enabled: true
+    Cron: "0 0 2 * * *"
+    RetentionDays: 90
+    LockTTLMinutes: 60

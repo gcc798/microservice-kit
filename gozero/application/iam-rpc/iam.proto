@@ -34,6 +34,8 @@ message UserInfo {
   string avatar = 6;
   int32 user_type = 7;
   int64 org_id = 8;
+  string open_id = 9;
+  string union_id = 10;
 }
 
 message AuthLoginReq {
@@ -47,6 +49,8 @@ message AuthLoginReq {
   string email = 8;
   string wx_code = 9;
   string uuid = 10;
+  string login_ip = 11;
+  string user_agent = 12;
 }
 
 message AuthLoginResp {

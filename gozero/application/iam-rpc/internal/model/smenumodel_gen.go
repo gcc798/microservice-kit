@@ -10,43 +10,25 @@ import (
 )
 
 type SMenu struct {
-	Id int64 `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
-
-	MenuName string `gorm:"column:menu_name" json:"menu_name"`
-
-	ParentId int64 `gorm:"column:parent_id" json:"parent_id"`
-
-	Sort int64 `gorm:"column:sort" json:"sort"`
-
-	Path sql.NullString `gorm:"column:path" json:"path"`
-
-	Component sql.NullString `gorm:"column:component" json:"component"`
-
-	Query sql.NullString `gorm:"column:query" json:"query"`
-
-	IsFrame int64 `gorm:"column:is_frame" json:"is_frame"`
-
-	IsCache int64 `gorm:"column:is_cache" json:"is_cache"`
-
-	MenuType int64 `gorm:"column:menu_type" json:"menu_type"`
-
-	Visible int64 `gorm:"column:visible" json:"visible"`
-
-	Status int64 `gorm:"column:status" json:"status"`
-
-	Perms sql.NullString `gorm:"column:perms" json:"perms"`
-
-	Icon sql.NullString `gorm:"column:icon" json:"icon"`
-
-	Remark sql.NullString `gorm:"column:remark" json:"remark"`
-
-	CreateBy sql.NullInt64 `gorm:"column:create_by" json:"create_by"`
-
-	UpdateBy sql.NullInt64 `gorm:"column:update_by" json:"update_by"`
-
-	CreatedTime sql.NullTime `gorm:"column:created_time" json:"created_time"`
-
-	UpdatedTime sql.NullTime `gorm:"column:updated_time" json:"updated_time"`
+	Id          int64          `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
+	MenuName    string         `gorm:"column:menu_name" json:"menu_name"`
+	ParentId    int64          `gorm:"column:parent_id" json:"parent_id"`
+	Sort        int64          `gorm:"column:sort" json:"sort"`
+	Path        sql.NullString `gorm:"column:path" json:"path"`
+	Component   sql.NullString `gorm:"column:component" json:"component"`
+	Query       sql.NullString `gorm:"column:query" json:"query"`
+	IsFrame     int64          `gorm:"column:is_frame" json:"is_frame"`
+	IsCache     int64          `gorm:"column:is_cache" json:"is_cache"`
+	MenuType    int64          `gorm:"column:menu_type" json:"menu_type"`
+	Visible     int64          `gorm:"column:visible" json:"visible"`
+	Status      int64          `gorm:"column:status" json:"status"`
+	Perms       sql.NullString `gorm:"column:perms" json:"perms"`
+	Icon        sql.NullString `gorm:"column:icon" json:"icon"`
+	Remark      sql.NullString `gorm:"column:remark" json:"remark"`
+	CreateBy    sql.NullInt64  `gorm:"column:create_by" json:"create_by"`
+	UpdateBy    sql.NullInt64  `gorm:"column:update_by" json:"update_by"`
+	CreatedTime sql.NullTime   `gorm:"column:created_time" json:"created_time"`
+	UpdatedTime sql.NullTime   `gorm:"column:updated_time" json:"updated_time"`
 }
 
 func (m *SMenuModel) Delete(ctx context.Context, id int64) error {

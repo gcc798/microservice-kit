@@ -2,10 +2,29 @@ Name: iam-api
 Host: 0.0.0.0
 Port: 9011
 Mode: dev
+DevServer:
+  Enabled: true
+  Port: 6071
+  EnableMetrics: true
+  EnablePprof: false
+TraceIgnorePaths:
+  - /health
+  - /health/live
+  - /health/ready
+  - /health/startup
 
 IamRpc:
-  Target: 127.0.0.1:9001
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: iam.rpc
   NonBlock: true
+
+HTTPRegistry:
+  Etcd:
+    Hosts:
+      - 127.0.0.1:2379
+    Key: /microservice-kit/http/iam-api
 
 Redis:
   Addr: "127.0.0.1:6379"
@@ -18,3 +37,4 @@ Jwt:
 
 Auth:
   TokenHeader: "Authorization"
+  AllowConcurrent: false

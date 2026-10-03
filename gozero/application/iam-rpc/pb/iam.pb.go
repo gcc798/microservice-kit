@@ -391,6 +391,8 @@ type UserInfo struct {
 	Avatar        string                 `protobuf:"bytes,6,opt,name=avatar,proto3" json:"avatar,omitempty"`
 	UserType      int32                  `protobuf:"varint,7,opt,name=user_type,json=userType,proto3" json:"user_type,omitempty"`
 	OrgId         int64                  `protobuf:"varint,8,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	OpenId        string                 `protobuf:"bytes,9,opt,name=open_id,json=openId,proto3" json:"open_id,omitempty"`
+	UnionId       string                 `protobuf:"bytes,10,opt,name=union_id,json=unionId,proto3" json:"union_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -481,6 +483,20 @@ func (x *UserInfo) GetOrgId() int64 {
 	return 0
 }
 
+func (x *UserInfo) GetOpenId() string {
+	if x != nil {
+		return x.OpenId
+	}
+	return ""
+}
+
+func (x *UserInfo) GetUnionId() string {
+	if x != nil {
+		return x.UnionId
+	}
+	return ""
+}
+
 type AuthLoginReq struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ClientKey     string                 `protobuf:"bytes,1,opt,name=client_key,json=clientKey,proto3" json:"client_key,omitempty"`
@@ -493,6 +509,8 @@ type AuthLoginReq struct {
 	Email         string                 `protobuf:"bytes,8,opt,name=email,proto3" json:"email,omitempty"`
 	WxCode        string                 `protobuf:"bytes,9,opt,name=wx_code,json=wxCode,proto3" json:"wx_code,omitempty"`
 	Uuid          string                 `protobuf:"bytes,10,opt,name=uuid,proto3" json:"uuid,omitempty"`
+	LoginIp       string                 `protobuf:"bytes,11,opt,name=login_ip,json=loginIp,proto3" json:"login_ip,omitempty"`
+	UserAgent     string                 `protobuf:"bytes,12,opt,name=user_agent,json=userAgent,proto3" json:"user_agent,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -593,6 +611,20 @@ func (x *AuthLoginReq) GetWxCode() string {
 func (x *AuthLoginReq) GetUuid() string {
 	if x != nil {
 		return x.Uuid
+	}
+	return ""
+}
+
+func (x *AuthLoginReq) GetLoginIp() string {
+	if x != nil {
+		return x.LoginIp
+	}
+	return ""
+}
+
+func (x *AuthLoginReq) GetUserAgent() string {
+	if x != nil {
+		return x.UserAgent
 	}
 	return ""
 }
@@ -4410,7 +4442,7 @@ const file_iam_proto_rawDesc = "" +
 	"\x05total\x18\x01 \x01(\x03R\x05total\x12\x12\n" +
 	"\x04size\x18\x02 \x01(\x03R\x04size\x12\x18\n" +
 	"\acurrent\x18\x03 \x01(\x03R\acurrent\x12\x14\n" +
-	"\x05pages\x18\x04 \x01(\x03R\x05pages\"\xdf\x01\n" +
+	"\x05pages\x18\x04 \x01(\x03R\x05pages\"\x93\x02\n" +
 	"\bUserInfo\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\x03R\x06userId\x12\x1a\n" +
 	"\busername\x18\x02 \x01(\tR\busername\x12\x1a\n" +
@@ -4419,7 +4451,10 @@ const file_iam_proto_rawDesc = "" +
 	"\x05email\x18\x05 \x01(\tR\x05email\x12\x16\n" +
 	"\x06avatar\x18\x06 \x01(\tR\x06avatar\x12\x1b\n" +
 	"\tuser_type\x18\a \x01(\x05R\buserType\x12\x15\n" +
-	"\x06org_id\x18\b \x01(\x03R\x05orgId\"\xa2\x02\n" +
+	"\x06org_id\x18\b \x01(\x03R\x05orgId\x12\x17\n" +
+	"\aopen_id\x18\t \x01(\tR\x06openId\x12\x19\n" +
+	"\bunion_id\x18\n" +
+	" \x01(\tR\aunionId\"\xdc\x02\n" +
 	"\fAuthLoginReq\x12\x1d\n" +
 	"\n" +
 	"client_key\x18\x01 \x01(\tR\tclientKey\x12#\n" +
@@ -4433,7 +4468,10 @@ const file_iam_proto_rawDesc = "" +
 	"\x05email\x18\b \x01(\tR\x05email\x12\x17\n" +
 	"\awx_code\x18\t \x01(\tR\x06wxCode\x12\x12\n" +
 	"\x04uuid\x18\n" +
-	" \x01(\tR\x04uuid\"\xd9\x01\n" +
+	" \x01(\tR\x04uuid\x12\x19\n" +
+	"\blogin_ip\x18\v \x01(\tR\aloginIp\x12\x1d\n" +
+	"\n" +
+	"user_agent\x18\f \x01(\tR\tuserAgent\"\xd9\x01\n" +
 	"\rAuthLoginResp\x12\x1b\n" +
 	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x1d\n" +
 	"\n" +

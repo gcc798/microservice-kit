@@ -225,7 +225,10 @@ message OperLogReq {
   string error_msg = 13;
   int64 cost_time = 14;
   string user_agent = 15;
+  int64 oper_time_unix_milli = 16;
 }
+
+message OperLogBatchReq { repeated OperLogReq logs = 1; }
 
 message OperLogUpdateReq {
   int64 id = 1;
@@ -278,6 +281,7 @@ service SysService {
   rpc LoginLogDelete(IdReq) returns (Ack);
 
   rpc OperLogCreate(OperLogReq) returns (Ack);
+  rpc OperLogBatchCreate(OperLogBatchReq) returns (Ack);
   rpc OperLogPage(OperLogPageReq) returns (OperLogPageResp);
   rpc OperLogBatchDelete(BatchIdsReq) returns (Ack);
   rpc OperLogClean(LogCleanReq) returns (Ack);

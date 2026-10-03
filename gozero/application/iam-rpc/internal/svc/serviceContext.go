@@ -7,41 +7,17 @@ import (
 	"github.com/gcc798/microservice-kit/application/iam-rpc/internal/migrations"
 	"github.com/gcc798/microservice-kit/application/sys-rpc/client/sysservice"
 	"github.com/gcc798/microservice-kit/internal/database"
+	"github.com/redis/go-redis/extra/redisotel/v9"
 	"github.com/redis/go-redis/v9"
-	"github.com/zeromicro/go-zero/core/logx"
 	"github.com/zeromicro/go-zero/zrpc"
 	"gorm.io/gorm"
 )
 
-type SMSProvider interface {
-	SendSMS(phone, code string) error
-}
-
-type EmailProvider interface {
-	SendEmail(email, code string) error
-}
-
-type consoleSMSProvider struct{}
-
-func (p *consoleSMSProvider) SendSMS(phone, code string) error {
-	logx.Infof("[验证码] 短信验证码发送至 %s: %s", phone, code)
-	return nil
-}
-
-type consoleEmailProvider struct{}
-
-func (p *consoleEmailProvider) SendEmail(email, code string) error {
-	logx.Infof("[验证码] 邮箱验证码发送至 %s: %s", email, code)
-	return nil
-}
-
 type ServiceContext struct {
-	Config        config.Config
-	DB            *gorm.DB
-	Redis         *redis.Client
-	SMSProvider   SMSProvider
-	EmailProvider EmailProvider
-	SysRpcClient  sysservice.SysService
+	Config       config.Config
+	DB           *gorm.DB
+	Redis        *redis.Client
+	SysRpcClient sysservice.SysService
 }
 
 func NewServiceContext(c config.Config) (*ServiceContext, error) {
@@ -68,14 +44,17 @@ func NewServiceContext(c config.Config) (*ServiceContext, error) {
 		Password: c.CacheRedis.Password,
 		DB:       c.CacheRedis.Db,
 	})
+	if err := redisotel.InstrumentTracing(rdb); err != nil {
+		_ = rdb.Close()
+		_ = database.Close(db)
+		return nil, err
+	}
 
 	return &ServiceContext{
-		Config:        c,
-		DB:            db,
-		Redis:         rdb,
-		SMSProvider:   &consoleSMSProvider{},
-		EmailProvider: &consoleEmailProvider{},
-		SysRpcClient:  sysservice.NewSysService(zrpc.MustNewClient(c.SysRpc)),
+		Config:       c,
+		DB:           db,
+		Redis:        rdb,
+		SysRpcClient: sysservice.NewSysService(zrpc.MustNewClient(c.SysRpc)),
 	}, nil
 }
 

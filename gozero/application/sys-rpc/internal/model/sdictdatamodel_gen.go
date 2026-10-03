@@ -10,31 +10,19 @@ import (
 )
 
 type SDictData struct {
-	Id int64 `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
-
-	ParentId int64 `gorm:"column:parent_id" json:"parent_id"`
-
-	Sort int64 `gorm:"column:sort" json:"sort"`
-
-	DictLabel sql.NullString `gorm:"column:dict_label" json:"dict_label"`
-
-	DictValue sql.NullString `gorm:"column:dict_value" json:"dict_value"`
-
-	DictType sql.NullString `gorm:"column:dict_type" json:"dict_type"`
-
-	IsDefault bool `gorm:"column:is_default" json:"is_default"`
-
-	Status int64 `gorm:"column:status" json:"status"`
-
-	Remark sql.NullString `gorm:"column:remark" json:"remark"`
-
-	CreateBy sql.NullInt64 `gorm:"column:create_by" json:"create_by"`
-
-	CreatedTime sql.NullTime `gorm:"column:created_time" json:"created_time"`
-
-	UpdateBy sql.NullInt64 `gorm:"column:update_by" json:"update_by"`
-
-	UpdatedTime sql.NullTime `gorm:"column:updated_time" json:"updated_time"`
+	Id          int64          `gorm:"column:id;primaryKey;autoIncrement:false" autogen:"int64" json:"id"`
+	ParentId    int64          `gorm:"column:parent_id" json:"parent_id"`
+	Sort        int64          `gorm:"column:sort" json:"sort"`
+	DictLabel   sql.NullString `gorm:"column:dict_label" json:"dict_label"`
+	DictValue   sql.NullString `gorm:"column:dict_value" json:"dict_value"`
+	DictType    sql.NullString `gorm:"column:dict_type" json:"dict_type"`
+	IsDefault   bool           `gorm:"column:is_default" json:"is_default"`
+	Status      int64          `gorm:"column:status" json:"status"`
+	Remark      sql.NullString `gorm:"column:remark" json:"remark"`
+	CreateBy    sql.NullInt64  `gorm:"column:create_by" json:"create_by"`
+	CreatedTime sql.NullTime   `gorm:"column:created_time" json:"created_time"`
+	UpdateBy    sql.NullInt64  `gorm:"column:update_by" json:"update_by"`
+	UpdatedTime sql.NullTime   `gorm:"column:updated_time" json:"updated_time"`
 }
 
 func (m *SDictDataModel) Delete(ctx context.Context, id int64) error {

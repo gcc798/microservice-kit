@@ -21,7 +21,7 @@ IAM_TABLES ?= s_api_permission,s_auth_client,s_menu,s_org,s_role,s_user,m_*
 SYS_TABLES ?= s_config,s_dict_data,s_login_log,s_oper_log
 RESOURCE_TABLES ?= biz_attachment
 
-.PHONY: help init-tree gen-iam-api gen-sys-api gen-resource-api gen-iam-rpc gen-sys-rpc gen-resource-rpc gen-realtime gen-iam-model-pg gen-sys-model-pg gen-resource-model-pg gen-models verify-gorm-template verify-no-sqlx verify gen-all build-gateway build-iam-api build-sys-api build-resource-api build-iam-rpc build-sys-rpc build-resource-rpc build-realtime build-all run-gateway run-iam-api run-sys-api run-resource-api run-iam-rpc run-sys-rpc run-resource-rpc run-realtime package clean
+.PHONY: help init-tree gen-iam-api gen-sys-api gen-resource-api gen-iam-rpc gen-sys-rpc gen-resource-rpc gen-realtime gen-iam-model-pg gen-sys-model-pg gen-resource-model-pg gen-models swagger verify-gorm-template verify-no-sqlx verify gen-all build-gateway build-iam-api build-sys-api build-resource-api build-iam-rpc build-sys-rpc build-resource-rpc build-realtime build-all run-gateway run-iam-api run-sys-api run-resource-api run-iam-rpc run-sys-rpc run-resource-rpc run-realtime package clean
 
 help: ## Display help
 	@grep -h -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -53,6 +53,16 @@ gen-resource-api: ## Generate resource-api service code from resource.api
 	@echo "Generating resource-api..."
 	@$(GOCTL) api go --api=$(RESOURCE_API_DIR)/resource.api --dir=$(RESOURCE_API_DIR) --style=$(STYLE)
 
+swagger: ## Generate the unified Gateway Swagger document
+	@mkdir -p $(GATEWAY_DIR)/internal/openapi
+	@$(GOCTL) api swagger --api=$(IAM_API_DIR)/iam.api --dir=$(GATEWAY_DIR)/internal/openapi --filename=iam
+	@$(GOCTL) api swagger --api=$(SYS_API_DIR)/sys.api --dir=$(GATEWAY_DIR)/internal/openapi --filename=sys
+	@$(GOCTL) api swagger --api=$(RESOURCE_API_DIR)/resource.api --dir=$(GATEWAY_DIR)/internal/openapi --filename=resource
+	@go run ./tools/openapi-merge --output=$(GATEWAY_DIR)/internal/openapi/swagger.json \
+		$(GATEWAY_DIR)/internal/openapi/iam.json \
+		$(GATEWAY_DIR)/internal/openapi/sys.json \
+		$(GATEWAY_DIR)/internal/openapi/resource.json
+
 gen-iam-rpc: ## Generate iam-rpc service code from iam.proto
 	@echo "Generating iam-rpc..."
 	@rm -rf $(IAM_RPC_DIR)/pb/*
@@ -66,6 +76,7 @@ gen-iam-rpc: ## Generate iam-rpc service code from iam.proto
 		--style=$(STYLE) \
 		-m \
 		$(IAM_RPC_DIR)/iam.proto
+	@rm -f $(IAM_RPC_DIR)/etc/iam.yaml $(IAM_RPC_DIR)/etc/pb.yaml
 
 gen-sys-rpc: ## Generate sys-rpc service code from sys.proto
 	@echo "Generating sys-rpc..."
@@ -168,7 +179,7 @@ verify: verify-no-sqlx ## Run repository checks that do not require external ser
 	@go test ./...
 	@go vet ./...
 
-gen-all: gen-iam-api gen-sys-api gen-resource-api gen-iam-rpc gen-sys-rpc gen-resource-rpc gen-realtime ## Generate API and RPC code
+gen-all: gen-iam-api gen-sys-api gen-resource-api gen-iam-rpc gen-sys-rpc gen-resource-rpc gen-realtime swagger ## Generate API, RPC, and Swagger code
 
 build-gateway: ## Build gateway binary
 	@mkdir -p $(BIN_DIR)

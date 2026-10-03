@@ -65,6 +65,7 @@ func SetCORSHeaders(header http.Header, cfg CORSConfig) {
 
 	header.Set("Access-Control-Allow-Methods", allowedMethods)
 	header.Set("Access-Control-Allow-Headers", allowedHeaders)
+	header.Set("Access-Control-Allow-Credentials", "true")
 	header.Set("Access-Control-Expose-Headers", exposeHeaders)
 	header.Set("Access-Control-Max-Age", "86400")
 }
